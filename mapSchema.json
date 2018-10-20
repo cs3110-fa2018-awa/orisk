@@ -26,7 +26,11 @@
       "name": "Robert Purcell Community Center",
       "borders": [
         "HR5"
-      ]
+      ],
+      "coordinates": {
+        "x": 4,
+        "y": 5
+      }
     },
     {
       "id": "JAM",
@@ -34,7 +38,11 @@
       "borders": [
         "LR7",
         "RPCC"
-      ]
+      ],
+      "coordinates": {
+        "x": 1,
+        "y": 1
+      }
     },
     {
       "id": "LR7",
@@ -42,28 +50,44 @@
       "borders": [
         "RPCC",
         "JAM"
-      ]
+      ],
+      "coordinates": {
+        "x": 0,
+        "y": 4
+      }
     },
     {
       "id": "HR5",
       "name": "High Rise 5",
       "borders": [
         "RPCC"
-      ]
+      ],
+      "coordinates": {
+        "x": 0,
+        "y": 0
+      }
     },
     {
       "id": "Keeton",
       "name": "William Keeton",
       "borders": [
         "Rose"
-      ]
+      ],
+      "coordinates": {
+        "x": 8,
+        "y": 4
+      }
     },
     {
       "id": "Rose",
       "name": "Flora Rose",
       "borders": [
         "Keeton"
-      ]
+      ],
+      "coordinates": {
+        "x": 5,
+        "y": 5
+      }
     }
   ]
 }
