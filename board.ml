@@ -42,10 +42,10 @@ let fold_nodes ({nodes} : t) (f : node_id -> 'a -> 'a) (acc : 'a) : 'a =
 
 let has_node ({nodes} : t) node = String_map.mem node nodes
 
-let find_node ({nodes} : t) (node : node_id) =
-  match String_map.find_opt node nodes with
+let find_node ({nodes} : t) (node_id : node_id) =
+  match String_map.find_opt node_id nodes with
   | Some (node) -> node
-  | None -> raise (UnknownNode node)
+  | None -> raise (UnknownNode node_id)
 
 let node_borders board node = let {borders} : node = (find_node board node) in borders
 
@@ -60,10 +60,10 @@ let fold_conts ({conts} : t) (f : cont_id -> 'a -> 'a) (acc : 'a) : 'a =
 
 let has_cont ({conts} : t) cont = String_map.mem cont conts
 
-let find_cont ({conts} : t) (cont : cont_id) =
-  match String_map.find_opt cont conts with
+let find_cont ({conts} : t) (cont_id : cont_id) =
+  match String_map.find_opt cont_id conts with
   | Some (cont) -> cont
-  | None -> raise (UnknownCont cont)
+  | None -> raise (UnknownCont cont_id)
 
 let cont_nodes board cont = let {nodes} : cont = (find_cont board cont) in nodes
 
