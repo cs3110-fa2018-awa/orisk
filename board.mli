@@ -2,7 +2,7 @@
 (** The type of a board. *)
 type t
 
-type coords
+type coords = (int * int)
 
 (** The type of identifier for a node. *)
 type node_id = string
