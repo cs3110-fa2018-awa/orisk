@@ -25,38 +25,39 @@ exception UnknownCont of cont_id
 let coords_of_node json =
   (json |> member "x" |> to_int), (json |> member "y" |> to_int)
 
-let node_of_json json = 
-  {id = json |> member "id" |> to_string; 
-   name = json |> member "name" |> to_string;
-   coords = json |> member "coordinates" |> coords_of_node; 
-   borders = json |> member "borders" |> to_list |> List.map to_string
+let node_of_json json =
+  {
+    id = json |> member "id" |> to_string;
+    name = json |> member "name" |> to_string;
+    coords = json |> member "coordinates" |> coords_of_node;
+    borders = json |> member "borders" |> to_list |> List.map to_string;
   }
 
-let cont_of_json json = 
-  {id = json |> member "id" |> to_string; 
-   name = json |> member "name" |> to_string; 
-   nodes = json |> member "territories" |> to_list |> List.map to_string
+let cont_of_json json =
+  {
+    id = json |> member "id" |> to_string;
+    name = json |> member "name" |> to_string;
+    nodes = json |> member "territories" |> to_list |> List.map to_string;
   }
 
-let rec node_to_map m (l: node list) = 
-  match l with
+let rec node_to_map m = function
   | [] -> m
-  | {id = i; name = _; coords = _; borders = _} as node :: tl 
-    -> node_to_map (String_map.add i node m) tl
+  | ({id} : node) as node :: tl
+    -> node_to_map (String_map.add id node m) tl
 
-let rec cont_to_map m (l: cont list) = 
-  match l with
+let rec cont_to_map m = function
   | [] -> m
-  | {id = i; name = _; nodes = _} as cont :: tl 
-    -> cont_to_map (String_map.add i cont m) tl
+  | ({id} : cont) as cont :: tl
+    -> cont_to_map (String_map.add id cont m) tl
 
 let from_json json =
-  {name = json |> member "map" |> to_string; 
-   ascii= json |> member "ascii" |> to_string; 
-   nodes = json |> member "territories" |> to_list 
-           |> List.map node_of_json |> node_to_map String_map.empty;
-   conts = json |> member "continents" |> to_list 
-           |> List.map cont_of_json |> cont_to_map String_map.empty
+  {
+    name = json |> member "map" |> to_string;
+    ascii = json |> member "ascii" |> to_string;
+    nodes = json |> member "territories" |> to_list
+            |> List.map node_of_json |> node_to_map String_map.empty;
+    conts = json |> member "continents" |> to_list
+            |> List.map cont_of_json |> cont_to_map String_map.empty;
   }
 
 let board_name ({name} : t) = name

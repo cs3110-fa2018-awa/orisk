@@ -75,7 +75,7 @@ let board_tests = [
   gen_comp "doesn't have cont" (lazy (has_cont (~$ map_schema) "foo")) false bool;
   gen_comp "cont name" (lazy (cont_name (~$ map_schema) "North")) "North Campus" str;
   except_comp "invalid cont" (lazy (cont_name (~$ map_schema) "foo")) (UnknownCont "foo");
-  gen_comp "cont nodes" (lazy (cont_nodes (~$ map_schema) "North"))
+  gen_comp "cont nodes" (lazy (List.sort compare (cont_nodes (~$ map_schema) "North")))
     (List.sort compare ["RPCC"; "JAM"; "LR7"]) (pp_list str);
 ]
 
