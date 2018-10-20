@@ -12,10 +12,6 @@ let make_coords x y = x, y
 type node_id = string
 type cont_id = string
 
-(* for testing purposes *)
-let node_to_string (id : node_id) = id
-let cont_to_string (id : cont_id) = id
-
 (* note: storing node_id in node and cont seems redundant now,
    but it could come in handy later *)
 
