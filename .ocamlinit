@@ -1,0 +1,8 @@
+#directory "_build";;
+#require "yojson";;
+#require "bisect";;
+#load_rec "board.cmo";;
+#load_rec "engine.cmo";;
+#load_rec "game.cmo";;
+#load_rec "interface.cmo";;
+#load_rec "state.cmo";;
