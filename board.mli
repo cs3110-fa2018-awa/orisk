@@ -19,6 +19,10 @@ val x : coords -> int
 
 val y : coords -> int
 
+val node_to_string : node_id -> string
+
+val cont_to_string : cont_id -> string
+
 val board_name : t -> string
 
 val board_ascii : t -> string
