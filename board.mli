@@ -2,26 +2,22 @@
 (** The type of a board. *)
 type t
 
-type coords
+type coords = (int * int)
 
 (** The type of identifier for a node. *)
-type node_id
+type node_id = string
 
 (** The type of a continent/ *)
 type cont
 
 (** The type of identifer for a continent. *)
-type cont_id
+type cont_id = string
 
 val from_json : Yojson.Basic.json -> t
 
 val x : coords -> int
 
 val y : coords -> int
-
-val node_to_string : node_id -> string
-
-val cont_to_string : cont_id -> string
 
 val board_name : t -> string
 

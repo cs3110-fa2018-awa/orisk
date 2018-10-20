@@ -1,4 +1,4 @@
-MODULES=engine state board game interface authors
+MODULES=engine board_state game_state board player game interface authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=mli)
@@ -20,9 +20,9 @@ play:
 
 zip:
 	zip a678src.zip *.ml* *.json _tags Makefile
-	
+
 docs: docs-public docs-private
-	
+
 docs-public: build
 	mkdir -p doc.public
 	ocamlfind ocamldoc -I _build -package yojson,ANSITerminal \
