@@ -28,7 +28,15 @@ let board_name ({name} : t) = name
 (* todo this is probably inefficient *)
 let list_of_string_map map = List.map (fun (k, _) -> k) (String_map.bindings map)
 
+let fold_internal (f : 'a -> 'b -> 'b) (acc : 'b) (map : 'c String_map.t) =
+  String_map.fold (fun (a:'a) (_:'c) (b:'b) : 'b -> f a b) map acc
+
 let nodes ({nodes} : t) = list_of_string_map nodes
+
+let fold_nodes ({nodes} : t) (f : node_id -> 'a -> 'a) (acc : 'a) : 'a =
+  fold_internal f acc nodes
+
+let has_node ({nodes} : t) node = String_map.mem node nodes
 
 let find_node ({nodes} : t) (node : node_id) =
   match String_map.find_opt node nodes with
@@ -40,6 +48,11 @@ let node_borders board node = let {borders} : node = (find_node board node) in b
 let node_name board node = let {name} : node = (find_node board node) in name
 
 let conts ({conts} : t) = list_of_string_map conts
+
+let fold_conts ({conts} : t) (f : cont_id -> 'a -> 'a) (acc : 'a) : 'a =
+  fold_internal f acc conts
+
+let has_cont ({conts} : t) cont = String_map.mem cont conts
 
 let find_cont ({conts} : t) (cont : cont_id) =
   match String_map.find_opt cont conts with
