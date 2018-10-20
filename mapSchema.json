@@ -1,0 +1,69 @@
+{
+  "map": "Cornell",
+  "ascii": "",
+  "continents": [
+    {
+      "id": "North",
+      "name": "North Campus",
+      "territories": [
+        "RPCC",
+        "JAM",
+        "LR7"
+      ]
+    },
+    {
+      "id": "West",
+      "name": "West Campus",
+      "territories": [
+        "Keeton",
+        "Rose"
+      ]
+    }
+  ],
+  "territories": [
+    {
+      "id": "RPCC",
+      "name": "Robert Purcell Community Center",
+      "borders": [
+        "HR5"
+      ]
+    },
+    {
+      "id": "JAM",
+      "name": "Just About Music",
+      "borders": [
+        "LR7",
+        "RPCC"
+      ]
+    },
+    {
+      "id": "LR7",
+      "name": "Low Rise 7",
+      "borders": [
+        "RPCC",
+        "JAM"
+      ]
+    },
+    {
+      "id": "HR5",
+      "name": "High Rise 5",
+      "borders": [
+        "RPCC"
+      ]
+    },
+    {
+      "id": "Keeton",
+      "name": "William Keeton",
+      "borders": [
+        "Rose"
+      ]
+    },
+    {
+      "id": "Rose",
+      "name": "Flora Rose",
+      "borders": [
+        "Keeton"
+      ]
+    }
+  ]
+}
