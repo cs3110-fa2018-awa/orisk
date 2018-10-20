@@ -2,6 +2,8 @@
 (** The type of a board. *)
 type t
 
+type coords
+
 (** The type of identifier for a node. *)
 type node_id
 
@@ -13,7 +15,13 @@ type cont_id
 
 val from_json : Yojson.Basic.json -> t
 
+val x : coords -> int
+
+val y : coords -> int
+
 val board_name : t -> string
+
+val board_ascii : t -> string
 
 val nodes : t -> node_id list
 
@@ -24,6 +32,8 @@ val has_node : t -> node_id -> bool
 val node_borders : t -> node_id -> node_id list
 
 val node_name : t -> node_id -> string
+
+val node_coords : t -> node_id -> coords
 
 val conts : t -> cont_id list
 
