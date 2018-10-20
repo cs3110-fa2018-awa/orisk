@@ -5,6 +5,8 @@ type color = ANSITerminal.color
 
 val create : string -> color -> t
 
-val name : t -> string
+val player_name : t -> string
 
-val color : t -> color
+val player_color : t -> color
+
+val compare : t -> t -> int
