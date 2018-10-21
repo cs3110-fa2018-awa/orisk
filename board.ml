@@ -103,3 +103,10 @@ let find_cont ({conts} : t) (cont_id : cont_id) =
 let cont_nodes board cont = let {nodes} : cont = (find_cont board cont) in nodes
 
 let cont_name board cont = let {name} : cont = (find_cont board cont) in name
+
+let node_conts board node =
+  (* TODO perhaps this could be computed ahead of time *)
+  fold_conts board
+    (fun cont_id acc -> if List.mem node
+        (let ({nodes} : cont) = (find_cont board cont_id) in nodes)
+      then cont_id :: acc else acc) []

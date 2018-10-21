@@ -45,6 +45,8 @@ val cont_nodes : t -> cont_id -> node_id list
 
 val cont_name : t -> cont_id -> string
 
+val node_conts : t -> node_id -> cont_id list
+
 exception UnknownNode of node_id
 
 exception UnknownCont of cont_id
