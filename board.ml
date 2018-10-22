@@ -68,9 +68,9 @@ let board_ascii ({ascii} : t) = ascii
 let list_of_string_map map = List.map (fun (k, _) -> k) (String_map.bindings map)
 
 let fold_internal (f : 'a -> 'b -> 'b) (acc : 'b) (map : 'c String_map.t) =
-  String_map.fold (fun (a:'a) (_:'c) (b:'b) : 'b -> f a b) map acc
+  String_map.fold (fun (a:'a) (_:'c) (b:'b) -> f a b) map acc
 
-let nodes ({nodes} : t) = list_of_string_map nodes
+let nodes ({nodes} : t) = list_of_string_map nodes 
 
 let fold_nodes ({nodes} : t) (f : node_id -> 'a -> 'a) (acc : 'a) : 'a =
   fold_internal f acc nodes
@@ -82,11 +82,11 @@ let find_node ({nodes} : t) (node_id : node_id) =
   | Some (node) -> node
   | None -> raise (UnknownNode node_id)
 
-let node_borders board node = let {borders} : node = (find_node board node) in borders
+let node_borders board node_id = let {borders} : node = (find_node board node_id) in borders
 
-let node_name board node = let {name} : node = (find_node board node) in name
+let node_name board node_id = let {name} : node = (find_node board node_id) in name
 
-let node_coords board node = let {coords} : node = (find_node board node) in coords
+let node_coords board node_id = let {coords} : node = (find_node board node_id) in coords
 
 let conts ({conts} : t) = list_of_string_map conts
 

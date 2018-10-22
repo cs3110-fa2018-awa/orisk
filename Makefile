@@ -18,6 +18,13 @@ test:
 play:
 	$(OCAMLBUILD) $(GAME) && ./$(GAME)
 
+bisect-test:
+	$(OCAMLBUILD) -package bisect -syntax camlp4o,bisect_pp \
+	  $(TEST) && ./$(TEST) -runner sequential
+
+bisect: clean bisect-test
+	bisect-report -I _build -html report bisect0001.out
+
 zip:
 	zip a678src.zip *.ml* *.json _tags Makefile
 
