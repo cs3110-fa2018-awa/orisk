@@ -38,6 +38,8 @@ let turn {turn} = turn
 
 let turn_to_attack st = {st with turn = Attack}
 
+let change_board_st st board_st = {st with board_state = board_st}
+
 let reinforce st n =
   let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
   {st with board_state = Board_state.place_army st.board_state n 1}
@@ -62,9 +64,9 @@ let attack st a d invading_armies =
   let attacker = Board_state.node_owner st.board_state a in
   let () = if attacker = Board_state.node_owner st.board_state d 
     then raise (FriendlyFire attacker) else () in
-  let total_attackers = Board_state.node_army st.board_state a in 
-  let attack_armies = min (total_attackers - 1) 3 in
-  let () = if attack_armies <= 0 || invading_armies < attack_armies 
+  let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
+  let attack_armies = min total_attackers 3 in
+  let () = if attack_armies <= 0 || invading_armies < attack_armies || invading_armies > total_attackers
     then raise (InsufficientArmies (a,attack_armies)) else () in
   let total_defenders = Board_state.node_army st.board_state d in
   let defend_armies = min total_defenders 2 in
@@ -74,12 +76,14 @@ let attack st a d invading_armies =
     rand_int_lst [] defend_armies |> List.sort Pervasives.compare in
   let attack_deaths,defend_deaths = battle attack_dice defend_dice (0,0) in 
   if defend_deaths = total_defenders 
+  (* attacker won *)
   then {st with board_state = 
                   Board_state.set_army 
                     (Board_state.set_army 
                        (Board_state.set_owner st.board_state d attacker) d 
                        (invading_armies - attack_deaths)) a 
                     (total_attackers - invading_armies)} 
+  (* attacker lost *)
   else {st with board_state = 
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 

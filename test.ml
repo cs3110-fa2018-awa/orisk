@@ -153,7 +153,21 @@ let board_state_tests = [
 
 let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
 
-let attack_state = lazy (turn_to_attack (~$ init_game_state))
+let player_a_own_RPCC_LR7 = lazy (set_owner (set_owner (~$ init_board_state) "RPCC" (Some (~$ player_a))) "LR7" (Some (~$ player_a)))
+
+let attack_0_armies = lazy (change_board_st (turn_to_attack (~$ init_game_state)) (~$ player_a_own_RPCC_LR7))
+
+let attack_state = lazy (change_board_st (~$ attack_0_armies) (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 2))
+
+let player_a_set_armies = lazy (change_board_st (~$ init_game_state) (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 3))
+
+let player_a_reinforce = lazy (reinforce (~$ player_a_set_armies) "LR7")
+
+let attack_rpcc_hr5 = (lazy (attack (~$ attack_state) "RPCC" "HR5" 1))
+
+(*let () = print_endline (string_of_int (player_army (~$ init_board_state) (~$ player_a)))
+  let () = print_endline (pp_list str (player_nodes (~$ player_a_own_RPCC) (~$ player_a)))
+  let () = print_endline ((opt player_p) (node_owner (~$ player_a_own_RPCC) "RPCC"))*)
 
 let game_state_tests = [
   (* initial game state *)
@@ -174,16 +188,21 @@ let game_state_tests = [
     (NonadjacentNode ("RPCC","LR7"));
   except_comp "game state invalid state" 
     (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) (InvalidState Reinforce);
-  (*except_comp "game state insufficient armies"
+  except_comp "game state insufficient armies"
     (lazy (attack (~$ attack_state) "RPCC" "HR5" 16)) 
     (InsufficientArmies ("RPCC", 1));
-    except_comp "game state cannot attack oneself"
+  except_comp "game state cannot attack oneself"
     (lazy (attack (~$ attack_state) "Keeton" "Rose" 2)) 
-    (FriendlyFire (Some (~$ player_a)));*)
+    (FriendlyFire None);
 
   (* reinforce *)
+  gen_comp "game state reinforce"
+    (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null;
 
   (* attack *)
+  gen_comp "game state attack"
+    (lazy (node_army ((~$ attack_rpcc_hr5) |> board_st) "HR5")) 1 null;
+
 ]
 
 let suite =
