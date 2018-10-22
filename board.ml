@@ -82,11 +82,11 @@ let find_node ({nodes} : t) (node_id : node_id) =
   | Some (node) -> node
   | None -> raise (UnknownNode node_id)
 
-let node_borders board node_id = let {borders} : node = (find_node board node_id) in borders
+let node_borders board node_id = (find_node board node_id).borders
 
-let node_name board node_id = let {name} : node = (find_node board node_id) in name
+let node_name board node_id = (find_node board node_id).name
 
-let node_coords board node_id = let {coords} : node = (find_node board node_id) in coords
+let node_coords board node_id = (find_node board node_id).coords
 
 let conts ({conts} : t) = list_of_string_map conts
 
@@ -100,9 +100,9 @@ let find_cont ({conts} : t) (cont_id : cont_id) =
   | Some (cont) -> cont
   | None -> raise (UnknownCont cont_id)
 
-let cont_nodes board cont = let {nodes} : cont = (find_cont board cont) in nodes
+let cont_nodes board cont = (find_cont board cont).nodes
 
-let cont_name board cont = let {name} : cont = (find_cont board cont) in name
+let cont_name board cont = (find_cont board cont).name
 
 let node_conts board node =
   (* TODO perhaps this could be computed ahead of time *)
