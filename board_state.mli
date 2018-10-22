@@ -4,9 +4,6 @@ open Player
 (** The type of a board state. *)
 type t
 
-(** The type of a player's army. *)
-type army = int
-
 (** [init b players] is the default state from board [b]. *)
 val init : Board.t -> Player.t list -> t
 
@@ -35,6 +32,11 @@ val player_conts : t -> Player.t -> cont_id list
 (** [player_army state player] is the total number of armies owned
     by [player] in [state]. *)
 val player_army : t -> Player.t -> army
+
+(** [player_reinforcements state player] is the total number of
+    reinforcements that [player] recieves given the current board
+    configuration. *)
+val player_reinforcements : t -> Player.t -> army
 
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)

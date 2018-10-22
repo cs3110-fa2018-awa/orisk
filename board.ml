@@ -12,11 +12,13 @@ let make_coords x y = x, y
 type node_id = string
 type cont_id = string
 
+type army = int
+
 (* note: storing node_id in node and cont seems redundant now,
    but it could come in handy later *)
 
 type node = {id : node_id; name : string; coords : coords;  borders : node_id list}
-type cont = {id : cont_id; name : string; nodes : node_id list}
+type cont = {id : cont_id; name : string; bonus : army; nodes : node_id list}
 type t = {name : string; ascii : string; nodes : node String_map.t; conts : cont String_map.t}
 
 exception UnknownNode of node_id
@@ -37,6 +39,7 @@ let cont_of_json json =
   {
     id = json |> member "id" |> to_string;
     name = json |> member "name" |> to_string;
+    bonus = json |> member "bonus" |> to_int;
     nodes = json |> member "territories" |> to_list |> List.map to_string;
   }
 
@@ -103,6 +106,8 @@ let find_cont ({conts} : t) (cont_id : cont_id) =
 let cont_nodes board cont = let {nodes} : cont = (find_cont board cont) in nodes
 
 let cont_name board cont = let {name} : cont = (find_cont board cont) in name
+
+let cont_bonus board cont = (find_cont board cont).bonus
 
 let node_conts board node =
   (* TODO perhaps this could be computed ahead of time *)

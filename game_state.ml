@@ -10,7 +10,8 @@ type t = {
   board_state : Board_state.t;
   players : players;
   current_player : Player.t;
-  turn : turn_state
+  turn : turn_state;
+  remaining_reinforcements : army;
 }
 
 exception NoPlayers
@@ -25,7 +26,8 @@ let init board players = {
   current_player = (match players with 
       | [] -> raise NoPlayers 
       | hd :: tl -> hd);
-  turn = Reinforce
+  turn = Reinforce;
+  remaining_reinforcements = 0;
 }
 
 let board_st {board_state} = board_state
@@ -37,6 +39,10 @@ let current_player {current_player} = current_player
 let turn {turn} = turn
 
 let turn_to_attack st = {st with turn = Attack}
+
+let remaining_reinforcements st =
+  let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
+  st.remaining_reinforcements
 
 let reinforce st n =
   let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in

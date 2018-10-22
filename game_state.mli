@@ -26,6 +26,8 @@ val turn : t -> turn_state
 
 val turn_to_attack : t -> t
 
-val attack : t -> node_id -> node_id -> Board_state.army -> t
+val attack : t -> node_id -> node_id -> army -> t
 
 val reinforce : t -> node_id -> t
+
+val remaining_reinforcements : t -> army

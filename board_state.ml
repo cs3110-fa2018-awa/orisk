@@ -6,8 +6,6 @@ module String_map = Map.Make (String)
 module String_set = Set.Make (String)
 module Player_map = Map.Make (Player)
 
-type army = int
-
 (* idea: we want to be able to access this information quickly
    from both ends; so we implement data structures that facilitate
    both sides of data access and update them at the same time *)
@@ -86,6 +84,13 @@ let extract except (a : 'a option) =
   match a with
   | Some x -> x
   | None -> raise except
+
+let player_reinforcements st player =
+  (* territory reinforcements *)
+  (max (List.length (player_nodes st player) / 3) 3)
+  + (List.fold_left (fun acc cont_id ->
+      acc + (Board.cont_bonus st.board cont_id))
+      0 (player_conts st player))
 
 let set_army st node army =
   let ({nodes} : t) = st

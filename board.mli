@@ -13,6 +13,8 @@ type cont
 (** The type of identifer for a continent. *)
 type cont_id = string
 
+type army = int
+
 val from_json : Yojson.Basic.json -> t
 
 val x : coords -> int
@@ -44,6 +46,8 @@ val has_cont : t -> cont_id -> bool
 val cont_nodes : t -> cont_id -> node_id list
 
 val cont_name : t -> cont_id -> string
+
+val cont_bonus : t -> cont_id -> army
 
 val node_conts : t -> node_id -> cont_id list
 
