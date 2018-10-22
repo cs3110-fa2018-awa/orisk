@@ -1,8 +1,9 @@
 #directory "_build";;
 #require "yojson";;
 #require "bisect";;
+#require "ansiterminal";;
 #load_rec "board.cmo";;
-#load_rec "game.cmo";;
+(*#load_rec "game.cmo";;*)
 #load_rec "board_state.cmo";;
 #load_rec "game_state.cmo";;
 #load_rec "player.cmo";;
