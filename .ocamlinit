@@ -2,7 +2,7 @@
 #require "yojson";;
 #require "bisect";;
 #load_rec "board.cmo";;
-#load_rec "engine.cmo";;
 #load_rec "game.cmo";;
-#load_rec "interface.cmo";;
-#load_rec "state.cmo";;
+#load_rec "board_state.cmo";;
+#load_rec "game_state.cmo";;
+#load_rec "player.cmo";;
