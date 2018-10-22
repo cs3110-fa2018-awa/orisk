@@ -3,6 +3,7 @@ open ANSITerminal
 open Board
 open Player
 open Board_state
+open Game_state
 
 (* General note to all those concerned.
 
@@ -109,8 +110,6 @@ let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
 let set_armies_state = lazy (set_army (~$ init_board_state) "JAM" 2)
 let add_armies_state = lazy (place_army (place_army (~$ set_armies_state) "RPCC" 5) "JAM" 2)
 
-
-
 let board_state_tests = [
   (* initial board state *)
   gen_comp "board state board"
@@ -152,11 +151,47 @@ let board_state_tests = [
     (lazy (node_army (~$ add_armies_state) "LR7")) 0 int;
 ]
 
+let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
+
+let attack_state = lazy (turn_to_attack (~$ init_game_state))
+
+let game_state_tests = [
+  (* initial game state *)
+  gen_comp "game state board state"
+    (lazy (board_st (~$ init_game_state))) (~$ init_board_state) null;
+  gen_comp "game state players"
+    (lazy (players (~$ init_game_state))) (~$ demo_players) (pp_list player_p);
+  gen_comp "game state current_player"
+    (lazy (current_player (~$ init_game_state))) (~$ player_a) player_p;
+  gen_comp "game state turn"
+    (lazy (turn (~$ init_game_state))) Reinforce null;
+
+  (* exceptions *)
+  except_comp "game state no players" 
+    (lazy (Game_state.init (~$ map_schema) [])) NoPlayers;
+  except_comp "game state attack nonadjacent node"
+    (lazy (attack (~$ attack_state) "RPCC" "LR7" 2)) 
+    (NonadjacentNode ("RPCC","LR7"));
+  except_comp "game state invalid state" 
+    (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) (InvalidState Reinforce);
+  (*except_comp "game state insufficient armies"
+    (lazy (attack (~$ attack_state) "RPCC" "HR5" 16)) 
+    (InsufficientArmies ("RPCC", 1));
+    except_comp "game state cannot attack oneself"
+    (lazy (attack (~$ attack_state) "Keeton" "Rose" 2)) 
+    (FriendlyFire (Some (~$ player_a)));*)
+
+  (* reinforce *)
+
+  (* attack *)
+]
+
 let suite =
   "test suite for A678" >::: List.flatten [
     board_tests;
     player_tests;
     board_state_tests;
+    game_state_tests;
   ]
 
 let () = run_test_tt_main suite

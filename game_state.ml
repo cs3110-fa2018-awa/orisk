@@ -30,7 +30,13 @@ let init board players = {
 
 let board_st {board_state} = board_state
 
+let players {players} = players 
+
+let current_player {current_player} = current_player 
+
 let turn {turn} = turn
+
+let turn_to_attack st = {st with turn = Attack}
 
 let reinforce st n =
   let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
