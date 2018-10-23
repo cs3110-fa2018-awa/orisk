@@ -136,3 +136,6 @@ let attack st a d invading_armies =
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 
                     (total_attackers - attack_deaths + 1)}, attack_dice, defend_dice
+
+(* random seed *)
+let () = Random.self_init ()

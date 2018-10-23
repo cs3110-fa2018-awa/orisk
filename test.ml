@@ -79,7 +79,7 @@ let board_tests = [
   except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) (UnknownNode "foo");
   gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (4, 3) coord;
   gen_comp "node borders" (lazy (node_borders (~$ map_schema) "JAM"))
-    (List.sort Pervasives.compare ["LR7"; "RPCC"]) (pp_list str);
+    (List.sort Pervasives.compare ["LR7"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
     (List.sort Pervasives.compare ["North"; "West"]) (pp_list str);
   gen_comp "has cont" (lazy (has_cont (~$ map_schema) "North")) true bool;
@@ -88,7 +88,7 @@ let board_tests = [
   except_comp "invalid cont" (lazy (cont_name (~$ map_schema) "foo")) (UnknownCont "foo");
   gen_comp "cont bonus" (lazy (cont_bonus (~$ map_schema) "North")) 5 int;
   gen_comp "cont nodes" (lazy (List.sort Pervasives.compare (cont_nodes (~$ map_schema) "North")))
-    (List.sort Pervasives.compare ["RPCC"; "JAM"; "LR7"]) (pp_list str);
+    (List.sort Pervasives.compare ["RPCC"; "JAM"; "LR7"; "HR5"]) (pp_list str);
 ]
 
 let player_a = lazy (Player.create "player_a" Red)
@@ -194,7 +194,7 @@ let game_state_tests = [
     (lazy (Game_state.init (~$ map_schema) [])) NoPlayers;
   except_comp "game state attack nonadjacent node"
     (lazy (attack (~$ attack_state) "RPCC" "LR7" 2)) 
-    (NonadjacentNode ("RPCC","LR7"));
+    (FriendlyFire (Some (~$ player_a)));
   except_comp "game state invalid state" 
     (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) (InvalidState Reinforce);
   except_comp "game state insufficient armies"
@@ -210,7 +210,8 @@ let game_state_tests = [
 
   (* attack *)
   gen_comp "game state attack"
-    (lazy (node_army ((~$ attack_rpcc_hr5) |> board_st) "HR5")) 1 null;
+    (lazy (node_army (let st', _, _ = (~$ attack_rpcc_hr5)
+                      in st' |> board_st) "HR5")) 1 null;
 
 ]
 
