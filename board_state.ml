@@ -88,6 +88,7 @@ let extract except (a : 'a option) =
 let player_reinforcements st player =
   (* territory reinforcements *)
   (max (List.length (player_nodes st player) / 3) 3)
+  (* continent bonus *)
   + (List.fold_left (fun acc cont_id ->
       acc + (Board.cont_bonus st.board cont_id))
       0 (player_conts st player))
