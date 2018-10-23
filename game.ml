@@ -4,7 +4,7 @@ let rec game_loop board (st:Game_state.t) =
   let process (result) (msg : string) = match result with
     | NoPlayers -> 
       print_endline("\nNo players!");
-      game_loop board st
+      game_loop boarSd st
     | NonadjacentNode(node_id1 * node_id2) -> 
       print_endline("\n" node_id1 ^ " is not adjacent to " node_id2) ^ "!";
       game_loop board st
@@ -27,8 +27,7 @@ let rec game_loop board (st:Game_state.t) =
     print_endline("\nPlease enter a command!"); 
     game_loop board st
   | Quit -> print_endline("\Thanks for playing!\n"); exit 0
-  | Score -> print_endline("\n"^string_of_int (State.score adv st)); 
-    game_loop adv st
+      game_loop board st
 
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in 
