@@ -38,6 +38,6 @@ module Display = struct
     (* populate nodes *)
     draw_nodes gs;
     (* add some extra space at bottom - fix this later *)
-    let () = Printf.printf "\n\n\n\n\n\n\n\n\n" in ()
+    let () = Printf.printf "\n" in ()
 
 end
