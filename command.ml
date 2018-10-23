@@ -9,7 +9,6 @@ type object_phrase = string list
 type command = 
   | Attack of object_phrase
   | Reinforce of object_phrase
-  | Score
   | Quit
 
 (** Empty is raised when the provided string to parse is either empty
@@ -30,6 +29,5 @@ let parse str =
   | ("attack" | "fight") :: args -> Attack(parse_args args)
   | ("reinforce" | "fortify" | "strengthen") :: args -> Reinforce(parse_args args)
   | "quit" :: _ -> Quit
-  | "score" :: _ -> Score
   | [] -> raise Empty
   | _ -> raise Malformed
