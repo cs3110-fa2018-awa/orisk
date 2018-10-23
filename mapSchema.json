@@ -5,6 +5,7 @@
     {
       "id": "North",
       "name": "North Campus",
+      "bonus": 5,
       "territories": [
         "RPCC",
         "JAM",
@@ -14,6 +15,7 @@
     {
       "id": "West",
       "name": "West Campus",
+      "bonus": 3,
       "territories": [
         "Keeton",
         "Rose"
