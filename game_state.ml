@@ -27,12 +27,12 @@ let init board players =
       | [] -> raise NoPlayers 
       | hd :: tl -> hd) in
   {
-  board_state = board_st;
-  players = players;
-  current_player = curr_player;
-  turn = Reinforce;
-  remaining_reinforcements = player_reinforcements board_st curr_player;
-}
+    board_state = board_st;
+    players = players;
+    current_player = curr_player;
+    turn = Reinforce;
+    remaining_reinforcements = player_reinforcements board_st curr_player;
+  }
 
 let board_st {board_state} = board_state
 
@@ -41,6 +41,11 @@ let players {players} = players
 let current_player {current_player} = current_player 
 
 let turn {turn} = turn
+
+let turn_to_str {turn} =
+  match turn with
+  | Reinforce -> "Reinforce"
+  | Attack -> "Attack"
 
 let turn_to_attack st = {st with turn = Attack}
 
@@ -62,10 +67,10 @@ let reinforce st n =
 
 let next_player curr_player lst =
   let rec helper = function
-  | hd :: next :: tl when hd = curr_player -> next
-  | hd :: [] when hd = curr_player -> List.hd lst
-  | [] -> failwith "current player isn't in players" 
-  | hd :: tl -> helper tl
+    | hd :: next :: tl when hd = curr_player -> next
+    | hd :: [] when hd = curr_player -> List.hd lst
+    | [] -> failwith "current player isn't in players" 
+    | hd :: tl -> helper tl
   in helper lst
 
 let assign_random_nodes (st : t) : t =
