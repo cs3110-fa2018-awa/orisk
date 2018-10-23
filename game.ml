@@ -4,8 +4,8 @@ let rec game_loop board (st:Game_state.t) =
   let process (result) (msg : string) = match result with
     | NoPlayers -> 
       print_endline("\nNo players!");
-      game_loop boarSd st
-    | NonadjacentNode(node_id1 * node_id2) -> 
+      game_loop board st
+    | NonadjacentNode(node_id1, node_id2) -> 
       print_endline("\n" node_id1 ^ " is not adjacent to " node_id2) ^ "!";
       game_loop board st
     | InvalidState(turn_state) -> 
