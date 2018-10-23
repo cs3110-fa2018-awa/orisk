@@ -90,8 +90,6 @@ let rec rand_int_lst acc = function
 let rec battle attack defend (deatha,deathd) = 
   match attack,defend with 
   | ahd :: atl,dhd :: dtl ->
-    ("attacker die" ^ string_of_int ahd) |> print_endline;
-    ("defender die" ^ string_of_int dhd) |> print_endline;
     if (ahd - dhd) > 0 
     then battle atl dtl (deatha,deathd + 1) 
     else battle atl dtl (deatha + 1,deathd)
@@ -126,10 +124,10 @@ let attack st a d invading_armies =
                     (Board_state.set_army 
                        (Board_state.set_owner st.board_state d attacker) d 
                        (invading_armies - attack_deaths)) a 
-                    (total_attackers - invading_armies + 1)} 
+                    (total_attackers - invading_armies + 1)}, attack_dice, defend_dice
   (* attacker lost *)
   else {st with board_state = 
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 
-                    (total_attackers - attack_deaths + 1)}
+                    (total_attackers - attack_deaths + 1)}, attack_dice, defend_dice

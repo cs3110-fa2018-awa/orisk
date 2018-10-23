@@ -30,7 +30,7 @@ zip:
 	zip a678src.zip *.ml* *.json _tags Makefile
 
 docs: docs-public docs-private
-	
+
 docs-public: build
 	mkdir -p doc.public
 	ocamlfind ocamldoc -I _build -package $(PKGS) \

@@ -25,6 +25,8 @@ val board_name : t -> string
 
 val board_ascii : t -> string
 
+val board_ascii_height : t -> int
+
 val nodes : t -> node_id list
 
 val fold_nodes : t -> (node_id -> 'a -> 'a) -> 'a -> 'a

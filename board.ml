@@ -19,7 +19,7 @@ type army = int
 
 type node = {id : node_id; name : string; coords : coords;  borders : node_id list}
 type cont = {id : cont_id; name : string; bonus : army; nodes : node_id list}
-type t = {name : string; ascii : string; nodes : node String_map.t; conts : cont String_map.t}
+type t = {name : string; ascii : string; ascii_height : int; nodes : node String_map.t; conts : cont String_map.t}
 
 exception UnknownNode of node_id
 exception UnknownCont of cont_id
@@ -53,19 +53,25 @@ let rec cont_to_map m = function
   | ({id} : cont) as cont :: tl
     -> cont_to_map (String_map.add id cont m) tl
 
+let count_newlines str = str |> Str.split (Str.regexp "\n") |> List.length
+
 let from_json json =
+  let ascii =  json |> member "ascii" |> to_string in
   {
     name = json |> member "map" |> to_string;
-    ascii = json |> member "ascii" |> to_string;
+    ascii = ascii;
+    ascii_height = (count_newlines ascii) + 1;
     nodes = json |> member "territories" |> to_list
             |> List.map node_of_json |> node_to_map String_map.empty;
     conts = json |> member "continents" |> to_list
             |> List.map cont_of_json |> cont_to_map String_map.empty;
   }
 
-let board_name ({name} : t) = name
+let board_name st = st.name
 
-let board_ascii ({ascii} : t) = ascii
+let board_ascii st = st.ascii
+
+let board_ascii_height st = st.ascii_height
 
 (* todo this is probably inefficient *)
 let list_of_string_map map = List.map (fun (k, _) -> k) (String_map.bindings map)

@@ -29,7 +29,7 @@ val turn_to_attack : t -> t
 
 val change_board_st : t -> Board_state.t -> t
 
-val attack : t -> node_id -> node_id -> army -> t
+val attack : t -> node_id -> node_id -> army -> t * int list * int list
 
 val reinforce : t -> node_id -> t
 
