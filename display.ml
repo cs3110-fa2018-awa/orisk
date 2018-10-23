@@ -6,6 +6,7 @@ open Game_state
 (** TODO: make nicer ascii map for demo *)
 (** TODO: make errors look nicer *)
 (** TODO: display turn information *)
+(** TODO: draw something nicer when node is not owned *)
 
 (** [format_2digit num] is the 2 digit string representation of [num]. 
     Requires: 0 <= [num] <= 99 *)
@@ -50,3 +51,23 @@ let draw_board (gs : Game_state.t) : unit =
   (* add some extra space at bottom - fix this later *)
   let () = Printf.printf "\n" in ()
 
+(** [draw_turn gamestate] prints the current turn information based
+    on [gamestate]. *)
+let draw_turn (gs : Game_state.t) : unit = 
+  (* print current player *)
+  Printf.printf "\n\nCurrent player: ";
+  ANSITerminal.print_string 
+    [Foreground (gs |> Game_state.current_player |> Player.player_color)]
+    (gs |> Game_state.current_player |> Player.player_name);
+  (* print turn type *)
+  Printf.printf "\nTurn type: ";
+  ANSITerminal.print_string (* todo: colors for turn type? *)
+    [Foreground White] (Game_state.turn_to_str gs);
+  (* print remaining reinforcements or attack info? *)
+  match (gs |> turn) with
+  | Reinforce -> Printf.printf "\nRemaining reinforcements: ";
+    ANSITerminal.print_string 
+      [Foreground (gs |> Game_state.current_player |> Player.player_color)]
+      (gs |> Game_state.remaining_reinforcements |> string_of_int)
+  | Attack ->
+    Printf.printf "\ntodo: print attack info"

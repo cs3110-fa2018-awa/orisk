@@ -25,6 +25,8 @@ val current_player : t -> Player.t
 
 val turn : t -> turn_state
 
+val turn_to_str : t -> string
+
 val turn_to_attack : t -> t
 
 val change_board_st : t -> Board_state.t -> t

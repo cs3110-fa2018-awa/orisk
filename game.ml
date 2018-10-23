@@ -4,9 +4,10 @@ open Board
 open Board_state
 open Display
 
-let rec game_loop (st:Game_state.t) : unit =
+let rec game_loop (st : Game_state.t) : unit =
   draw_board st;
-  print_endline "\nEnter a command";
+  draw_turn st;
+  print_endline "\n\nEnter a command";
   print_string  "> "; 
   try begin match Command.parse (read_line ()) with
     | exception (Command.Malformed) ->
