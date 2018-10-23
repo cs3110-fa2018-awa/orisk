@@ -77,7 +77,7 @@ let board_tests = [
   gen_comp "doesn't have node" (lazy (has_node (~$ map_schema) "foo")) false bool;
   gen_comp "node name" (lazy (node_name (~$ map_schema) "JAM")) "Just About Music" str;
   except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) (UnknownNode "foo");
-  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (4, 3) coord;
+  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 3) coord;
   gen_comp "node borders" (lazy (node_borders (~$ map_schema) "JAM"))
     (List.sort Pervasives.compare ["LR7"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
@@ -190,18 +190,18 @@ let game_state_tests = [
     (lazy (turn (~$ init_game_state))) Reinforce null;
 
   (* exceptions *)
-  except_comp "game state no players" 
+  except_comp "game state no players"
     (lazy (Game_state.init (~$ map_schema) [])) NoPlayers;
   except_comp "game state attack nonadjacent node"
-    (lazy (attack (~$ attack_state) "RPCC" "LR7" 2)) 
+    (lazy (attack (~$ attack_state) "RPCC" "LR7" 2))
     (FriendlyFire (Some (~$ player_a)));
-  except_comp "game state invalid state" 
+  except_comp "game state invalid state"
     (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) (InvalidState Reinforce);
   except_comp "game state insufficient armies"
-    (lazy (attack (~$ attack_state) "RPCC" "HR5" 16)) 
+    (lazy (attack (~$ attack_state) "RPCC" "HR5" 16))
     (InsufficientArmies ("RPCC", 1));
   except_comp "game state cannot attack oneself"
-    (lazy (attack (~$ attack_state) "Keeton" "Rose" 2)) 
+    (lazy (attack (~$ attack_state) "Keeton" "Rose" 2))
     (NotOwner "Keeton");
 
   (* reinforce *)

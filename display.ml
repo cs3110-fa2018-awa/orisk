@@ -31,7 +31,7 @@ let draw_nodes (gs : Game_state.t) : unit =
        match (Board_state.node_owner brd_st id) with
        | Some player ->
          draw_str (Board_state.node_army brd_st id |> format_2digit)
-           (Board.node_coords brd id |> Board.x |> ( * ) 2 |> (+) 1)
+           (Board.node_coords brd id |> Board.x |> (+) 1)
            (Board.node_coords brd id |> Board.y |> (+) 1)
            (Player.player_color player)
        | None -> ()
