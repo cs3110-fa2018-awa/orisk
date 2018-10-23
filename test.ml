@@ -66,9 +66,11 @@ let pp_list pp_elt lst =
 (* test boards *)
 let map_schema = lazy (from_json (Yojson.Basic.from_file "mapSchema.json"))
 
+let ascii = "............XX..\n..........//....\n.........//.....\n........XX==XX..\n............||..\n............XX..\n....XX==XX......\n................"
+
 let board_tests = [
   gen_comp "board name" (lazy (board_name (~$ map_schema))) "Cornell" str;
-  gen_comp "board ascii" (lazy (board_ascii (~$ map_schema))) "" str;
+  gen_comp "board ascii" (lazy (board_ascii (~$ map_schema))) ascii str;
   gen_comp "nodes" (lazy (nodes (~$ map_schema)))
     (List.sort Pervasives.compare ["RPCC"; "JAM"; "LR7"; "HR5"; "Keeton"; "Rose"]) (pp_list str);
   gen_comp "has node" (lazy (has_node (~$ map_schema) "RPCC")) true bool;

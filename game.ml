@@ -2,8 +2,10 @@ open Game_state
 open Command
 open Board
 open Board_state
+open Display
 
-let rec game_loop (st:Game_state.t) : unit = 
+let rec game_loop (st:Game_state.t) : unit =
+  draw_board st;
   print_endline "\nEnter a command";
   print_string  "> "; 
   try begin match Command.parse (read_line ()) with

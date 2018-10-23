@@ -27,7 +27,8 @@
       "id": "RPCC",
       "name": "Robert Purcell Community Center",
       "borders": [
-        "HR5"
+        "HR5",
+        "JAM"
       ],
       "coordinates": {
         "x": 4,

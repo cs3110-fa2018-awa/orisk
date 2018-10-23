@@ -71,7 +71,7 @@ let next_player curr_player lst =
 let assign_random_nodes (st : t) : t =
   (* TODO not actually random right now *)
   fold_nodes (board st.board_state)
-    (fun (node : node_id) (st',player) : (t * Player.t) ->
+    (fun (node : node_id) ((st',player) : (t * Player.t)) ->
        let next = next_player player st.players
        in ({st' with board_state
                      = place_army (set_owner st'.board_state node (Some next))
@@ -89,7 +89,10 @@ let rec rand_int_lst acc = function
 
 let rec battle attack defend (deatha,deathd) = 
   match attack,defend with 
-  | ahd :: atl,dhd :: dtl -> if (ahd - dhd) > 0 
+  | ahd :: atl,dhd :: dtl ->
+    ("attacker die" ^ string_of_int ahd) |> print_endline;
+    ("defender die" ^ string_of_int dhd) |> print_endline;
+    if (ahd - dhd) > 0 
     then battle atl dtl (deatha,deathd + 1) 
     else battle atl dtl (deatha + 1,deathd)
   | _ -> deatha,deathd
@@ -112,9 +115,9 @@ let attack st a d invading_armies =
   let total_defenders = Board_state.node_army st.board_state d in
   let defend_armies = min total_defenders 2 in
   let attack_dice = 
-    rand_int_lst [] attack_armies |> List.sort Pervasives.compare in
+    rand_int_lst [] attack_armies |> List.sort Pervasives.compare |> List.rev in
   let defend_dice = 
-    rand_int_lst [] defend_armies |> List.sort Pervasives.compare in
+    rand_int_lst [] defend_armies |> List.sort Pervasives.compare |> List.rev in
   let attack_deaths,defend_deaths = battle attack_dice defend_dice (0,0) in 
   if defend_deaths = total_defenders 
   (* attacker won *)
@@ -123,10 +126,10 @@ let attack st a d invading_armies =
                     (Board_state.set_army 
                        (Board_state.set_owner st.board_state d attacker) d 
                        (invading_armies - attack_deaths)) a 
-                    (total_attackers - invading_armies)} 
+                    (total_attackers - invading_armies + 1)} 
   (* attacker lost *)
   else {st with board_state = 
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 
-                    (total_attackers - attack_deaths)}
+                    (total_attackers - attack_deaths + 1)}
