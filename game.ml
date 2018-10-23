@@ -27,7 +27,7 @@ let rec game_loop (st:Game_state.t) : unit =
     print_endline "\nWrong type of turn.";
     game_loop st
   | InsufficientArmies (node_id,army) -> 
-    print_endline ("\nYou only have " ^ (string_of_int army) ^ "armies! You can't attack" ^ node_id ^ "!");
+    print_endline ("\nYou only have " ^ (string_of_int army) ^ " armies to attack with! You can't attack " ^ node_id ^ "!");
     game_loop st  
   | FriendlyFire player -> 
     print_endline "\nYou can't attack yourself!";
@@ -41,6 +41,9 @@ let rec game_loop (st:Game_state.t) : unit =
   | UnknownPlayer p ->
     print_endline "\nPlayer does not exist.";
     game_loop st
+  | NotOwner n ->
+    print_endline "\nYou don't control this territory!";
+    game_loop st
 
 let players = [
   Player.create "player_a" Red; 
@@ -50,7 +53,7 @@ let players = [
 
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in 
-  try game_loop (Game_state.init board players) with 
+  try game_loop (assign_random_nodes (Game_state.init board players)) with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
 let rec game () = 

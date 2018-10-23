@@ -19,15 +19,19 @@ exception NonadjacentNode of (node_id * node_id)
 exception InvalidState of turn_state
 exception InsufficientArmies of (node_id * army)
 exception FriendlyFire of Player.t option
+exception NotOwner of node_id
 
-let init board players = {
-  board_state = Board_state.init board players;
-  players = players;
-  current_player = (match players with 
+let init board players =
+  let board_st = Board_state.init board players in
+  let curr_player = (match players with 
       | [] -> raise NoPlayers 
-      | hd :: tl -> hd);
+      | hd :: tl -> hd) in
+  {
+  board_state = board_st;
+  players = players;
+  current_player = curr_player;
   turn = Reinforce;
-  remaining_reinforcements = 0;
+  remaining_reinforcements = player_reinforcements board_st curr_player;
 }
 
 let board_st {board_state} = board_state
@@ -47,20 +51,34 @@ let remaining_reinforcements st =
   st.remaining_reinforcements
 
 let reinforce st n =
+  let () = if Some st.current_player <> (node_owner st.board_state n)
+    then raise (NotOwner n) else () in
   let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
   let () = if st.remaining_reinforcements <= 0 then failwith "need more armies"
     else () in 
-  {st with board_state = Board_state.place_army st.board_state n 1; 
+  {st with board_state = place_army st.board_state n 1; 
            remaining_reinforcements = st.remaining_reinforcements - 1;
            turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
 
-let rec next_player curr_player lst = function
+let next_player curr_player lst =
+  let rec helper = function
   | hd :: next :: tl when hd = curr_player -> next
   | hd :: [] when hd = curr_player -> List.hd lst
   | [] -> failwith "current player isn't in players" 
-  | hd :: tl -> next_player curr_player lst tl 
+  | hd :: tl -> helper tl
+  in helper lst
 
-let end_attack st = let next = next_player st.current_player st.players st.players in 
+let assign_random_nodes (st : t) : t =
+  (* TODO not actually random right now *)
+  fold_nodes (board st.board_state)
+    (fun (node : node_id) (st',player) : (t * Player.t) ->
+       let next = next_player player st.players
+       in ({st' with board_state
+                     = place_army (set_owner st'.board_state node (Some next))
+                         node 1} : t), next)
+    (st,st.current_player) |> fst
+
+let end_attack st = let next = next_player st.current_player st.players in 
   {st with current_player = next; 
            turn = Reinforce; 
            remaining_reinforcements = player_reinforcements st.board_state next}
@@ -83,6 +101,8 @@ let attack st a d invading_armies =
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
     then raise (NonadjacentNode (a,d)) else () in 
   let attacker = Board_state.node_owner st.board_state a in
+  let () = if Some st.current_player <> (node_owner st.board_state a)
+    then raise (NotOwner a) else () in
   let () = if attacker = Board_state.node_owner st.board_state d 
     then raise (FriendlyFire attacker) else () in
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 

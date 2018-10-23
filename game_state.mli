@@ -13,6 +13,7 @@ exception NonadjacentNode of (node_id * node_id)
 exception InvalidState of turn_state
 exception InsufficientArmies of (node_id * army)
 exception FriendlyFire of Player.t option
+exception NotOwner of node_id
 
 val init : Board.t -> players -> t
 
@@ -33,5 +34,7 @@ val attack : t -> node_id -> node_id -> army -> t
 val reinforce : t -> node_id -> t
 
 val end_attack : t -> t
+
+val assign_random_nodes : t -> t
 
 val remaining_reinforcements : t -> army
