@@ -32,4 +32,6 @@ val attack : t -> node_id -> node_id -> army -> t
 
 val reinforce : t -> node_id -> t
 
+val end_attack : t -> t
+
 val remaining_reinforcements : t -> army

@@ -111,6 +111,9 @@ let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
 let set_armies_state = lazy (set_army (~$ init_board_state) "JAM" 2)
 let add_armies_state = lazy (place_army (place_army (~$ set_armies_state) "RPCC" 5) "JAM" 2)
 
+let player_a_own_rpcc = lazy (set_owner (~$ add_armies_state) "RPCC" (Some (~$ player_a)))
+let player_a_own_rpcc_jam = lazy (set_owner (~$ player_a_own_rpcc) "JAM" (Some (~$ player_a)))
+
 let board_state_tests = [
   (* initial board state *)
   gen_comp "board state board"
@@ -150,6 +153,9 @@ let board_state_tests = [
     (lazy (node_army (~$ add_armies_state) "RPCC")) 5 int;
   gen_comp "board state add armies lr7"
     (lazy (node_army (~$ add_armies_state) "LR7")) 0 int;
+
+  gen_comp "board state player armies"
+    (lazy (player_army (~$ player_a_own_rpcc_jam) (~$ player_a))) 9 int;
 ]
 
 let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))

@@ -48,7 +48,22 @@ let remaining_reinforcements st =
 
 let reinforce st n =
   let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
-  {st with board_state = Board_state.place_army st.board_state n 1}
+  let () = if st.remaining_reinforcements <= 0 then failwith "need more armies"
+    else () in 
+  {st with board_state = Board_state.place_army st.board_state n 1; 
+           remaining_reinforcements = st.remaining_reinforcements - 1;
+           turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
+
+let rec next_player curr_player lst = function
+  | hd :: next :: tl when hd = curr_player -> next
+  | hd :: [] when hd = curr_player -> List.hd lst
+  | [] -> failwith "current player isn't in players" 
+  | hd :: tl -> next_player curr_player lst tl 
+
+let end_attack st = let next = next_player st.current_player st.players st.players in 
+  {st with current_player = next; 
+           turn = Reinforce; 
+           remaining_reinforcements = player_reinforcements st.board_state next}
 
 let rec rand_int_lst acc = function
   | 0 -> acc

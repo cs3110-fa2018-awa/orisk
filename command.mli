@@ -1,11 +1,11 @@
-
-type object_phrase = string list
+open Board
 
 (** The type [command] represents a player command that is decomposed
     into a verb and possibly an object phrase. *)
 type command = 
-  | Attack of object_phrase
-  | Fortify of object_phrase
+  | AttackC of (node_id * node_id * army)
+  | ReinforceC of node_id
+  | EndTurn
   | Quit
 
 (** Raised when an empty command is parsed. *)
