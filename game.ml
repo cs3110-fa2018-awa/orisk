@@ -1,6 +1,6 @@
 open Game_state
 
-let rec game_loop board (st:Game_state.t) =
+(** let rec game_loop board (st:Game_state.t) =
   let process (result) (msg : string) = match result with
     | NoPlayers -> 
       print_endline("\nNo players!");
@@ -28,11 +28,14 @@ let rec game_loop board (st:Game_state.t) =
     game_loop board st
   | Quit -> print_endline("\Thanks for playing!\n"); exit 0
       game_loop board st
+*)
 
 let risk f = 
-  let board = Board.from_json (Yojson.Basic.from_file f) in 
+  failwith "todo"
+  (*let board = Board.from_json (Yojson.Basic.from_file f) in 
   try game_loop board (Game_state.init board) with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
+  *)
 
 let rec game () = 
   ANSITerminal.(print_string [red]
