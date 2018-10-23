@@ -27,7 +27,8 @@ let rec game_loop (st:Game_state.t) : unit =
     print_endline "\nWrong type of turn.";
     game_loop st
   | InsufficientArmies (node_id,army) -> 
-    print_endline ("\nYou only have " ^ (string_of_int army) ^ " armies to attack with! You can't attack " ^ node_id ^ "!");
+    print_endline ("\nYou only have " ^ (string_of_int army) ^
+                   " armies to attack with! You can't attack " ^ node_id ^ "!");
     game_loop st  
   | FriendlyFire player -> 
     print_endline "\nYou can't attack yourself!";

@@ -75,7 +75,7 @@ let board_tests = [
   gen_comp "doesn't have node" (lazy (has_node (~$ map_schema) "foo")) false bool;
   gen_comp "node name" (lazy (node_name (~$ map_schema) "JAM")) "Just About Music" str;
   except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) (UnknownNode "foo");
-  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (4, 5) coord;
+  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (4, 3) coord;
   gen_comp "node borders" (lazy (node_borders (~$ map_schema) "JAM"))
     (List.sort Pervasives.compare ["LR7"; "RPCC"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
@@ -200,7 +200,7 @@ let game_state_tests = [
     (InsufficientArmies ("RPCC", 1));
   except_comp "game state cannot attack oneself"
     (lazy (attack (~$ attack_state) "Keeton" "Rose" 2)) 
-    (FriendlyFire None);
+    (NotOwner "Keeton");
 
   (* reinforce *)
   gen_comp "game state reinforce"
