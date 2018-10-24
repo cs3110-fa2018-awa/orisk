@@ -3,12 +3,15 @@ open Board
 (** A command is either:
      - Attack of the object phrase to attack
      - Reinforce of the object phrase of where to reinforce
+     - EndTurn
+     - Help
      - Quit
 *)
 type command = 
   | AttackC of (node_id * node_id * army)
   | ReinforceC of node_id
   | EndTurn
+  | Help
   | Quit
 
 (** Empty is raised when the provided string to parse is either empty
@@ -36,6 +39,7 @@ let parse str =
   | "attack" :: args -> AttackC (parse_attack args)
   | "reinforce" :: args -> ReinforceC (parse_reinforce args)
   | "end" :: _ -> EndTurn
+  | "help" :: _ -> Help
   | "quit" :: _ -> Quit
   | [] -> raise Empty
   | _ -> raise Malformed

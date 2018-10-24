@@ -4,6 +4,12 @@ open Board
 open Board_state
 open Display
 
+let helpmsg = "[attack t1 t2 n] - attack t2 with n invading armies from t1\n
+[reinforce t] - reinforce territory t with 1 army\n
+[end] - end your turn\n
+[help] - list possible commands\n
+[quit] - quit game"
+
 let string_of_dice dice =
   let rec internal acc = function
     | [] -> acc ^ "]"
@@ -15,8 +21,8 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
   draw_board st;
   print_endline "";
   print_endline (match msg with
-  | Some m -> m
-  | None -> "..."); 
+      | Some m -> m
+      | None -> "..."); 
   print_endline "\nEnter a command";
   print_string  "> "; 
   try begin match Command.parse (read_line ()) with
@@ -25,6 +31,7 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
     | exception (Command.Empty) ->
       game_loop st (Some "Please enter a command!")
     | Quit -> print_endline("\nThanks for playing!\n"); exit 0
+    | Help -> game_loop st (Some helpmsg)
     | ReinforceC (n) -> game_loop (reinforce st n) None
     | AttackC (a,d,i)
       -> let st', attack, defend = attack st a d i
@@ -38,7 +45,7 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
     -> game_loop st (Some "Wrong type of turn.")
   | InsufficientArmies (node_id,army)
     -> game_loop st (Some ("You only have " ^ (string_of_int army) ^
-                   " armies to attack with! You can't attack " ^ node_id ^ "!"))
+                           " armies to attack with! You can't attack " ^ node_id ^ "!"))
   | FriendlyFire player
     -> game_loop st (Some "You can't attack yourself!")
   | UnknownNode n
