@@ -3,6 +3,7 @@ open Command
 open Board
 open Board_state
 open Display
+open Player
 
 let helpmsg = "[attack t1 t2 n] - attack t2 with n invading armies from t1\n
 [reinforce t] - reinforce territory t with 1 army\n
@@ -27,7 +28,8 @@ let win_yet (st:Game_state.t) : unit =
       (* check if a player owns all possible continents yet *)
       if ((p |> Board_state.player_conts (st |> Game_state.board_st) |> List.length) =
           (st |> Game_state.board_st |> Board_state.board |> Board.conts |> List.length))
-      then (print_endline "You win!"; ignore (exit 0)) (* todo: say which player won *)
+      then (ANSITerminal.print_string [Foreground (player_color p)] ((player_name p)^" wins!\n"); 
+            ignore (exit 0)) (* todo: say which player won *)
       else ()
   in internal (st |> Game_state.players)
 
