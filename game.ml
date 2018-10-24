@@ -24,7 +24,7 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
       | Some m -> m
       | None -> "..."); 
   print_endline "\nEnter a command";
-  print_string  "> "; 
+  print_string  "> ";
   try begin match Command.parse (read_line ()) with
     | exception (Command.Malformed) ->
       game_loop st (Some "Invalid command")
