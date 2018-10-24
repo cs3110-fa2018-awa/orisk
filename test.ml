@@ -66,7 +66,9 @@ let pp_list pp_elt lst =
 (* test boards *)
 let map_schema = lazy (from_json (Yojson.Basic.from_file "mapSchema.json"))
 
-let ascii = "............XX..\n..........//....\n.........//.....\n........XX==XX..\n............||..\n............XX..\n....XX==XX......\n................"
+let ascii = "............XX..\n..........//....\n.........//.....\n........XX"
+            ^ "==XX..\n............||..\n............XX..\n....XX==XX......\n"
+            ^ "................"
 
 let board_tests = [
   gen_comp "board name" (lazy (board_name (~$ map_schema))) "Cornell" str;
@@ -78,8 +80,9 @@ let board_tests = [
   gen_comp "node name" (lazy (node_name (~$ map_schema) "JAM")) "Just About Music" str;
   except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) (UnknownNode "foo");
   gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 3) coord;
-  gen_comp "node borders" (lazy (node_borders (~$ map_schema) "JAM"))
-    (List.sort Pervasives.compare ["LR7"]) (pp_list str);
+  gen_comp "node borders"
+    (lazy (List.sort Pervasives.compare (node_borders (~$ map_schema) "JAM")))
+    (List.sort Pervasives.compare ["LR7"; "Keeton"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
     (List.sort Pervasives.compare ["North"; "West"]) (pp_list str);
   gen_comp "has cont" (lazy (has_cont (~$ map_schema) "North")) true bool;
