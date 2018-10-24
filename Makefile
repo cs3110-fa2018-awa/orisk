@@ -1,4 +1,4 @@
-MODULES=engine board_state game_state board player game interface authors
+MODULES=board_state game_state board player game interface authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=mli)

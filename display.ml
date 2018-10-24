@@ -4,11 +4,6 @@ open Board_state
 open Game_state
 open Player
 
-(** TODO: make nicer ascii map for demo *)
-(** TODO: make errors look nicer *)
-(** TODO: display turn information *)
-(** TODO: draw something nicer when node is not owned *)
-
 (** [format_2digit num] is the 2 digit string representation of [num]. 
     Requires: 0 <= [num] <= 99 *)
 let format_2digit (i : int) : string =

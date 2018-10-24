@@ -1,7 +1,7 @@
 open Board
 open Player
 
-(** The type of a board state. *)
+(** The abstract type respresenting a board state. *)
 type t
 
 (** [init b players] is the default state from board [b]. *)
@@ -55,4 +55,6 @@ val set_owner : t -> node_id -> Player.t option -> t
     Returns a list of nodes visited. *)
 val dfs : t -> node_id -> node_id list -> node_id list
 
+(** [UnknownPlayer player] is raised if [player] is not in the [players] of 
+    the current [state]. *)
 exception UnknownPlayer of Player.t

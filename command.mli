@@ -16,4 +16,6 @@ exception Empty
 (** Raised when a malformed command is encountered. *)
 exception Malformed
 
+(** [parse str] returns the command parsed from [str] - AttackC, ReinforceC, 
+    Quit. *)
 val parse : string -> command
