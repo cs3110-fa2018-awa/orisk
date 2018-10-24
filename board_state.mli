@@ -50,6 +50,11 @@ val place_army : t -> node_id -> army -> t
     changing ownership of [node] to [player] in [state]. *)
 val set_owner : t -> node_id -> Player.t option -> t
 
+<<<<<<< HEAD
 (** [UnknownPlayer player] is raised if [player] is not in the [players] of 
     the current [state]. *)
+=======
+(** [UnknownPlayer player] is the exception raised when a unknown player
+    ID is specified. *)
+>>>>>>> 9a2fcb17695badada1d8ea403508b9a64fc14c35
 exception UnknownPlayer of Player.t

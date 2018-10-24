@@ -3,6 +3,13 @@ open Command
 open Board
 open Board_state
 open Display
+open Player
+
+let helpmsg = "[attack t1 t2 n] - attack t2 with n invading armies from t1\n
+[reinforce t] - reinforce territory t with 1 army\n
+[end] - end your turn\n
+[help] - list possible commands\n
+[quit] - quit game"
 
 let string_of_dice dice =
   let rec internal acc = function
@@ -11,20 +18,37 @@ let string_of_dice dice =
     | hd :: tl -> internal (acc ^ (string_of_int (hd + 1))) tl
   in internal "[" dice
 
+(* check if any player has won yet *)
+let win_yet (st:Game_state.t) : unit =
+  (* takes in player list*)
+  let rec internal (acc: Player.t list) =
+    match acc with
+    | [] -> ()
+    | p :: rest -> 
+      (* check if a player owns all possible continents yet *)
+      if ((p |> Board_state.player_conts (st |> Game_state.board_st) |> List.length) =
+          (st |> Game_state.board_st |> Board_state.board |> Board.conts |> List.length))
+      then (ANSITerminal.print_string [Foreground (player_color p)] ((player_name p)^" wins!\n"); 
+            ignore (exit 0)) (* todo: say which player won *)
+      else ()
+  in internal (st |> Game_state.players)
+
 let rec game_loop (st:Game_state.t) (msg : string option) : unit =
   draw_board st;
+  win_yet st;
   print_endline "";
   print_endline (match msg with
-  | Some m -> m
-  | None -> "..."); 
+      | Some m -> m
+      | None -> "..."); 
   print_endline "\nEnter a command";
-  print_string  "> "; 
+  print_string  "> ";
   try begin match Command.parse (read_line ()) with
     | exception (Command.Malformed) ->
       game_loop st (Some "Invalid command")
     | exception (Command.Empty) ->
       game_loop st (Some "Please enter a command!")
     | Quit -> print_endline("\nThanks for playing!\n"); exit 0
+    | Help -> game_loop st (Some helpmsg)
     | ReinforceC (n) -> game_loop (reinforce st n) None
     | AttackC (a,d,i)
       -> let st', attack, defend = attack st a d i
@@ -38,7 +62,7 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
     -> game_loop st (Some "Wrong type of turn.")
   | InsufficientArmies (node_id,army)
     -> game_loop st (Some ("You only have " ^ (string_of_int army) ^
-                   " armies to attack with! You can't attack " ^ node_id ^ "!"))
+                           " armies to attack with! You can't attack from " ^ node_id ^ "!"))
   | FriendlyFire player
     -> game_loop st (Some "You can't attack yourself!")
   | UnknownNode n
