@@ -2,18 +2,33 @@
 open Board
 open Player
 
+(** ['a String_map] is a map with keys of [node_id] or [cont_id]. *)
 module String_map = Map.Make (String)
+(** ['a String_set] is a set with keys of [node_id] or [cont_id]. *)
 module String_set = Set.Make (String)
+(** ['a Player_map] is a map with keys of [Player.t]. *)
 module Player_map = Map.Make (Player)
 
 (* idea: we want to be able to access this information quickly
    from both ends; so we implement data structures that facilitate
    both sides of data access and update them at the same time *)
 
+(** [node_state] is the state of a node, used internally.
+    Owner (may be none to represent not owned by anyone) and army. *)
 type node_state = {owner : Player.t option; army : army}
+
+(** [cont_state] is the state of a continent, used internally.
+    Owner (may by none to represent not owned by anyone). *)
 type cont_state = {owner : Player.t option}
+
+(** [player_state] is the state of a player, used internally.
+    Set of nodes and continents owned by the player. *)
 type player_state = {nodes : String_set.t; conts : String_set.t}
 
+(** [Board_state.t] is the state of a board. The underlying (and
+    unchanging) board, the map of nodes to node states, the map
+    of continents to continent states, and the map of players
+    to player states. *)
 type t = {
   board : Board.t;
   nodes : node_state String_map.t;
@@ -21,8 +36,13 @@ type t = {
   players : player_state Player_map.t;
 }
 
+(** [UnknownPlayer player] is the exception raised when a unknown player
+    ID is specified. *)
 exception UnknownPlayer of Player.t
 
+(** [init b players] is the default state from board [b].
+    All nodes have no owner and zero armies. All continents have no
+    owner. All players have no nodes and no continents. *)
 let init board players =
   {
     board = board;
@@ -40,51 +60,72 @@ let init board players =
         Player_map.empty players;
   }
 
-let board ({board} : t) = board
+(** [board s] is the board used by state [s]. *)
+let board st = st.board
 
-let node_state ({nodes} : t) node_id =
-  match String_map.find_opt node_id nodes with
+(** [node_state st node] is the state of the node
+    referenced by [node] in [st]. *)
+let node_state st node_id =
+  match String_map.find_opt node_id st.nodes with
   | Some (state) -> state
   | None -> raise (UnknownNode node_id)
 
-let cont_state ({conts} : t) cont_id =
-  match String_map.find_opt cont_id conts with
+(** [cont_state st cont] is the state of the continent
+    referenced by [cont] in [st]. *)
+let cont_state st cont_id =
+  match String_map.find_opt cont_id st.conts with
   | Some (state) -> state
   | None -> raise (UnknownCont cont_id)
 
-let player_state ({players} : t) player =
-  match Player_map.find_opt player players with
+(** [player_state st player] is the state of the player
+    referenced by [player] in [st]. *)
+let player_state st player =
+  match Player_map.find_opt player st.players with
   | Some (state) -> state
   | None -> raise (UnknownPlayer player)
 
-let node_owner st node =
-  let ({owner} : node_state) = (node_state st node) in owner
+(** [node_owner state id] is [Some player] if node [id] is owned by 
+    [player], or [None] if [id] is not owned by anyone. *)
+let node_owner st node = (node_state st node).owner
 
-let node_army st node =
-  let ({army} : node_state) = (node_state st node) in army
+(** [node_army state id] is the army stationed at node [id] in [state]. *)
+let node_army st node = (node_state st node).army
 
-let cont_owner st cont =
-  let ({owner} : cont_state) = (cont_state st cont) in owner
+(** [cont_owner state id] is [Some player] if continent [id] 
+    is owned by [player], or [None] if [id] is not owned by anyone. *)
+let cont_owner st cont = (cont_state st cont).owner
 
+(** [player_nodes state player] is a list of the nodes
+    owned by [player] in [state]. *)
 let player_nodes st player =
-  let ({nodes} : player_state) = (player_state st player)
   (* TODO this might be inefficient *)
-  in String_set.elements nodes
+  String_set.elements (player_state st player).nodes
 
+(** [player_conts state player] is a list of the continents
+    owned by [player] in [state]. *)
 let player_conts st player =
-  let ({conts} : player_state) = (player_state st player)
   (* TODO this might be inefficient *)
-  in String_set.elements conts
+  String_set.elements (player_state st player).conts
 
+(** [player_army state player] is the total number of armies owned
+    by [player] in [state]. This function performs the calculation
+    as this information is not saved in the board state. *)
 let player_army st player : army =
   List.fold_left (fun acc node -> acc + (node_army st node))
     0 (player_nodes st player)
 
+(** [extract ex a] extracts the value from the option [a]
+    if that option is [Some value] and raises [ex] otherwise. *)
 let extract except (a : 'a option) =
   match a with
   | Some x -> x
   | None -> raise except
 
+(** [player_reinforcements state player] is the total number of
+    reinforcements that [player] recieves given the current board
+    configuration. This includes reinforcements from the number
+    of nodes ([max(floor(n/3),3)]) and the sum of all bonuses
+    provided by controlling entire continents. *)
 let player_reinforcements st player =
   (* territory reinforcements *)
   (max (List.length (player_nodes st player) / 3) 3)
@@ -93,25 +134,34 @@ let player_reinforcements st player =
       acc + (Board.cont_bonus st.board cont_id))
       0 (player_conts st player))
 
+(** [set_army state node army] is the new state resulting from setting
+    [node] to have [army] armies in [state]. *)
 let set_army st node army =
   let ({nodes} : t) = st
   in let new_node_st = fun state ->
     Some {(extract (UnknownNode node) state) with army = army}
   in {st with nodes = String_map.update node new_node_st nodes}
 
+(** [place_army state node army] is the new state resulting from adding
+    [army] armies to [node] in [state]. This is a helper function
+    that merely calls [set_army] internally. *)
 let place_army st node army =
   set_army st node ((node_army st node) + army)
 
-(** [set_owner state node player] needs to accomplish several things:
+(** [set_owner state node player] is the new state resulting from
+    changing ownership of [node] to [player] in [state].
+
+    This function needs to accomplish several things:
      - change owner of [node] to [player]
      - remove old owner from continents containing [node]
      - add [player] as owner of continents containing [node]
          newly controlled by [player] as a result
-     - update controlled node and cont lists in player state
-*)
+     - update controlled node and cont lists in player state *)
 let set_owner (st : t) (node : node_id) (player : Player.t option) =
   (* this is a giant state transition function *)
 
+  (* [update_map player_opt f map] runs [Map.replace] on [map]
+      with option handling for [player_opt] and [f]. *)
   let update_map
       (player_opt : Player.t option)
       (f : player_state -> player_state)
@@ -122,12 +172,17 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
     | Some player' -> Player_map.update player' (replacer player') map
     | None -> map
 
+  (* the previous owner of the target node *)
   in let prev_owner = node_owner st node
+  (* all continents containing the target node *)
   in let node_conts = node_conts (board st) node
+  (* the new state of the target node, with the owner updated *)
   in let new_node_st = fun state ->
       Some ({(extract (UnknownNode node) state)
              with owner = player} : node_state)
 
+  (* [is_owner cont] is true iff [player] is the owner of [cont]
+      after owning the target node. *)
   in let is_owner cont =
        List.for_all
          (fun n -> (n = node) || ((node_owner st n) = player))
@@ -173,6 +228,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
                 else None) conts'
          ) conts' node_conts
 
+  (* state transition *)
   in let ({nodes; conts; players} : t) = st in
   {
     st with
