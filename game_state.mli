@@ -2,7 +2,7 @@ open Player
 open Board_state
 open Board
 
-type turn_state = Reinforce | Attack 
+type turn_state = Reinforce | Attack | Fortify
 
 type players = Player.t list 
 
@@ -25,7 +25,7 @@ val current_player : t -> Player.t
 
 val turn : t -> turn_state
 
-val turn_to_str : t -> string
+(* val turn_to_str : t -> string *)
 
 val turn_to_attack : t -> t
 
@@ -40,3 +40,5 @@ val end_attack : t -> t
 val assign_random_nodes : t -> t
 
 val remaining_reinforcements : t -> army
+
+val fortify : t -> node_id -> node_id -> t

@@ -96,11 +96,29 @@ let player_reinforcements st player =
 let set_army st node army =
   let ({nodes} : t) = st
   in let new_node_st = fun state ->
-    Some {(extract (UnknownNode node) state) with army = army}
+      Some {(extract (UnknownNode node) state) with army = army}
   in {st with nodes = String_map.update node new_node_st nodes}
 
 let place_army st node army =
   set_army st node ((node_army st node) + army)
+
+let player_color_from_node (st : t) (node_id : Board.node_id) = 
+  match (node_owner st node_id) with
+  | Some p -> Player.player_color p
+  | None -> failwith "This node is owned by no player"
+
+(** [dfs node visited] is a special implementation of a depth first search that
+    will only go along monochromatic paths. 
+    Returns a list of nodes visited. *)
+let rec dfs (st : t) (n : node_id) (visited : node_id list) : node_id list =
+  let rec internal (borders:node_id list) =
+    match borders with
+    | [] -> n::visited
+    | child :: rest -> if ((not (List.mem child visited)) && 
+                           (player_color_from_node st child = player_color_from_node st n))
+      then dfs st child (n::visited) else internal rest in
+
+  internal (Board.node_borders (board st) n)
 
 (** [set_owner state node player] needs to accomplish several things:
      - change owner of [node] to [player]

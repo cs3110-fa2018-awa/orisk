@@ -2,7 +2,7 @@ open Player
 open Board_state
 open Board
 
-type turn_state = Reinforce | Attack 
+type turn_state = Reinforce | Attack | Fortify
 
 type players = Player.t list 
 
@@ -46,6 +46,7 @@ let turn_to_str {turn} =
   match turn with
   | Reinforce -> "Reinforce"
   | Attack -> "Attack"
+  | Fortify -> "Fortify"
 
 let turn_to_attack st = {st with turn = Attack}
 
@@ -63,7 +64,7 @@ let reinforce st n =
     else () in 
   {st with board_state = place_army st.board_state n 1; 
            remaining_reinforcements = st.remaining_reinforcements - 1;
-           turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
+           turn = if st.remaining_reinforcements = 1 then Fortify else Reinforce}
 
 let next_player curr_player lst =
   let rec helper = function
@@ -99,6 +100,15 @@ let rec battle attack defend (deatha,deathd) =
     then battle atl dtl (deatha,deathd + 1) 
     else battle atl dtl (deatha + 1,deathd)
   | _ -> deatha,deathd
+
+
+(* [fortify st f t] sends one army from territory [f] to territory [t] if 
+   they are connected by a path of territories that the current player owns. *)
+let fortify st (f:Board.node_id) (t:Board.node_id) : t =
+  if (Board_state.dfs (st |> board_st) f []) |> List.mem t
+  then {st with board_state = place_army (place_army st.board_state t 1) f (-1); turn = Attack} (*todo: subtract an army lol*)
+  else raise (NonadjacentNode (f,t))
+
 
 (* one atack *)
 let attack st a d invading_armies = 
