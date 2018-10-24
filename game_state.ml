@@ -64,7 +64,7 @@ let reinforce st n =
     else () in 
   {st with board_state = place_army st.board_state n 1; 
            remaining_reinforcements = st.remaining_reinforcements - 1;
-           turn = if st.remaining_reinforcements = 1 then Fortify else Reinforce}
+           turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
 
 let next_player curr_player lst =
   let rec helper = function
@@ -84,10 +84,7 @@ let assign_random_nodes (st : t) : t =
                          node 1} : t), next)
     (st,st.current_player) |> fst
 
-let end_attack st = let next = next_player st.current_player st.players in 
-  {st with current_player = next; 
-           turn = Reinforce; 
-           remaining_reinforcements = player_reinforcements st.board_state next}
+let end_attack st = {st with turn = Fortify}
 
 let rec rand_int_lst acc = function
   | 0 -> acc
@@ -101,14 +98,23 @@ let rec battle attack defend (deatha,deathd) =
     else battle atl dtl (deatha + 1,deathd)
   | _ -> deatha,deathd
 
-
-(* [fortify st f t] sends one army from territory [f] to territory [t] if 
+(** [fortify st f t] sends one army from territory [f] to territory [t] if 
    they are connected by a path of territories that the current player owns. *)
-let fortify st (f:Board.node_id) (t:Board.node_id) : t =
-  if (Board_state.dfs (st |> board_st) f []) |> List.mem t
-  then {st with board_state = place_army (place_army st.board_state t 1) f (-1); turn = Attack} (*todo: subtract an army lol*)
-  else raise (NonadjacentNode (f,t))
-
+let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
+  let () = if Some st.current_player <> (node_owner st.board_state from_node)
+    then raise (NotOwner from_node) else ()
+  in let () = if from_node = to_node
+       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+  in let () = if (node_army st.board_state from_node) <= 1
+       then raise (InsufficientArmies (from_node,1)) else ()
+  in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
+       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+  in let next = next_player st.current_player st.players
+  in {st with
+      board_state = place_army (place_army st.board_state to_node 1) from_node (-1);
+      current_player = next;
+      remaining_reinforcements = player_reinforcements st.board_state next;
+      turn = Reinforce}
 
 (* one atack *)
 let attack st a d invading_armies = 
