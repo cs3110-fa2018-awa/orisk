@@ -40,7 +40,8 @@
       "id": "JAM",
       "name": "Just About Music",
       "borders": [
-        "LR7"
+        "LR7",
+        "Keeton"
       ],
       "coordinates": {
         "x": 12,
@@ -74,7 +75,8 @@
       "id": "Keeton",
       "name": "William Keeton",
       "borders": [
-        "Rose"
+        "Rose",
+        "JAM"
       ],
       "coordinates": {
         "x": 8,
