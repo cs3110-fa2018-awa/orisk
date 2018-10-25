@@ -1,3 +1,5 @@
+(** Dynamically draw board to terminal. *)
+
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gs]. *)
 val draw_board : Game_state.t -> unit

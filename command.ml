@@ -1,11 +1,13 @@
 open Board
 
 (** A command is either:
-     - Attack of the object phrase to attack
-     - Reinforce of the object phrase of where to reinforce
-     - EndTurn
-     - Help
-     - Quit
+     - [Attack] of a tuple with the attacking [node_id], defending [node_id], 
+     and the number of armies to move into the defending node if the attacker 
+     wins.
+     - [Reinforce] of a [node_id] to add one army to
+     - [EndTurn]
+     - [Help]
+     - [Quit]
 *)
 type command = 
   | AttackC of (node_id * node_id * army)
@@ -14,15 +16,15 @@ type command =
   | Help
   | Quit
 
-(** Empty is raised when the provided string to parse is either empty
+(** [Empty] is raised when the provided string to parse is either empty
     or consists entirely of spaces. *)
 exception Empty
 
-(** Malformed is raised when the command string cannot be parsed. *)
+(** [Malformed] is raised when the command string cannot be parsed. *)
 exception Malformed
 
-(** [parse str] returns the command parsed from [str] - AttackC, ReinforceC, 
-    Quit. *)
+(** [parse str] returns the command parsed from [str] - [AttackC], [ReinforceC], 
+    [EndTurn], [Help], [Quit].*)
 let parse str =
   let parse_attack = function 
     | attack :: defend :: invade :: [] -> begin 

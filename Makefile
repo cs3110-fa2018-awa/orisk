@@ -1,7 +1,7 @@
-MODULES=board_state game_state board player game interface authors
+MODULES=board_state game_state command board player game display authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
-MLIS=$(MODULES:=mli)
+MLIS=$(MODULES:=.mli)
 TEST=test.byte
 GAME=game.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
@@ -40,7 +40,7 @@ docs-private: build
 	mkdir -p doc.private
 	ocamlfind ocamldoc -I _build -package $(PKGS) \
 		-html -stars -d doc.private \
-		-inv-merge-ml-mli -m A -hide-warnings $(MLIS) $(MLS)
+		-inv-merge-ml-mli -m A -hide-warnings $(MLS)
 
 clean:
 	ocamlbuild -clean

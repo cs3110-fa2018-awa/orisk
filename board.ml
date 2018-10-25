@@ -1,23 +1,22 @@
-
 open Yojson.Basic.Util
 
 (** ['a String_map] is used for storing maps indexed by [node_id]
-    or [node_id], both of which are aliases of [string]. *)
+    or [cont_id], both of which are aliases of [string]. *)
 module String_map = Map.Make (String)
 
-(** The type of a coordinate pair, an int tuple of (x, y). *)
+(** The type of a coordinate pair (x, y). *)
 type coords = (int * int)
 
-(** [x] is the first item in the (x, y) coords tuple. *)
+(** [x (a,b)] is [a]. *)
 let x = fst
 
-(** [y] is the second item in the (x, y) coords tuple. *)
+(** [y (a,b)] is [b]. *)
 let y = snd
 
 (** [make_coords x y] is the coords tuple (x, y). This is a convenience
     function if we want to change the implementation of [coords] in the
     future. *)
-let make_coords x y = x, y
+let make_coords x y = x,y
 
 (** The type of ID for referring to nodes (aka territories). *)
 type node_id = string
@@ -66,11 +65,11 @@ exception UnknownNode of node_id
 (** [UnknownCont cont] is the exception raised when [cont] is not found. *)
 exception UnknownCont of cont_id
 
-(** [coords_of_node json] is the coords value represented by [json]. *)
+(** [coords_of_node json] is the [coords] value represented by [json]. *)
 let coords_of_node json =
   (json |> member "x" |> to_int), (json |> member "y" |> to_int)
 
-(** [node_of_json json] is the node value represented by [json]. *)
+(** [node_of_json json] is the [node] value represented by [json]. *)
 let node_of_json json =
   {
     id = json |> member "id" |> to_string;
@@ -79,7 +78,7 @@ let node_of_json json =
     borders = json |> member "borders" |> to_list |> List.map to_string;
   }
 
-(** [cont_of_json json] is the continent value represented by [json]. *)
+(** [cont_of_json json] is the [cont] value represented by [json]. *)
 let cont_of_json json =
   {
     id = json |> member "id" |> to_string;
@@ -131,11 +130,12 @@ let board_ascii board = board.ascii
 let board_ascii_height board = board.ascii_height
 
 (** [list_of_string_map map] is the string list containing all of the elements
-    of [map].
+    of [map]. *)
 
-    TODO the current implementation is inefficient because it generates a
-    new list every time that it is applied. *)
-let list_of_string_map map = List.map (fun (k, _) -> k) (String_map.bindings map)
+(* TODO the current implementation is inefficient because it generates a
+   new list every time that it is applied. *)
+let list_of_string_map map = 
+  List.map (fun (k, _) -> k) (String_map.bindings map)
 
 (** [fold_internal f acc map] tail-recursively folds over [map] with function
     [f] and accumulator [acc]. *)
@@ -147,7 +147,7 @@ let nodes board = list_of_string_map board.nodes
 
 (** [fold_nodes board f acc] is a tail-recursive fold over all of the nodes
     in [board] with accumulator [acc]. [f] is a function that takes a node
-    ID and an accumulator and produces the next accumulator. *)
+    ID and an [acc] and produces the next [acc]. *)
 let fold_nodes board (f : node_id -> 'a -> 'a) (acc : 'a) : 'a =
   fold_internal f acc board.nodes
 
@@ -184,7 +184,7 @@ let conts board = list_of_string_map board.conts
 
 (** [fold_conts board f acc] is a tail-recursive fold over all of the
     continents in [board] with accumulator [acc]. [f] is a function that
-    takes a node ID and an accumulator and produces the next accumulator. *)
+    takes a node ID and an [acc] and produces the next [acc]. *)
 let fold_conts board (f : cont_id -> 'a -> 'a) (acc : 'a) : 'a =
   fold_internal f acc board.conts
 
@@ -217,9 +217,9 @@ let cont_bonus board cont = (find_cont board cont).bonus
 (** [node_conts board node] is the list of continents containing [node]
     in [board].
 
-    Raises [UnknownNode node] iff [has_node board node] is false.
+    Raises [UnknownNode node] iff [has_node board node] is false.*)
 
-    TODO perhaps this could be computed ahead of time to speed things up. *)
+(* TODO perhaps this could be computed ahead of time to speed things up. *)
 let node_conts board node =
   fold_conts board
     (fun cont_id acc -> if List.mem node

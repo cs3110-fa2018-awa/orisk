@@ -1,0 +1,1 @@
+let hours_worked = [30; 26; 9; 1]

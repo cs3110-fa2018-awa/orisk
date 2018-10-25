@@ -1,4 +1,3 @@
-
 open Board
 open Player
 
@@ -60,7 +59,7 @@ let init board players =
         Player_map.empty players;
   }
 
-(** [board s] is the board used by state [s]. *)
+(** [board st] is the board used by state [s]. *)
 let board st = st.board
 
 (** [node_state st node] is the state of the node
@@ -139,7 +138,7 @@ let player_reinforcements st player =
 let set_army st node army =
   let ({nodes} : t) = st
   in let new_node_st = fun state ->
-    Some {(extract (UnknownNode node) state) with army = army}
+      Some {(extract (UnknownNode node) state) with army = army}
   in {st with nodes = String_map.update node new_node_st nodes}
 
 (** [place_army state node army] is the new state resulting from adding
@@ -219,12 +218,13 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
   in let new_conts conts' player' = List.fold_left
          (fun acc cont ->
             String_map.update cont (fun cont_st_opt ->
-                if is_owner cont then
+                if is_owner cont then begin
                   (* this gives us a warning now,
                      but we may want to be able to add
                      additional record fields later *)
                   Some {(extract (UnknownCont cont) cont_st_opt)
                         with owner = player'}
+                end
                 else None) conts'
          ) conts' node_conts
 

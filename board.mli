@@ -1,7 +1,9 @@
+(** Representation of a game board. *)
 
-(** The type of a board. *)
+(** The abtract type representing a board. *)
 type t
 
+(** The type of a coordinate pair (x,y). *)
 type coords = (int * int)
 
 (** The type of identifier for a node. *)
@@ -35,12 +37,12 @@ val board_ascii : t -> string
     associated with [board]. *)
 val board_ascii_height : t -> int
 
-(** [nodes board] is the list of all nodes in [board]. *)
+(** [nodes board] is the list of all [node_id] in [board]. *)
 val nodes : t -> node_id list
 
 (** [fold_nodes board f acc] is a tail-recursive fold over all of the nodes
     in [board] with accumulator [acc]. [f] is a function that takes a node
-    ID and an accumulator and produces the next accumulator. *)
+    ID and an [acc] and produces the next [acc]. *)
 val fold_nodes : t -> (node_id -> 'a -> 'a) -> 'a -> 'a
 
 (** [has_node board node] is true iff [node] is a node of [board]. *)
@@ -62,12 +64,12 @@ val node_name : t -> node_id -> string
     Raises [UnknownNode node] iff [has_node board node] is false. *)
 val node_coords : t -> node_id -> coords
 
-(** [conts board] is the list of all continents in [board]. *)
+(** [conts board] is the list of all [cont_id] in [board]. *)
 val conts : t -> cont_id list
 
 (** [fold_conts board f acc] is a tail-recursive fold over all of the
     continents in [board] with accumulator [acc]. [f] is a function that
-    takes a node ID and an accumulator and produces the next accumulator. *)
+    takes a node ID and an [acc] and produces the next [acc]. *)
 val fold_conts : t -> (cont_id -> 'a -> 'a) -> 'a -> 'a
 
 (** [has_cont board cont] is true iff [cont] is a continent of [board]. *)

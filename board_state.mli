@@ -1,10 +1,13 @@
+(** Representation of board state including a board, and the state of the
+    players, territories, and continents as the game is played. *)
+
 open Board
 open Player
 
 (** The abstract type respresenting a board state. *)
 type t
 
-(** [init b players] is the default state from board [b]. *)
+(** [init b players] is the default board state from board [b]. *)
 val init : Board.t -> Player.t list -> t
 
 (** [board s] is the board used by state [s]. *)
