@@ -6,7 +6,7 @@ open Board_state
 open Board
 
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack 
+type turn_state = Reinforce | Attack | Fortify
 
 (** The type of a list of players. *)
 type players = Player.t list 
@@ -112,6 +112,6 @@ val assign_random_nodes : t -> t
     [current player] and the [turn_state] [Reinforce]. *)
 val end_attack : t -> t
 
+val remaining_reinforcements : t -> army
 
-
-
+val fortify : t -> node_id -> node_id -> t

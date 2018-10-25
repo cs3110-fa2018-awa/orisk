@@ -78,6 +78,7 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
       -> let st', attack, defend = attack st a d i
       in game_loop st' (Some ("A: " ^ (string_of_dice attack) 
                               ^ " vs D: " ^ (string_of_dice defend)))
+    | FortifyC (n1,n2) -> game_loop (fortify st n1 n2) None
     | EndTurn -> game_loop (end_attack st) None end with
   | NoPlayers
     -> game_loop st (Some "No players!")

@@ -12,6 +12,7 @@ open Board
 type command = 
   | AttackC of (node_id * node_id * army)
   | ReinforceC of node_id
+  | FortifyC of (node_id * node_id)
   | EndTurn
   | Help
   | Quit
@@ -34,12 +35,16 @@ let parse str =
   let parse_reinforce = function
     | node :: [] -> node
     | _ -> raise Malformed in
+  let parse_fortify = function
+    | n1 :: n2 :: [] -> (n1, n2)
+    | _ -> raise Malformed in
   (* remove empty strings resulting from consecutive spaces *)
   let string_list = String.split_on_char ' ' str 
                     |> List.filter (fun s -> String.length s > 0) in 
   match string_list with 
   | "attack" :: args -> AttackC (parse_attack args)
   | "reinforce" :: args -> ReinforceC (parse_reinforce args)
+  | "fortify" :: args -> FortifyC (parse_fortify args)
   | "end" :: _ -> EndTurn
   | "help" :: _ -> Help
   | "quit" :: _ -> Quit

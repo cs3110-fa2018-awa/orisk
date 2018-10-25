@@ -147,6 +147,27 @@ let set_army st node army =
 let place_army st node army =
   set_army st node ((node_army st node) + army)
 
+(** [player_color_from_node st node] is the option of the color of [node]
+    in [st]. This is [Some color] if the owner of the node is [Some player]
+    and [None] if the owner of the node is [None]. *)
+let player_color_from_node (st : t) (node_id : Board.node_id) = 
+  match (node_owner st node_id) with
+  | Some p -> Some (Player.player_color p)
+  | None -> None
+
+(** [dfs node visited] is a special implementation of a depth first search that
+    will only go along monochromatic paths. 
+    Returns a list of nodes visited. *)
+let rec dfs (st : t) (n : node_id) (visited : node_id list) : node_id list =
+  let rec internal (borders:node_id list) =
+    match borders with
+    | [] -> n :: visited
+    | child :: rest ->
+      if ((not (List.mem child visited))
+          && (player_color_from_node st child = player_color_from_node st n))
+      then dfs st child (n::visited) else internal rest
+  in internal (Board.node_borders (board st) n)
+
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].
 

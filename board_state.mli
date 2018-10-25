@@ -53,6 +53,11 @@ val place_army : t -> node_id -> army -> t
     changing ownership of [node] to [player] in [state]. *)
 val set_owner : t -> node_id -> Player.t option -> t
 
+(** [dfs node visited] is a special implementation of a depth first search that
+    will only go along monochromatic paths. 
+    Returns a list of nodes visited. *)
+val dfs : t -> node_id -> node_id list -> node_id list
+
 (** [UnknownPlayer player] is raised if [player] is not in the [players] of 
     the current [state]. *)
 exception UnknownPlayer of Player.t

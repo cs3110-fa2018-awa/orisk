@@ -42,6 +42,7 @@ let draw_turn (gs : Game_state.t) : unit =
     match turn gs with
     | Reinforce -> "Reinforce " ^ (remaining_reinforcements gs |> string_of_int)
     | Attack -> "Attack"
+    | Fortify -> "Fortify"
   end;
   print_string [] "\n"
 

@@ -3,7 +3,7 @@ open Board_state
 open Board
 
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack 
+type turn_state = Reinforce | Attack | Fortify
 
 (** The type of a list of players. *)
 type players = Player.t list 
@@ -82,6 +82,7 @@ let turn_to_str st =
   match st.turn with
   | Reinforce -> "Reinforce"
   | Attack -> "Attack"
+  | Fortify -> "Fortify"
 
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
 let turn_to_attack st = {st with turn = Attack}
@@ -142,10 +143,7 @@ let assign_random_nodes (st : t) : t =
 (*BISECT-IGNORE-BEGIN*) (* play tested *)
 (** [end_attack st] is the game state [st] with the next [player] as the 
     [current player] and the [turn_state] [Reinforce]. *)
-let end_attack st = let next = next_player st.current_player st.players in 
-  {st with current_player = next; 
-           turn = Reinforce; 
-           remaining_reinforcements = player_reinforcements st.board_state next}
+let end_attack st = {st with turn = Fortify;}
 (*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
@@ -169,6 +167,24 @@ let rec battle attack defend (deatha,deathd) =
     then battle atl dtl (deatha,deathd + 1)
     else battle atl dtl (deatha + 1,deathd)(*BISECT-IGNORE-END*)
   | _ -> deatha,deathd
+
+(** [fortify st f t] sends one army from territory [f] to territory [t] if 
+   they are connected by a path of territories that the current player owns. *)
+let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
+  let () = if Some st.current_player <> (node_owner st.board_state from_node)
+    then raise (NotOwner from_node) else ()
+  in let () = if from_node = to_node
+       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+  in let () = if (node_army st.board_state from_node) <= 1
+       then raise (InsufficientArmies (from_node,1)) else ()
+  in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
+       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+  in let next = next_player st.current_player st.players
+  in {st with
+      board_state = place_army (place_army st.board_state to_node 1) from_node (-1);
+      current_player = next;
+      remaining_reinforcements = player_reinforcements st.board_state next;
+      turn = Reinforce}
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
