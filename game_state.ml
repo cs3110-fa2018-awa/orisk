@@ -113,6 +113,7 @@ let reinforce st n =
            remaining_reinforcements = st.remaining_reinforcements - 1;
            turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
 
+(*BISECT-IGNORE-BEGIN*) (* helper not exposed in mli, also play tested both*)
 (** [next_player curr_player lst] is the element in [lst] immediately after 
     [curr_player]. Returns the head of [lst] if [curr_player] is the last 
     element. *)
@@ -127,7 +128,7 @@ let next_player curr_player lst =
 (** [assign_random_nodes st] is the game state [st] after assigning 
     ownership of the nodes in [st] as equally as possible to each [player] in
     [st]. *)
-let assign_random_nodes (st : t) : t =
+let assign_random_nodes (st : t) : t = 
   (* TODO not actually random right now *)
   fold_nodes (board st.board_state)
     (fun (node : node_id) ((st',player) : (t * Player.t)) ->
@@ -136,13 +137,16 @@ let assign_random_nodes (st : t) : t =
                      = place_army (set_owner st'.board_state node (Some next))
                          node 1} : t), next)
     (st,st.current_player) |> fst
+(*BISECT-IGNORE-END*)
 
+(*BISECT-IGNORE-BEGIN*) (* play tested *)
 (** [end_attack st] is the game state [st] with the next [player] as the 
     [current player] and the [turn_state] [Reinforce]. *)
 let end_attack st = let next = next_player st.current_player st.players in 
   {st with current_player = next; 
            turn = Reinforce; 
            remaining_reinforcements = player_reinforcements st.board_state next}
+(*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
     5, inclusive. *)
@@ -161,9 +165,9 @@ let rec rand_int_lst acc = function
 let rec battle attack defend (deatha,deathd) = 
   match attack,defend with 
   | ahd :: atl,dhd :: dtl ->
-    if (ahd - dhd) > 0 
-    then battle atl dtl (deatha,deathd + 1) 
-    else battle atl dtl (deatha + 1,deathd)
+    if (ahd - dhd) > 0 (*BISECT-IGNORE-BEGIN*) (* play tested because random *)
+    then battle atl dtl (deatha,deathd + 1)
+    else battle atl dtl (deatha + 1,deathd)(*BISECT-IGNORE-END*)
   | _ -> deatha,deathd
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
@@ -218,7 +222,7 @@ let attack st a d invading_armies =
                     (total_attackers - invading_armies + 1)}, 
        attack_dice, defend_dice
   (* attacker lost *)
-  else {st with board_state = 
+  else {st with board_state =               (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 

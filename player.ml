@@ -1,3 +1,5 @@
+(** *) (* blank doc-comment to prevent docs from confusing first one *)
+
 (** Type alias for terminal colors. *)
 type color = ANSITerminal.color
 

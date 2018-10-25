@@ -118,7 +118,7 @@ let player_army st player : army =
 let extract except (a : 'a option) =
   match a with
   | Some x -> x
-  | None -> raise except
+  | None -> raise except (*BISECT-IGNORE*) (*helper function not in mli*)
 
 (** [player_reinforcements state player] is the total number of
     reinforcements that [player] recieves given the current board

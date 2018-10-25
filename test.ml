@@ -74,24 +74,35 @@ let board_tests = [
   gen_comp "board name" (lazy (board_name (~$ map_schema))) "Cornell" str;
   gen_comp "board ascii" (lazy (board_ascii (~$ map_schema))) ascii str;
   gen_comp "nodes" (lazy (nodes (~$ map_schema)))
-    (List.sort Pervasives.compare ["RPCC"; "JAM"; "LR7"; "HR5"; "Keeton"; "Rose"]) (pp_list str);
+    (List.sort Pervasives.compare 
+       ["RPCC"; "JAM"; "LR7"; "HR5"; "Keeton"; "Rose"]) (pp_list str);
   gen_comp "has node" (lazy (has_node (~$ map_schema) "RPCC")) true bool;
-  gen_comp "doesn't have node" (lazy (has_node (~$ map_schema) "foo")) false bool;
-  gen_comp "node name" (lazy (node_name (~$ map_schema) "JAM")) "Just About Music" str;
-  except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) (UnknownNode "foo");
-  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 3) coord;
+  gen_comp "doesn't have node" (lazy (has_node (~$ map_schema) "foo")) false 
+    bool;
+  gen_comp "node name" (lazy (node_name (~$ map_schema) "JAM")) 
+    "Just About Music" str;
+  except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) 
+    (UnknownNode "foo");
+  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 3) 
+    coord;
   gen_comp "node borders"
     (lazy (List.sort Pervasives.compare (node_borders (~$ map_schema) "JAM")))
     (List.sort Pervasives.compare ["LR7"; "Keeton"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
     (List.sort Pervasives.compare ["North"; "West"]) (pp_list str);
   gen_comp "has cont" (lazy (has_cont (~$ map_schema) "North")) true bool;
-  gen_comp "doesn't have cont" (lazy (has_cont (~$ map_schema) "foo")) false bool;
-  gen_comp "cont name" (lazy (cont_name (~$ map_schema) "North")) "North Campus" str;
-  except_comp "invalid cont" (lazy (cont_name (~$ map_schema) "foo")) (UnknownCont "foo");
+  gen_comp "doesn't have cont" (lazy (has_cont (~$ map_schema) "foo")) false 
+    bool;
+  gen_comp "cont name" (lazy (cont_name (~$ map_schema) "North")) "North Campus" 
+    str;
+  except_comp "invalid cont" (lazy (cont_name (~$ map_schema) "foo")) 
+    (UnknownCont "foo");
   gen_comp "cont bonus" (lazy (cont_bonus (~$ map_schema) "North")) 5 int;
-  gen_comp "cont nodes" (lazy (List.sort Pervasives.compare (cont_nodes (~$ map_schema) "North")))
+  gen_comp "cont nodes" (lazy (List.sort Pervasives.compare 
+                                 (cont_nodes (~$ map_schema) "North")))
     (List.sort Pervasives.compare ["RPCC"; "JAM"; "LR7"; "HR5"]) (pp_list str);
+  gen_comp "board ascii height" (lazy (board_ascii_height (~$ map_schema))) 9 
+    int;
 ]
 
 let player_a = lazy (Player.create "player_a" Red)
@@ -114,10 +125,17 @@ let false_player = lazy (Player.create "foo" Black)
 let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
 
 let set_armies_state = lazy (set_army (~$ init_board_state) "JAM" 2)
-let add_armies_state = lazy (place_army (place_army (~$ set_armies_state) "RPCC" 5) "JAM" 2)
+let add_armies_state = lazy 
+  (place_army (place_army (~$ set_armies_state) "RPCC" 5) "JAM" 2)
 
-let player_a_own_rpcc = lazy (set_owner (~$ add_armies_state) "RPCC" (Some (~$ player_a)))
-let player_a_own_rpcc_jam = lazy (set_owner (~$ player_a_own_rpcc) "JAM" (Some (~$ player_a)))
+let player_a_own_rpcc = lazy 
+  (set_owner (~$ add_armies_state) "RPCC" (Some (~$ player_a)))
+let player_a_own_rpcc_jam = lazy 
+  (set_owner (~$ player_a_own_rpcc) "JAM" (Some (~$ player_a)))
+let player_a_own_keeton = lazy 
+  (set_owner (~$ init_board_state) "Keeton" (Some (~$ player_a)))
+let player_a_own_cont = lazy 
+  (set_owner (~$ player_a_own_keeton) "Rose" (Some (~$ player_a)))
 
 let board_state_tests = [
   (* initial board state *)
@@ -146,7 +164,6 @@ let board_state_tests = [
     (UnknownPlayer (~$ false_player));
 
   (* armies *)
-
   gen_comp "board state set armies jam"
     (lazy (node_army (~$ set_armies_state) "JAM")) 2 int;
   gen_comp "board state set armies lr7"
@@ -161,25 +178,30 @@ let board_state_tests = [
 
   gen_comp "board state player armies"
     (lazy (player_army (~$ player_a_own_rpcc_jam) (~$ player_a))) 9 int;
+
+  (* others *)
+  gen_comp "continent bonus" 
+    (lazy (player_reinforcements (~$ player_a_own_cont) (~$ player_a))) 6 int;
+
 ]
 
 let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
 
-let player_a_own_RPCC_LR7 = lazy (set_owner (set_owner (~$ init_board_state) "RPCC" (Some (~$ player_a))) "LR7" (Some (~$ player_a)))
+let player_a_own_RPCC_LR7 = lazy 
+  (set_owner (set_owner (~$ init_board_state) "RPCC" (Some (~$ player_a))) 
+     "LR7" (Some (~$ player_a)))
+let attack_0_armies = lazy (change_board_st 
+                              (turn_to_attack (~$ init_game_state)) 
+                              (~$ player_a_own_RPCC_LR7))
+let attack_state = lazy (change_board_st (~$ attack_0_armies) 
+                           (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 2))
 
-let attack_0_armies = lazy (change_board_st (turn_to_attack (~$ init_game_state)) (~$ player_a_own_RPCC_LR7))
-
-let attack_state = lazy (change_board_st (~$ attack_0_armies) (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 2))
-
-let player_a_set_armies = lazy (change_board_st (~$ init_game_state) (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 3))
-
+let player_a_set_armies = lazy 
+  (change_board_st (~$ init_game_state) 
+     (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 3))
 let player_a_reinforce = lazy (reinforce (~$ player_a_set_armies) "LR7")
 
-let attack_rpcc_hr5 = (lazy (attack (~$ attack_state) "RPCC" "HR5" 1))
-
-(*let () = print_endline (string_of_int (player_army (~$ init_board_state) (~$ player_a)))
-  let () = print_endline (pp_list str (player_nodes (~$ player_a_own_RPCC) (~$ player_a)))
-  let () = print_endline ((opt player_p) (node_owner (~$ player_a_own_RPCC) "RPCC"))*)
+let attack_rpcc_hr5 = lazy (attack (~$ attack_state) "RPCC" "HR5" 1)
 
 let game_state_tests = [
   (* initial game state *)
@@ -216,6 +238,13 @@ let game_state_tests = [
     (lazy (node_army (let st', _, _ = (~$ attack_rpcc_hr5)
                       in st' |> board_st) "HR5")) 1 null;
 
+  (* others *)
+  gen_comp "string of attack" (lazy (turn_to_str (~$ attack_state))) "Attack" 
+    str;
+  gen_comp "string of reinforce" (lazy (turn_to_str (~$ init_game_state))) 
+    "Reinforce" str;
+  gen_comp "remaining reinforcement" 
+    (lazy (remaining_reinforcements (~$ init_game_state))) 3 int;
 ]
 
 let suite =
