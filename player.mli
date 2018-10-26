@@ -9,6 +9,9 @@ type color = ANSITerminal.color
 (** [create name color] is the player with [name] and [color]. *)
 val create : string -> color -> t
 
+(** [player_id player] is the [id] of [player]. *)
+val player_id : t -> int
+
 (** [player_name player] is the [name] of [player]. *)
 val player_name : t -> string
 

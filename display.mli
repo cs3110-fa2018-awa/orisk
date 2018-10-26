@@ -7,3 +7,6 @@ val draw_board : Game_state.t -> unit
 (** [draw_turn gamestate] prints the current turn information based
     on [gamestate]. *)
 val draw_turn : Game_state.t -> unit
+
+(** TODO: temporary for debugging *)
+val draw_stats : Game_state.t -> unit

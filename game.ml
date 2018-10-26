@@ -60,6 +60,7 @@ let win_yet (st:Game_state.t) : unit =
 let rec game_loop (st:Game_state.t) (msg : string option) : unit =
   draw_board st;
   win_yet st;
+  draw_stats st;
   print_endline "";
   print_endline (match msg with
       | Some m -> m

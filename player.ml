@@ -15,6 +15,9 @@ let id_counter =
 (** [create name color] is the player with [name] and [color]. *)
 let create name color = {id=id_counter (); name=name; color=color}
 
+(** [player_id player] is the [id] of [player]. *)
+let player_id player = player.id
+
 (** [player_name player] is the [name] of [player]. *)
 let player_name player = player.name
 

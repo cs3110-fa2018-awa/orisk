@@ -15,6 +15,21 @@ let draw_str (s : string) (x : int) (y : int) (c : color) : unit =
   ANSITerminal.set_cursor x y;
   ANSITerminal.print_string [Foreground c] s
 
+(** TODO: temporary for debugging *)
+let draw_stat (ps : Board_state.player_stats) : unit =
+  match ps with
+  | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
+    print_endline ((p |> Player.player_name) ^ "  Armies: " ^ (string_of_int a) ^ "  Territories: " ^ (string_of_int n) ^ "  Continents: " ^ (string_of_int c))
+
+(** TODO: temporary for debugging *)
+let draw_stats (gs : Game_state.t) : unit = 
+  let rec internal (ps : Board_state.player_stats list) : unit =
+    match ps with
+    | [] -> ()
+    | hd :: tl -> draw_stat hd; internal tl
+    (* change the string to whatever you want to sort by *)
+  in internal (Board_state.sorted_player_stats "territory" (Game_state.board_st gs))
+
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
 let draw_nodes (gs : Game_state.t) : unit = 
