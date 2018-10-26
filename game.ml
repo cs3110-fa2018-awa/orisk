@@ -132,7 +132,7 @@ let rec game_loop_new (st : Interface.t) (msg : string option) : unit =
 let players = [
   Player.create "player_a" Red; 
   Player.create "player_b" Green;
-  (*Player.create "player_c" Blue*)
+  Player.create "player_c" Blue
 ]
 
 (** [risk f] starts the game in [f]. 
