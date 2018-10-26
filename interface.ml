@@ -45,8 +45,7 @@ let find_best_move brd node arrow : (arrow * node_id option) =
              in let theta =
                   atan2 (float_of_int (ay - y)) (float_of_int (ax - x))
              in let diff = angle_diff theta target
-             in if diff < prev
-             then (diff, Some adj) else acc
+             in if diff < prev then (diff, Some adj) else acc
            end
         ) (pi /. 2., None) (node_borders brd node)
     end)
@@ -87,3 +86,10 @@ let move_arrow (st : t) (arrow : arrow) =
   in match List.assoc arrow lst with
   | Some node -> {st with cursor_node = node}
   | None -> st
+
+let pick st = 
+  let new_st = {st with game_state = pick_nodes st.game_state st.cursor_node} in
+  if List.mem None (new_st |> board_state |> owners) then new_st else
+    {st with game_state = init_reinforce new_st.game_state}
+
+let change_game_st st game_st = {st with game_state = game_st}

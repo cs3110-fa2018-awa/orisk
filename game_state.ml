@@ -8,6 +8,7 @@ type fortify_step = FromSelectF | ToSelectF | CountF
 
 (** The type of a turn.*)
 type turn_state =
+  | Null
   | Reinforce of reinforce_step
   | Attack of attack_step
   | Fortify of fortify_step
@@ -68,7 +69,7 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Reinforce SelectR;
+    turn = Null;
     remaining_reinforcements = player_reinforcements board_st curr_player;
   }
 
@@ -87,6 +88,7 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
+  | Null -> "Picking territories"
   | Reinforce _ -> "Reinforce"
   | Attack _ -> "Attack"
   | Fortify _ -> "Fortify"
@@ -97,6 +99,10 @@ let turn_to_attack st = {st with turn = Attack AttackSelectA}
 (** [change_board_st st board_st] is the game state [st] with board state 
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
+
+let is_null st = match st.turn with
+  | Null -> true
+  | _ -> false
 
 let is_reinforce st = match st.turn with
   | Reinforce _ -> true
@@ -160,6 +166,17 @@ let assign_random_nodes (st : t) : t =
     (st,st.current_player) |> fst
 (*BISECT-IGNORE-END*)
 
+let pick_nodes st node =
+  let () = if not (is_null st) then raise (InvalidState st.turn) else () in
+  let () = if node_owner st.board_state node <> None then raise (NotOwner node) else () in (*better exception*)
+  if List.mem None (owners st.board_state) then 
+    {st with board_state = place_army (set_owner st.board_state node (Some st.current_player))
+                 node 1; current_player = next_player st.current_player st.players}
+  else {st with current_player = List.hd st.players;
+                turn = Reinforce SelectR}
+
+let init_reinforce st = {st with current_player = List.hd st.players; turn = Reinforce SelectR}
+
 let setup_reinforce st =
   let next = next_player st.current_player st.players
   in {st with
@@ -174,6 +191,7 @@ let setup_reinforce st =
     reinforce. *)
 let end_turn_step st =
   match st.turn with
+  | Null -> {st with turn = Reinforce SelectR}
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
   | Fortify _ -> setup_reinforce st
@@ -202,10 +220,11 @@ let rec battle attack defend (deatha,deathd) =
   | _ -> deatha,deathd
 
 (** [fortify st f t] sends one army from territory [f] to territory [t] if 
-   they are connected by a path of territories that the current player owns. *)
+    they are connected by a path of territories that the current player owns. *)
 let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
-  let () = if Some st.current_player <> (node_owner st.board_state from_node)
-    then raise (NotOwner from_node) else ()
+  let () = if not (is_fortify st) then raise (InvalidState st.turn) else () 
+  in let () = if Some st.current_player <> (node_owner st.board_state from_node)
+       then raise (NotOwner from_node) else ()
   in let () = if from_node = to_node
        then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
   in let () = if (node_army st.board_state from_node) <= 1

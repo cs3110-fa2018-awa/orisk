@@ -65,6 +65,7 @@ let pp_list pp_elt lst =
 
 (* test boards *)
 let map_schema = lazy (from_json (Yojson.Basic.from_file "mapSchema.json"))
+let bornell = lazy (from_json (Yojson.Basic.from_file "bornell.json"))
 
 let ascii = "............XX..\n..........//....\n.........//.....\n........XX"
             ^ "==XX..\n............||..\n............XX..\n....XX==XX......\n"
@@ -88,6 +89,9 @@ let board_tests = [
   gen_comp "node borders"
     (lazy (List.sort Pervasives.compare (node_borders (~$ map_schema) "JAM")))
     (List.sort Pervasives.compare ["LR7"; "Keeton"]) (pp_list str);
+  gen_comp "node borders bornell"
+    (lazy (List.sort Pervasives.compare (node_borders (~$ bornell) "baker")))
+    (List.sort Pervasives.compare ["psb"; "lincoln"; "balch"]) (pp_list str);
   gen_comp "conts" (lazy (conts (~$ map_schema)))
     (List.sort Pervasives.compare ["North"; "West"]) (pp_list str);
   gen_comp "has cont" (lazy (has_cont (~$ map_schema) "North")) true bool;
@@ -212,7 +216,7 @@ let game_state_tests = [
   gen_comp "game state current_player"
     (lazy (current_player (~$ init_game_state))) (~$ player_a) player_p;
   gen_comp "game state turn"
-    (lazy (turn (~$ init_game_state))) Reinforce null;
+    (lazy (turn (~$ init_game_state))) (Null) null;
 
   (* exceptions *)
   except_comp "game state no players"
@@ -221,7 +225,8 @@ let game_state_tests = [
     (lazy (attack (~$ attack_state) "RPCC" "LR7" 2))
     (FriendlyFire (Some (~$ player_a)));
   except_comp "game state invalid state"
-    (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) (InvalidState Reinforce);
+    (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) 
+    (InvalidState (Null));
   except_comp "game state insufficient armies"
     (lazy (attack (~$ attack_state) "RPCC" "HR5" 16))
     (InsufficientArmies ("RPCC", 1));
@@ -230,8 +235,8 @@ let game_state_tests = [
     (NotOwner "Keeton");
 
   (* reinforce *)
-  gen_comp "game state reinforce"
-    (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null;
+  (*gen_comp "game state reinforce"
+    (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null;*)
 
   (* attack *)
   gen_comp "game state attack"
@@ -241,10 +246,10 @@ let game_state_tests = [
   (* others *)
   gen_comp "string of attack" (lazy (turn_to_str (~$ attack_state))) "Attack" 
     str;
-  gen_comp "string of reinforce" (lazy (turn_to_str (~$ init_game_state))) 
-    "Reinforce" str;
-  gen_comp "remaining reinforcement" 
-    (lazy (remaining_reinforcements (~$ init_game_state))) 3 int;
+  gen_comp "string of pick" (lazy (turn_to_str (~$ init_game_state))) 
+    "Picking territories" str;
+  (*gen_comp "remaining reinforcement" 
+    (lazy (remaining_reinforcements (~$ init_game_state))) 3 int;*)
 ]
 
 let suite =

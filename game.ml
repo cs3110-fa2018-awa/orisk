@@ -78,7 +78,7 @@ let rec game_loop (st:Interface.t) (msg : string option) : unit =
     | AttackC (a,d,i)
       -> let gs', attack, defend = attack (game_state st) a d i
       in game_loop (gs st gs') (Some ("A: " ^ (string_of_dice attack) 
-                              ^ " vs D: " ^ (string_of_dice defend)))
+                                      ^ " vs D: " ^ (string_of_dice defend)))
     | FortifyC (n1,n2) -> game_loop (gs st (fortify (game_state st) n1 n2)) None
     | EndTurnStep -> game_loop (gs st (end_turn_step (game_state st))) None end with
   | NoPlayers
@@ -121,7 +121,8 @@ let rec game_loop_new (st : Interface.t) (msg : string option) : unit =
     | 'a' -> game_loop_new (move_arrow st Left) msg
     | 's' -> game_loop_new (move_arrow st Down) msg
     | 'd' -> game_loop_new (move_arrow st Right) msg
-    | '\004' -> print_endline("\nThanks for playing!\n"); exit 0
+    | 'p' -> game_loop_new (pick st) msg 
+    | '\004' | 'q' -> print_endline("\nThanks for playing!\n"); exit 0
     | _ -> game_loop_new st msg
   end with
   | _ -> game_loop_new st msg
@@ -140,7 +141,7 @@ let players = [
     Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in 
-  try game_loop_new (Interface.init (assign_random_nodes (Game_state.init board players))) None with 
+  try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
 (** [game ()] prompts for the game json file to load and then starts it. 

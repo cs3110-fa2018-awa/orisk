@@ -87,6 +87,8 @@ let player_state st player =
     [player], or [None] if [id] is not owned by anyone. *)
 let node_owner st node = (node_state st node).owner
 
+let owners st = String_map.fold (fun k (d:node_state) acc -> d.owner :: acc) st.nodes []
+
 (** [node_army state id] is the army stationed at node [id] in [state]. *)
 let node_army st node = (node_state st node).army
 

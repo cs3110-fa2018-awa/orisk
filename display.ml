@@ -44,6 +44,7 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] " -- ";
   print_string [] begin
     match game_state st |> turn with
+    | Null -> "Picking territories"
     | Reinforce _ -> "Reinforce " ^
                      (game_state st |> remaining_reinforcements |> string_of_int)
     | Attack _ -> "Attack"

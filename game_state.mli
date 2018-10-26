@@ -11,6 +11,7 @@ type fortify_step = FromSelectF | ToSelectF | CountF
 
 (** The type of a turn.*)
 type turn_state =
+  | Null
   | Reinforce of reinforce_step
   | Attack of attack_step
   | Fortify of fortify_step
@@ -124,3 +125,7 @@ val end_turn_step : t -> t
 val remaining_reinforcements : t -> army
 
 val fortify : t -> node_id -> node_id -> t
+
+val pick_nodes : t -> node_id -> t
+
+val init_reinforce : t -> t
