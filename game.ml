@@ -4,6 +4,7 @@ open Board
 open Board_state
 open Display
 open Player
+open Interface
 
 (** [helpmsg] is the string containing all possible commands, which is displayed 
     to the player when they enter the command [Help]. *)
@@ -57,9 +58,9 @@ let win_yet (st:Game_state.t) : unit =
     message [msg].
 
     Helper for [risk f]. *)
-let rec game_loop (st:Game_state.t) (msg : string option) : unit =
+let rec game_loop (st:Interface.t) (msg : string option) : unit =
   draw_board st;
-  win_yet st;
+  win_yet (game_state st);
   print_endline "";
   print_endline (match msg with
       | Some m -> m
@@ -73,13 +74,13 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
       game_loop st (Some "Please enter a command!")
     | Quit -> print_endline("\nThanks for playing!\n"); exit 0
     | Help -> game_loop st (Some helpmsg)
-    | ReinforceC (n) -> game_loop (reinforce st n) None
+    | ReinforceC (n) -> game_loop (gs st (reinforce (game_state st) n)) None
     | AttackC (a,d,i)
-      -> let st', attack, defend = attack st a d i
-      in game_loop st' (Some ("A: " ^ (string_of_dice attack) 
+      -> let gs', attack, defend = attack (game_state st) a d i
+      in game_loop (gs st gs') (Some ("A: " ^ (string_of_dice attack) 
                               ^ " vs D: " ^ (string_of_dice defend)))
-    | FortifyC (n1,n2) -> game_loop (fortify st n1 n2) None
-    | EndTurn -> game_loop (end_attack st) None end with
+    | FortifyC (n1,n2) -> game_loop (gs st (fortify (game_state st) n1 n2)) None
+    | EndTurnStep -> game_loop (gs st (end_turn_step (game_state st))) None end with
   | NoPlayers
     -> game_loop st (Some "No players!")
   | NonadjacentNode (node_id1,node_id2)
@@ -101,13 +102,37 @@ let rec game_loop (st:Game_state.t) (msg : string option) : unit =
   | NotOwner n
     -> game_loop st (Some "You don't control this territory")
 
+let read_char () =
+  (* See https://stackoverflow.com/a/13410456 *)
+  let termio = Unix.tcgetattr Unix.stdin
+  in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN {termio with Unix.c_icanon = false}
+  in let char = input_char stdin
+  in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio
+  in char
+
+let rec game_loop_new (st : Interface.t) (msg : string option) : unit =
+  draw_board st;
+  win_yet (game_state st);
+  print_endline (match msg with
+      | Some m -> m
+      | None -> "...");
+  try begin match read_char () with
+    | 'w' -> game_loop_new (move_arrow st Up) msg
+    | 'a' -> game_loop_new (move_arrow st Left) msg
+    | 's' -> game_loop_new (move_arrow st Down) msg
+    | 'd' -> game_loop_new (move_arrow st Right) msg
+    | '\004' -> print_endline("\nThanks for playing!\n"); exit 0
+    | _ -> game_loop_new st msg
+  end with
+  | _ -> game_loop_new st msg
+
 (* [players] is a temporarily hard-coded set of players. Only used for the 
     demo as we will implement the ability to enter your own players in the
     future. *)
 let players = [
   Player.create "player_a" Red; 
   Player.create "player_b" Green;
-  Player.create "player_c" Blue
+  (*Player.create "player_c" Blue*)
 ]
 
 (** [risk f] starts the game in [f]. 
@@ -115,7 +140,7 @@ let players = [
     Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in 
-  try game_loop (assign_random_nodes (Game_state.init board players)) None with 
+  try game_loop_new (Interface.init (assign_random_nodes (Game_state.init board players))) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
 (** [game ()] prompts for the game json file to load and then starts it. 

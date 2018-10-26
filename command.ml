@@ -13,7 +13,7 @@ type command =
   | AttackC of (node_id * node_id * army)
   | ReinforceC of node_id
   | FortifyC of (node_id * node_id)
-  | EndTurn
+  | EndTurnStep
   | Help
   | Quit
 
@@ -45,7 +45,7 @@ let parse str =
   | "attack" :: args -> AttackC (parse_attack args)
   | "reinforce" :: args -> ReinforceC (parse_reinforce args)
   | "fortify" :: args -> FortifyC (parse_fortify args)
-  | "end" :: _ -> EndTurn
+  | "end" :: _ -> EndTurnStep
   | "help" :: _ -> Help
   | "quit" :: _ -> Quit
   | [] -> raise Empty

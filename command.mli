@@ -8,7 +8,7 @@ type command =
   | AttackC of (node_id * node_id * army)
   | ReinforceC of node_id
   | FortifyC of (node_id * node_id)
-  | EndTurn
+  | EndTurnStep
   | Help
   | Quit
 

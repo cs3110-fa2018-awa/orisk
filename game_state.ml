@@ -2,8 +2,15 @@ open Player
 open Board_state
 open Board
 
+type reinforce_step = SelectR | PlaceR
+type attack_step = AttackSelectA | DefendSelectA | ResultA | OccupyA
+type fortify_step = FromSelectF | ToSelectF | CountF
+
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack | Fortify
+type turn_state =
+  | Reinforce of reinforce_step
+  | Attack of attack_step
+  | Fortify of fortify_step
 
 (** The type of a list of players. *)
 type players = Player.t list 
@@ -61,7 +68,7 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Reinforce;
+    turn = Reinforce SelectR;
     remaining_reinforcements = player_reinforcements board_st curr_player;
   }
 
@@ -80,23 +87,35 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
-  | Reinforce -> "Reinforce"
-  | Attack -> "Attack"
-  | Fortify -> "Fortify"
+  | Reinforce _ -> "Reinforce"
+  | Attack _ -> "Attack"
+  | Fortify _ -> "Fortify"
 
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
-let turn_to_attack st = {st with turn = Attack}
+let turn_to_attack st = {st with turn = Attack AttackSelectA}
 
 (** [change_board_st st board_st] is the game state [st] with board state 
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
+
+let is_reinforce st = match st.turn with
+  | Reinforce _ -> true
+  | _ -> false
+
+let is_attack st = match st.turn with
+  | Attack _ -> true
+  | _ -> false
+
+let is_fortify st = match st.turn with
+  | Fortify _ -> true
+  | _ -> false
 
 (** [remaining_reinforcements st] is the number of armies the current [player] 
     of [st] has remaining. 
 
     Raises [InvalidState turn] when [turn] is not [Reinforce]. *)
 let remaining_reinforcements st =
-  let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
+  let () = if not (is_reinforce st) then raise (InvalidState st.turn) else () in
   st.remaining_reinforcements
 
 (** [reinforce st n] is the game state resulting from the current [player] of 
@@ -107,12 +126,13 @@ let remaining_reinforcements st =
 let reinforce st n =
   let () = if Some st.current_player <> (node_owner st.board_state n)
     then raise (NotOwner n) else () in
-  let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
+  let () = if not (is_reinforce st) then raise (InvalidState st.turn) else () in
   let () = if st.remaining_reinforcements <= 0 then failwith "need more armies"
     else () in 
   {st with board_state = place_army st.board_state n 1; 
            remaining_reinforcements = st.remaining_reinforcements - 1;
-           turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
+           turn = if st.remaining_reinforcements = 1
+             then Attack AttackSelectA else Reinforce SelectR}
 
 (*BISECT-IGNORE-BEGIN*) (* helper not exposed in mli, also play tested both*)
 (** [next_player curr_player lst] is the element in [lst] immediately after 
@@ -140,10 +160,23 @@ let assign_random_nodes (st : t) : t =
     (st,st.current_player) |> fst
 (*BISECT-IGNORE-END*)
 
+let setup_reinforce st =
+  let next = next_player st.current_player st.players
+  in {st with
+      current_player = next;
+      remaining_reinforcements = player_reinforcements st.board_state next;
+      turn = Reinforce SelectR}
+
 (*BISECT-IGNORE-BEGIN*) (* play tested *)
-(** [end_attack st] is the game state [st] with the next [player] as the 
-    [current player] and the [turn_state] [Reinforce]. *)
-let end_attack st = {st with turn = Fortify;}
+(** [end_turn_step st] is the game state [st] resulting from skipping the
+    current turn step. If in reinforce, then moves to attack. If in attack,
+    then moves to fortify. If in fortify, then advances to the next player's
+    reinforce. *)
+let end_turn_step st =
+  match st.turn with
+  | Reinforce _ -> {st with turn = Attack AttackSelectA}
+  | Attack _ -> {st with turn = Fortify FromSelectF}
+  | Fortify _ -> setup_reinforce st
 (*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
@@ -179,12 +212,8 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
        then raise (InsufficientArmies (from_node,1)) else ()
   in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
        then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
-  in let next = next_player st.current_player st.players
-  in {st with
-      board_state = place_army (place_army st.board_state to_node 1) from_node (-1);
-      current_player = next;
-      remaining_reinforcements = player_reinforcements st.board_state next;
-      turn = Reinforce}
+  in setup_reinforce
+    {st with board_state = place_army (place_army st.board_state to_node 1) from_node (-1)}
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
@@ -207,7 +236,7 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
           [a] and [d] *)
 let attack st a d invading_armies = 
-  let () = if st.turn <> Attack then raise (InvalidState st.turn) else () in
+  let () = if not (is_attack st) then raise (InvalidState st.turn) else () in
   let () = if not 
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
     then raise (NonadjacentNode (a,d)) else () in 
@@ -238,7 +267,7 @@ let attack st a d invading_armies =
                     (total_attackers - invading_armies + 1)}, 
        attack_dice, defend_dice
   (* attacker lost *)
-  else {st with board_state =               (*BISECT-IGNORE*) (* play tested *)
+  else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 

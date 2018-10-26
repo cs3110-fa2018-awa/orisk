@@ -5,11 +5,18 @@ open Player
 open Board_state
 open Board
 
+type reinforce_step = SelectR | PlaceR
+type attack_step = AttackSelectA | DefendSelectA | ResultA | OccupyA
+type fortify_step = FromSelectF | ToSelectF | CountF
+
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack | Fortify
+type turn_state =
+  | Reinforce of reinforce_step
+  | Attack of attack_step
+  | Fortify of fortify_step
 
 (** The type of a list of players. *)
-type players = Player.t list 
+type players = Player.t list
 
 (** The abstract type representing a game state. *)
 type t
@@ -108,9 +115,11 @@ val attack : t -> node_id -> node_id -> army -> t * int list * int list
     [st]. *)
 val assign_random_nodes : t -> t
 
-(** [end_attack st] is the game state [st] with the next [player] as the 
-    [current player] and the [turn_state] [Reinforce]. *)
-val end_attack : t -> t
+(** [end_turn_step st] is the game state [st] resulting from skipping the
+    current turn step. If in reinforce, then moves to attack. If in attack,
+    then moves to fortify. If in fortify, then advances to the next player's
+    reinforce. *)
+val end_turn_step : t -> t
 
 val remaining_reinforcements : t -> army
 

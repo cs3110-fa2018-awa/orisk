@@ -1,11 +1,9 @@
 
 open Board
 
-type reinforce_step = SelectR | PlaceR
-type attack_step = AttackSelectA | DefendSelectA | ResultA | OccupyA
-type fortify_step = FromSelectF | ToSelectF | CountF
-
 type t
+
+type arrow = Up | Down | Left | Right
 
 val init : Game_state.t -> t
 
@@ -17,8 +15,6 @@ val cursor_node : t -> node_id
 
 val scroll : t -> coords
 
-val reinforcestep : t -> reinforce_step
+val gs : t -> Game_state.t -> t
 
-val attack_step : t -> attack_step
-
-val fortify_step : t -> fortify_step
+val move_arrow : t -> arrow -> t
