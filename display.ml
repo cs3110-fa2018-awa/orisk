@@ -24,16 +24,16 @@ let draw_nodes (st : Interface.t) : unit =
   Board.fold_nodes brd 
     (fun id () ->
        (* only redraw if node is owned by a player *)
-       let color = begin match (Board_state.node_owner brd_st id) with
-         | Some player -> player_color player
-         | None -> Black end
-       in let x = Board.node_coords brd id |> Board.x
+       let x = Board.node_coords brd id |> Board.x
        in let y = Board.node_coords brd id |> Board.y
        in let is_cursor = cursor st = (x, y)
+       in let color_a, color_b = begin match (Board_state.node_owner brd_st id) with
+           | Some player -> player_color player, if is_cursor then White else Black
+           | None -> White, Black end
        in draw_str (Board_state.node_army brd_st id |> format_2digit)
          (x + 1) (y + 1) 
-         begin if is_cursor then [Background color; Foreground White]
-           else [Foreground color] end
+         begin if is_cursor then [Background color_a; Foreground color_b]
+           else [Foreground color_a; Background color_b] end
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
