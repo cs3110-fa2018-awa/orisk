@@ -102,27 +102,37 @@ let rec game_loop (st:Interface.t) (msg : string option) : unit =
   | NotOwner n
     -> game_loop st (Some "You don't control this territory")
 
-let read_char () =
+let read_input () =
+  let buf = Bytes.create 8
   (* See https://stackoverflow.com/a/13410456 *)
-  let termio = Unix.tcgetattr Unix.stdin
-  in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN {termio with Unix.c_icanon = false}
-  in let char = input_char stdin
+  in let termio = Unix.tcgetattr Unix.stdin
+  in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN
+         {termio with c_icanon = false; c_echo = false}
+  in let len = input stdin buf 0 8
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio
-  in char
+  in Bytes.sub_string buf 0 len
 
-let rec game_loop_new (st : Interface.t) (msg : string option) : unit =
+let char_regexp = Str.regexp "[A-Za-z]"
+
+let f a ?x = a
+
+let b = f ""
+
+let rec game_loop_new ?(search : string = "") (st : Interface.t) (msg : string option) : unit =
   draw_board st;
   win_yet (game_state st);
-  print_endline (match msg with
-      | Some m -> m
-      | None -> "...");
-  try begin match read_char () with
-    | 'w' -> game_loop_new (move_arrow st Up) msg
-    | 'a' -> game_loop_new (move_arrow st Left) msg
-    | 's' -> game_loop_new (move_arrow st Down) msg
-    | 'd' -> game_loop_new (move_arrow st Right) msg
-    | 'p' -> game_loop_new (pick st) msg 
-    | '\004' | 'q' -> print_endline("\nThanks for playing!\n"); exit 0
+  print_endline (match msg, search with
+      | Some m, _ -> m
+      | None, s when String.length s > 0 -> "Search: " ^ s
+      | None, _ -> "...");
+  try begin match read_input () with
+    | "\027[A" -> game_loop_new (move_arrow st Up) msg
+    | "\027[D" -> game_loop_new (move_arrow st Left) msg
+    | "\027[B" -> game_loop_new (move_arrow st Down) msg
+    | "\027[C" -> game_loop_new (move_arrow st Right) msg
+    | "p" -> game_loop_new (pick st) msg 
+    | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+    | c when Str.string_match char_regexp c 0 -> game_loop_new ~search:(search ^ c) st msg
     | _ -> game_loop_new st msg
   end with
   | _ -> game_loop_new st msg
