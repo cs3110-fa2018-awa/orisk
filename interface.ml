@@ -30,9 +30,7 @@ let target_angle arrow : float = match arrow with
   | Left -> pi
   | Right -> 0.
 
-let angle_diff a b =
-  let res = abs_float ((mod_float (a -. b +. pi) (pi *. 2.)) -. pi)
-  in print_endline ("angle_diff " ^ (string_of_float a) ^ " " ^ (string_of_float b) ^ " = " ^ (string_of_float res)); res
+let angle_diff a b = atan2 (sin (b -. a)) (cos (b -. a)) |> abs_float
 
 let find_best_move brd node arrow : (arrow * node_id option) =
   let target = target_angle arrow
