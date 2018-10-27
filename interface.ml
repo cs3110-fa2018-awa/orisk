@@ -85,6 +85,10 @@ let move_arrow (st : t) (arrow : arrow) =
   | Some node -> {st with cursor_node = node}
   | None -> st
 
+let set_cursor_node st = function
+  | None -> st
+  | Some node_id -> {st with cursor_node = node_id} 
+
 let pick st = 
   let new_st = {st with game_state = pick_nodes st.game_state st.cursor_node} in
   if List.mem None (new_st |> board_state |> owners) then new_st else

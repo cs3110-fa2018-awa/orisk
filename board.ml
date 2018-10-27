@@ -225,3 +225,13 @@ let node_conts board node =
     (fun cont_id acc -> if List.mem node
         (let ({nodes} : cont) = (find_cont board cont_id) in nodes)
       then cont_id :: acc else acc) []
+
+let start_with start compare_to = 
+  if String.length start > String.length compare_to then false 
+  else Str.string_before compare_to (String.length start) = start
+
+let node_search board str = 
+  String_map.filter (fun k _ -> start_with str k) board.nodes 
+  |> String_map.min_binding_opt |> function 
+  | Some (k,_) -> Some k
+  | None -> None

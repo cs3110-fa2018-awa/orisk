@@ -118,21 +118,31 @@ let f a ?x = a
 
 let b = f ""
 
-let rec game_loop_new ?(search : string = "") (st : Interface.t) (msg : string option) : unit =
+let rec game_loop_new ?(search : string * bool = "",false) 
+    (st : Interface.t) (msg : string option) : unit =
   draw_board st;
   win_yet (game_state st);
-  print_endline (match msg, search with
-      | Some m, _ -> m
-      | None, s when String.length s > 0 -> "Search: " ^ s
-      | None, _ -> "...");
+  begin match msg, search with
+    | Some m, _ -> print_endline m
+    | None, (s,success) when String.length s > 0 -> 
+      if success 
+      then print_endline ("Search: " ^ s)
+      else ANSITerminal.(print_string [] "Failing search: "; 
+                         print_string [red] s);
+      print_endline ""
+    | None, _ -> print_endline "..."
+  end;
   try begin match read_input () with
     | "\027[A" -> game_loop_new (move_arrow st Up) msg
     | "\027[D" -> game_loop_new (move_arrow st Left) msg
     | "\027[B" -> game_loop_new (move_arrow st Down) msg
     | "\027[C" -> game_loop_new (move_arrow st Right) msg
-    | "p" -> game_loop_new (pick st) msg 
+    | "\n" -> game_loop_new (pick st) msg 
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-    | c when Str.string_match char_regexp c 0 -> game_loop_new ~search:(search ^ c) st msg
+    | c when Str.string_match char_regexp c 0 -> 
+      let found_node = node_search (st |> Interface.board) ((fst search) ^ c) in
+      game_loop_new ~search:((fst search) ^ c,found_node <> None)
+        (set_cursor_node st found_node) msg
     | _ -> game_loop_new st msg
   end with
   | _ -> game_loop_new st msg

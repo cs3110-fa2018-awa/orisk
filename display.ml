@@ -65,7 +65,7 @@ let draw_board (st : Interface.t) : unit =
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
-  set_cursor 0 (game_state st |> board_st |> board |> board_ascii_height);
+  set_cursor 0 (game_state st |> board_st |> Board_state.board |> board_ascii_height);
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
