@@ -104,7 +104,7 @@ let rec game_loop (st:Interface.t) (msg : string option) : unit =
 
 let read_input () =
   let buf = Bytes.create 8
-  (* See https://stackoverflow.com/a/13410456 *)
+  (* Inspired by https://stackoverflow.com/a/13410456 *)
   in let termio = Unix.tcgetattr Unix.stdin
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN
          {termio with c_icanon = false; c_echo = false}
@@ -112,14 +112,16 @@ let read_input () =
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio
   in Bytes.sub_string buf 0 len
 
-let char_regexp = Str.regexp "[A-Za-z]"
-
-let f a ?x = a
-
-let b = f ""
+let char_regexp = Str.regexp "[A-Za-z0-9]"
 
 let rec game_loop_new ?(search : string * bool = "",false) 
     (st : Interface.t) (msg : string option) : unit =
+
+  let perform_search str : unit =
+    let found_node = node_search (st |> Interface.board) str in
+      game_loop_new ~search:(str,found_node <> None)
+        (set_cursor_node st found_node) msg in
+
   draw_board st;
   win_yet (game_state st);
   begin match msg, search with
@@ -127,9 +129,11 @@ let rec game_loop_new ?(search : string * bool = "",false)
     | None, (s,success) when String.length s > 0 -> 
       if success 
       then print_endline ("Search: " ^ s)
-      else ANSITerminal.(print_string [] "Failing search: "; 
+      else begin
+        ANSITerminal.(print_string [] "Failing search: "; 
                          print_string [red] s);
-      print_endline ""
+        print_endline ""
+      end
     | None, _ -> print_endline "..."
   end;
   try begin match read_input () with
@@ -139,10 +143,12 @@ let rec game_loop_new ?(search : string * bool = "",false)
     | "\027[C" -> game_loop_new (move_arrow st Right) msg
     | "\n" -> game_loop_new (pick st) msg 
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-    | c when Str.string_match char_regexp c 0 -> 
-      let found_node = node_search (st |> Interface.board) ((fst search) ^ c) in
-      game_loop_new ~search:((fst search) ^ c,found_node <> None)
-        (set_cursor_node st found_node) msg
+    | c when Str.string_match char_regexp c 0
+      -> perform_search ((fst search) ^ c)
+    | "\127" -> if String.length (fst search) <= 1
+      then game_loop_new st msg
+      else perform_search (String.sub (fst search) 0
+                             (String.length (fst search) - 1))
     | _ -> game_loop_new st msg
   end with
   | _ -> game_loop_new st msg
