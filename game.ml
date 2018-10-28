@@ -176,6 +176,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
       then game_loop_new st msg
       else perform_search (String.sub (fst search) 0
                              (String.length (fst search) - 1))
+    | "`" -> if (game_state st |> turn) = Null
+      then game_loop_new (game_state st |> assign_random_nodes
+                          |> change_game_st st) msg
+      else game_loop_new st msg
     | _ -> game_loop_new st msg
   end with
   | NoPlayers

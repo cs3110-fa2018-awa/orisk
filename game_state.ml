@@ -160,18 +160,23 @@ let next_player curr_player lst =
     | hd :: tl -> helper tl
   in helper lst
 
+let shuffle_lst lst = QCheck.Gen.(generate1 (shuffle_l lst))
+
 (** [assign_random_nodes st] is the game state [st] after assigning 
     ownership of the nodes in [st] as equally as possible to each [player] in
     [st]. *)
-let assign_random_nodes (st : t) : t = 
-  (* TODO not actually random right now *)
-  fold_nodes (board st.board_state)
-    (fun (node : node_id) ((st',player) : (t * Player.t)) ->
-       let next = next_player player st.players
-       in ({st' with board_state
-                     = place_army (set_owner st'.board_state node (Some next))
-                         node 1} : t), next)
-    (st,st.current_player) |> fst
+let assign_random_nodes (st : t) : t =
+  let unselected node = (node_owner st.board_state node) = None in
+  {begin
+    List.fold_left
+      (fun (st',player) (node : node_id) : (t * Player.t) ->
+         let next = next_player player st.players
+         in ({st' with board_state
+                       = place_army (set_owner st'.board_state node (Some next))
+                           node 1} : t), next)
+      (st,st.current_player) (board st.board_state |> nodes
+                              |> List.filter unselected |> shuffle_lst) |> fst
+  end with turn = Reinforce SelectR}
 (*BISECT-IGNORE-END*)
 
 let pick_nodes st node =
