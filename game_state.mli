@@ -31,6 +31,15 @@ exception NoPlayers
     adjacent nodes. *)
 exception NonadjacentNode of (node_id * node_id)
 
+(** [NonconnectedNode (n1,n2)] is raised when a player attempts to 
+    fortify from node [n1] to node [n2] but [n1] and [n2] are not
+    connected by a path of nodes that the player owns. *)
+exception NonconnectedNode of (node_id * node_id)
+
+(** [SameNode n] is raised when a player attempts to perform an
+    action meant for two different nodes on the same node. *)
+exception SameNode of node_id
+
 (** [InvalidState turn_st] is raised when a players inputs a 
     command that does not correspond to the current state of their
     turn [turn_st]. *)

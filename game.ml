@@ -56,10 +56,10 @@ let next_valid_node st =
   let node = cursor_node st
   in let lst = turn_valid_nodes st
   in let rec helper = function
-    | hd :: next :: tl when hd = node -> next
-    | hd :: [] when hd = node -> List.hd lst
-    | [] -> List.hd lst
-    | hd :: tl -> helper tl
+      | hd :: next :: tl when hd = node -> next
+      | hd :: [] when hd = node -> List.hd lst
+      | [] -> List.hd lst
+      | hd :: tl -> helper tl
   in if List.length lst = 0 then None else Some (helper lst)
 
 (** [game_loop st msg] continuously prompts the player for commands
@@ -95,6 +95,10 @@ let rec game_loop (st:Interface.t) (msg : string option) : unit =
     -> game_loop st (Some "No players!")
   | NonadjacentNode (node_id1,node_id2)
     -> game_loop st (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
+  | NonconnectedNode (node_id1,node_id2)
+    -> game_loop st (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!"))
+  | SameNode node_id
+    -> game_loop st (Some ("You can't perform this action on the same territory!"))
   | InvalidState (turn_state)
     -> game_loop st (Some "Wrong type of turn.")
   | InsufficientArmies (node_id,army)
@@ -197,6 +201,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
     -> game_loop_new st (Some "No players!")
   | NonadjacentNode (node_id1,node_id2)
     -> game_loop_new st (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
+  | NonconnectedNode (node_id1,node_id2)
+    -> game_loop_new st (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!"))
+  | SameNode node_id
+    -> game_loop_new st (Some ("You can't perform this action on the same territory!"))
   | InvalidState (turn_state)
     -> game_loop_new st (Some "Wrong type of turn.")
   | InsufficientArmies (node_id,army)

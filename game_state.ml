@@ -36,6 +36,15 @@ exception NoPlayers
     adjacent nodes. *)
 exception NonadjacentNode of (node_id * node_id)
 
+(** [NonconnectedNode (n1,n2)] is raised when a player attempts to 
+    fortify from node [n1] to node [n2] but [n1] and [n2] are not
+    connected by a path of nodes that the player owns. *)
+exception NonconnectedNode of (node_id * node_id)
+
+(** [SameNode n] is raised when a player attempts to perform an
+    action meant for two different nodes on the same node. *)
+exception SameNode of node_id
+
 (** [InvalidState turn_st] is raised when a players inputs a 
     command that does not correspond to the current state of their
     turn [turn_st]. *)
@@ -245,12 +254,14 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
   let () = if not (is_fortify st) then raise (InvalidState st.turn) else () 
   in let () = if Some st.current_player <> (node_owner st.board_state from_node)
        then raise (NotOwner from_node) else ()
+  in let () = if Some st.current_player <> (node_owner st.board_state to_node)
+       then raise (NotOwner to_node) else ()
   in let () = if from_node = to_node
-       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+       then raise (SameNode to_node) else ()
   in let () = if (node_army st.board_state from_node) <= 1
        then raise (InsufficientArmies (from_node,1)) else ()
   in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
-       then raise (NonadjacentNode (from_node,to_node)) else () (* TODO better exception *)
+       then raise (NonconnectedNode (from_node,to_node)) else ()
   in setup_reinforce
     {st with board_state = place_army (place_army st.board_state to_node 1) from_node (-1)}
 
@@ -276,6 +287,7 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
           [a] and [d] *)
 let attack st a d invading_armies = 
   let () = if not (is_attack st) then raise (InvalidState st.turn) else () in
+  let () = if a = d then raise (SameNode d) else () in
   let () = if not 
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
     then raise (NonadjacentNode (a,d)) else () in 
