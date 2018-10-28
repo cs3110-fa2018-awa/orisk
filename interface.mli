@@ -13,6 +13,14 @@ val board_state : t -> Board_state.t
 
 val board : t -> Board.t
 
+val attacking_node : t -> node_id option
+
+val change_attack_node : t -> node_id option -> t
+
+val from_fortify_node : t -> node_id option
+
+val change_from_fortify_node : t -> node_id option -> t
+
 val cursor : t -> coords
 
 val cursor_node : t -> node_id

@@ -14,6 +14,8 @@ type t = {
   cursor_node : node_id;
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
+  attacking_node : node_id option;
+  from_fortify_node : node_id option;
 }
 
 let game_state st = st.game_state
@@ -21,6 +23,28 @@ let game_state st = st.game_state
 let board_state st = game_state st |> board_st
 
 let board st = board_state st |> Board_state.board
+
+let attacking_node st = st.attacking_node
+
+let check_is_owner st (node:node_id option) =
+  match node with 
+  | None -> failwith "oops"
+  | Some node_id 
+    -> if node_owner (board_state st) node_id <> 
+          Some (current_player st.game_state)
+    then raise (NotOwner node_id) else () 
+
+let change_attack_node st (node:node_id option) = 
+  let () = check_is_owner st node in 
+  {st with attacking_node = node; 
+           game_state = set_turn st.game_state (Attack DefendSelectA)}
+
+let from_fortify_node st = st.from_fortify_node
+
+let change_from_fortify_node st node = 
+  let () = check_is_owner st node in 
+  {st with from_fortify_node = node;
+           game_state = set_turn st.game_state (Fortify ToSelectF)}
 
 let pi = acos (~-. 1.)
 
@@ -68,6 +92,8 @@ let init gs =
     cursor_node = board_st gs |> Board_state.board |> nodes |> List.hd;
     scroll = (0, 0);
     move_map = build_move_map gs;
+    attacking_node = None;
+    from_fortify_node = None;
   }
 
 let cursor st = node_coords (board st) st.cursor_node
@@ -94,4 +120,11 @@ let pick st =
   if List.mem None (new_st |> board_state |> owners) then new_st else
     {st with game_state = init_reinforce new_st.game_state}
 
-let change_game_st st game_st = {st with game_state = game_st}
+let change_game_st st game_st = print_endline "wds68";
+  {st with game_state = game_st;
+           attacking_node = if List.mem (turn game_st) 
+               [Attack DefendSelectA;Attack OccupyA] 
+             then st.attacking_node else None;
+           from_fortify_node = if List.mem (turn game_st) 
+               [Fortify ToSelectF; Fortify CountF] 
+             then st.from_fortify_node else None}

@@ -6,7 +6,7 @@ open Board_state
 open Board
 
 type reinforce_step = SelectR | PlaceR
-type attack_step = AttackSelectA | DefendSelectA | ResultA | OccupyA
+type attack_step = AttackSelectA | DefendSelectA | OccupyA
 type fortify_step = FromSelectF | ToSelectF | CountF
 
 (** The type of a turn.*)
@@ -88,7 +88,7 @@ val remaining_reinforcements : t -> army
 
     Raises [NotOwner n] if current [player] is not the owner of node [n] and
     [InvalidState turn] when [turn] is not [Reinforce]. *)
-val reinforce : t -> node_id -> t
+val reinforce : t -> node_id -> army -> t
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
@@ -129,3 +129,7 @@ val fortify : t -> node_id -> node_id -> t
 val pick_nodes : t -> node_id -> t
 
 val init_reinforce : t -> t
+
+val set_turn : t -> turn_state -> t
+
+val back_turn : t -> t

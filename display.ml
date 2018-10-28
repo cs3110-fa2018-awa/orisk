@@ -26,14 +26,21 @@ let draw_nodes (st : Interface.t) : unit =
        (* only redraw if node is owned by a player *)
        let x = Board.node_coords brd id |> Board.x
        in let y = Board.node_coords brd id |> Board.y
-       in let is_cursor = cursor st = (x, y)
-       in let color_a, color_b = begin match (Board_state.node_owner brd_st id) with
-           | Some player -> player_color player, if is_cursor then White else Black
-           | None -> White, Black end
+       in let is_cursor = cursor_node st = id
+       in let is_selected = 
+            from_fortify_node st = Some id || attacking_node st = Some id
+       in let style = 
+            match (Board_state.node_owner brd_st id),is_cursor,is_selected with
+            | None,true,_ -> [Foreground Black; Background White]
+            | None,false,_ -> [Foreground White;Background Black]
+            | Some player,false,false 
+              -> [Foreground (player_color player);Background Black]
+            | Some player,false,true 
+              -> [Foreground (player_color player);Background White]
+            | Some player,true,_ 
+              -> [Foreground White;Background (player_color player)]
        in draw_str (Board_state.node_army brd_st id |> format_2digit)
-         (x + 1) (y + 1) 
-         begin if is_cursor then [Background color_a; Foreground color_b]
-           else [Foreground color_a; Background color_b] end
+         (x + 1) (y + 1) style 
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
@@ -47,13 +54,17 @@ let draw_turn (st : Interface.t) : unit =
     | Null -> "Picking territories"
     | Reinforce _ -> "Reinforce " ^
                      (game_state st |> remaining_reinforcements |> string_of_int)
-    | Attack _ -> "Attack"
-    | Fortify _ -> "Fortify"
+    | Attack AttackSelectA -> "Attack Select"
+    | Attack DefendSelectA -> "Defend"
+    | Attack OccupyA -> "eh"
+    | Fortify FromSelectF -> "Fortify Select"
+    | Fortify ToSelectF -> "Fortify To"
+    | Fortify CountF -> "singularity"
   end;
   print_string [] "\n"
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated
-    with information from the board state corresponding to [gs]. *)
+    with information from the board state corresponding to [gamestate]. *)
 let draw_board (st : Interface.t) : unit = 
   (* clear screen *)
   ANSITerminal.erase Screen;

@@ -74,7 +74,7 @@ let rec game_loop (st:Interface.t) (msg : string option) : unit =
       game_loop st (Some "Please enter a command!")
     | Quit -> print_endline("\nThanks for playing!\n"); exit 0
     | Help -> game_loop st (Some helpmsg)
-    | ReinforceC (n) -> game_loop (gs st (reinforce (game_state st) n)) None
+    | ReinforceC (n) -> game_loop (gs st (reinforce (game_state st) n 1) ) None
     | AttackC (a,d,i)
       -> let gs', attack, defend = attack (game_state st) a d i
       in game_loop (gs st gs') (Some ("A: " ^ (string_of_dice attack) 
@@ -114,13 +114,37 @@ let read_input () =
 
 let char_regexp = Str.regexp "[A-Za-z0-9]"
 
+(** [extract a] extracts the value from the option [a]
+    if that option is [Some value] and raises [Failure] otherwise. *)
+let extract (a : 'a option) =
+  match a with
+  | Some x -> x
+  | None -> failwith "extract failed" (*BISECT-IGNORE*) (*helper function not in mli*)
+
+let game_stage st = match st |> game_state |> turn with 
+  | Null -> pick st,None
+  | Reinforce SelectR -> change_game_st st (reinforce (game_state st) (cursor_node st) 1),None
+  | Reinforce PlaceR -> failwith ";-;"
+  | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
+  | Attack DefendSelectA 
+    -> let gst',attack,defend = attack (game_state st) (attacking_node st |> extract) (cursor_node st) 
+           ((node_army (board_state st) (attacking_node st |> extract)) - 1) 
+    in print_endline (turn_to_str (game_state st)); change_game_st st gst', (Some ("A: " ^ (string_of_dice attack) 
+                                                                                   ^ " vs D: " ^ (string_of_dice defend)))
+  | Attack OccupyA -> failwith ":("
+  | Fortify FromSelectF -> Some (cursor_node st) |> change_from_fortify_node st,None
+  | Fortify ToSelectF 
+    -> fortify (game_state st) (from_fortify_node st |> extract) 
+         (cursor_node st) |> change_game_st st,None
+  | Fortify CountF -> failwith "):"
+
 let rec game_loop_new ?(search : string * bool = "",false) 
     (st : Interface.t) (msg : string option) : unit =
 
   let perform_search str : unit =
     let found_node = node_search (st |> Interface.board) str in
-      game_loop_new ~search:(str,found_node <> None)
-        (set_cursor_node st found_node) msg in
+    game_loop_new ~search:(str,found_node <> None)
+      (set_cursor_node st found_node) msg in
 
   draw_board st;
   win_yet (game_state st);
@@ -131,7 +155,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
       then print_endline ("Search: " ^ s)
       else begin
         ANSITerminal.(print_string [] "Failing search: "; 
-                         print_string [red] s);
+                      print_string [red] s);
         print_endline ""
       end
     | None, _ -> print_endline "..."
@@ -141,7 +165,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
     | "\027[D" -> game_loop_new (move_arrow st Left) msg
     | "\027[B" -> game_loop_new (move_arrow st Down) msg
     | "\027[C" -> game_loop_new (move_arrow st Right) msg
-    | "\n" -> game_loop_new (pick st) msg 
+    | " " -> let st',msg = game_stage st in game_loop_new st' msg
+    | "\n" 
+      -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
+    | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
       -> perform_search ((fst search) ^ c)
@@ -151,6 +178,26 @@ let rec game_loop_new ?(search : string * bool = "",false)
                              (String.length (fst search) - 1))
     | _ -> game_loop_new st msg
   end with
+  | NoPlayers
+    -> game_loop_new st (Some "No players!")
+  | NonadjacentNode (node_id1,node_id2)
+    -> game_loop_new st (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
+  | InvalidState (turn_state)
+    -> game_loop_new st (Some "Wrong type of turn.")
+  | InsufficientArmies (node_id,army)
+    -> game_loop_new st (Some ("You only have " ^ (string_of_int army) ^
+                               " armies to attack with! You can't attack from " ^
+                               node_id ^ "!"))
+  | FriendlyFire player
+    -> game_loop_new st (Some "You can't attack yourself!")
+  | UnknownNode n
+    -> game_loop_new st (Some "Territory does not exist.")
+  | UnknownCont c
+    -> game_loop_new st (Some "Continent does not exist.")
+  | UnknownPlayer p
+    -> game_loop_new st (Some "Player does not exist.")
+  | NotOwner n
+    -> game_loop_new st (Some "You don't control this territory")
   | _ -> game_loop_new st msg
 
 (* [players] is a temporarily hard-coded set of players. Only used for the 
