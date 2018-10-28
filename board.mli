@@ -99,6 +99,8 @@ val node_conts : t -> node_id -> cont_id list
 
 val node_search : t -> string -> node_id option
 
+val nodes_filter : t -> (node_id -> bool) -> node_id list
+
 (** [UnknownNode node] is the exception raised when [node] is not found. *)
 exception UnknownNode of node_id
 

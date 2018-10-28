@@ -235,3 +235,6 @@ let node_search board str =
   |> String_map.min_binding_opt |> function 
   | Some (k,_) -> Some k
   | None -> None
+
+let nodes_filter board predicate =
+  String_map.filter (fun k v -> predicate k) board.nodes |> list_of_string_map

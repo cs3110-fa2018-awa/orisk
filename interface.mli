@@ -36,3 +36,6 @@ val pick : t -> t
 val change_game_st : t -> Game_state.t -> t
 
 val set_cursor_node : t -> node_id option -> t
+
+val turn_valid_nodes : t -> node_id list
+    

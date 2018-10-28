@@ -14,6 +14,7 @@ type t = {
   cursor_node : node_id;
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
+  (* technically these would better as parameters of the state *)
   attacking_node : node_id option;
   from_fortify_node : node_id option;
 }
@@ -128,3 +129,34 @@ let change_game_st st game_st = print_endline "wds68";
            from_fortify_node = if List.mem (turn game_st) 
                [Fortify ToSelectF; Fortify CountF] 
              then st.from_fortify_node else None}
+
+let extract = function
+  | None -> failwith "extract failed"
+  | Some x -> x
+
+let turn_valid_nodes st =
+  let gs = game_state st
+  in let bs = board_state st
+  in let b = board st
+  in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
+  in let pred = match turn gs with
+    | Null -> fun node -> node_owner bs node = None
+    | Reinforce SelectR -> is_owner
+    | Reinforce PlaceR -> failwith "shouldn't happen"
+    | Attack AttackSelectA
+      -> fun node -> node_owner bs node = Some (current_player gs)
+                     && node_army bs node > 1
+    | Attack DefendSelectA
+      -> fun node -> node_owner bs node <> Some (current_player gs)
+                     && st.attacking_node <> None
+                     && List.mem node (node_borders b (extract st.attacking_node))
+    | Attack OccupyA -> failwith "shouldn't happen"
+    | Fortify FromSelectF -> fun node -> is_owner node
+                                         && node_army bs node > 1
+    | Fortify ToSelectF
+      -> let reachable = match st.from_fortify_node with
+          | None -> []
+          | Some from -> dfs bs from []
+      in fun node -> Some node <> st.from_fortify_node && List.mem node reachable
+    | Fortify CountF -> failwith "shouldn't happen"
+  in nodes_filter b pred

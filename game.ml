@@ -52,6 +52,16 @@ let win_yet (st:Game_state.t) : unit =
       else ()
   in check (st |> Game_state.players)
 
+let next_valid_node st =
+  let node = cursor_node st
+  in let lst = turn_valid_nodes st
+  in let rec helper = function
+    | hd :: next :: tl when hd = node -> next
+    | hd :: [] when hd = node -> List.hd lst
+    | [] -> List.hd lst
+    | hd :: tl -> helper tl
+  in if List.length lst = 0 then None else Some (helper lst)
+
 (** [game_loop st msg] continuously prompts the player for commands
     and updates the game state according to the user input and the current 
     state [st]. Reprompts if invalid commands are given and displays error
@@ -168,6 +178,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
     | " " -> let st',msg = game_stage st in game_loop_new st' msg
     | "\n" 
       -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
+    | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
     | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
