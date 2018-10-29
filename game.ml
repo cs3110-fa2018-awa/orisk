@@ -71,7 +71,7 @@ let next_valid_node st =
 let rec game_loop (st:Interface.t) (msg : string option) : unit =
   draw_board st;
   win_yet (game_state st);
-  draw_stats st;
+  draw_stats (game_state st);
   print_endline "";
   print_endline (match msg with
       | Some m -> m
