@@ -1,4 +1,4 @@
-MODULES=board_state game_state command board player game display authors
+MODULES=board_state game_state command board player game display interface authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

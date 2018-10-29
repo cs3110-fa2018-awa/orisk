@@ -177,8 +177,7 @@
             "borders": [
                 "dickson",
                 "balch",
-                "milstein",
-                "baker"
+                "milstein"
             ],
             "coordinates": {
                 "x": 70,
@@ -189,8 +188,7 @@
             "id": "baker",
             "name": "Baker",
             "borders": [
-                "balck",
-                "risley",
+                "balch",
                 "lincoln",
                 "psb"
             ],
@@ -416,7 +414,8 @@
             "borders": [
                 "rose",
                 "keeton",
-                "health"
+                "health",
+                "hollister"
             ],
             "coordinates": {
                 "x": 26,
@@ -441,7 +440,8 @@
             "borders": [
                 "health",
                 "carpenter",
-                "thurston"
+                "thurston",
+                "bethe"
             ],
             "coordinates": {
                 "x": 35,

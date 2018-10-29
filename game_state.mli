@@ -5,11 +5,19 @@ open Player
 open Board_state
 open Board
 
+type reinforce_step = SelectR | PlaceR
+type attack_step = AttackSelectA | DefendSelectA | OccupyA
+type fortify_step = FromSelectF | ToSelectF | CountF
+
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack 
+type turn_state =
+  | Null
+  | Reinforce of reinforce_step
+  | Attack of attack_step
+  | Fortify of fortify_step
 
 (** The type of a list of players. *)
-type players = Player.t list 
+type players = Player.t list
 
 (** The abstract type representing a game state. *)
 type t
@@ -22,6 +30,15 @@ exception NoPlayers
     attack from node [n1] to node [n2] but [n1] and [n2] are not
     adjacent nodes. *)
 exception NonadjacentNode of (node_id * node_id)
+
+(** [NonconnectedNode (n1,n2)] is raised when a player attempts to 
+    fortify from node [n1] to node [n2] but [n1] and [n2] are not
+    connected by a path of nodes that the player owns. *)
+exception NonconnectedNode of (node_id * node_id)
+
+(** [SameNode n] is raised when a player attempts to perform an
+    action meant for two different nodes on the same node. *)
+exception SameNode of node_id
 
 (** [InvalidState turn_st] is raised when a players inputs a 
     command that does not correspond to the current state of their
@@ -80,7 +97,7 @@ val remaining_reinforcements : t -> army
 
     Raises [NotOwner n] if current [player] is not the owner of node [n] and
     [InvalidState turn] when [turn] is not [Reinforce]. *)
-val reinforce : t -> node_id -> t
+val reinforce : t -> node_id -> army -> t
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
@@ -100,7 +117,8 @@ val reinforce : t -> node_id -> t
         - [NonadjacentNode (a,d)] if [a] and [d] are not adjacent
         - [NotOwner] if current [player] of [st] does not own [a]
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
-          [a] and [d] *)
+          [a] and [d]
+        - [SameNode n] if [n] is both the attacking and defending node *)
 val attack : t -> node_id -> node_id -> army -> t * int list * int list
 
 (** [assign_random_nodes st] is the game state [st] after assigning 
@@ -108,10 +126,32 @@ val attack : t -> node_id -> node_id -> army -> t * int list * int list
     [st]. *)
 val assign_random_nodes : t -> t
 
-(** [end_attack st] is the game state [st] with the next [player] as the 
-    [current player] and the [turn_state] [Reinforce]. *)
-val end_attack : t -> t
+(** [end_turn_step st] is the game state [st] resulting from skipping the
+    current turn step. If in reinforce, then moves to attack. If in attack,
+    then moves to fortify. If in fortify, then advances to the next player's
+    reinforce. *)
+val end_turn_step : t -> t
 
+val remaining_reinforcements : t -> army
 
+(** [fortify st f t] sends one army from territory [f] to territory [t] if 
+    they are connected by a path of territories that the current player owns.
 
+    Raises:
+        - [InvalidState turn] when [turn] is not [Fortify]
+        - [NotOwner] if current [player] of [st] does not own [from_node]
+        - [NotOwner] if current [player] of [st] does not own [to_node]
+        - [SameNode n] if [n] is both the node fortifying from and to
+        - [NonconnectedNode n1, n2] if [n1] and [n2] are not connected by a path
+          of nodes owned by the current player
+        - [InsufficientArmies n] if [n] does not have enough armies to fortify
+          with *)
+val fortify : t -> node_id -> node_id -> t
 
+val pick_nodes : t -> node_id -> t
+
+val init_reinforce : t -> t
+
+val set_turn : t -> turn_state -> t
+
+val back_turn : t -> t

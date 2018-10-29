@@ -7,7 +7,8 @@ open Board
 type command = 
   | AttackC of (node_id * node_id * army)
   | ReinforceC of node_id
-  | EndTurn
+  | FortifyC of (node_id * node_id)
+  | EndTurnStep
   | Help
   | Quit
 

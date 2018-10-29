@@ -2,8 +2,16 @@ open Player
 open Board_state
 open Board
 
+type reinforce_step = SelectR | PlaceR
+type attack_step = AttackSelectA | DefendSelectA | OccupyA
+type fortify_step = FromSelectF | ToSelectF | CountF
+
 (** The type of a turn.*)
-type turn_state = Reinforce | Attack 
+type turn_state =
+  | Null
+  | Reinforce of reinforce_step
+  | Attack of attack_step
+  | Fortify of fortify_step
 
 (** The type of a list of players. *)
 type players = Player.t list 
@@ -27,6 +35,15 @@ exception NoPlayers
     attack from node [n1] to node [n2] but [n1] and [n2] are not
     adjacent nodes. *)
 exception NonadjacentNode of (node_id * node_id)
+
+(** [NonconnectedNode (n1,n2)] is raised when a player attempts to 
+    fortify from node [n1] to node [n2] but [n1] and [n2] are not
+    connected by a path of nodes that the player owns. *)
+exception NonconnectedNode of (node_id * node_id)
+
+(** [SameNode n] is raised when a player attempts to perform an
+    action meant for two different nodes on the same node. *)
+exception SameNode of node_id
 
 (** [InvalidState turn_st] is raised when a players inputs a 
     command that does not correspond to the current state of their
@@ -61,7 +78,7 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Reinforce;
+    turn = Null;
     remaining_reinforcements = player_reinforcements board_st curr_player;
   }
 
@@ -80,22 +97,46 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
-  | Reinforce -> "Reinforce"
-  | Attack -> "Attack"
+  | Null -> "Picking territories"
+  | Reinforce _ -> "Reinforce"
+  | Attack AttackSelectA -> "Attack Select"
+  | Attack DefendSelectA -> "Defend"
+  | Attack OccupyA -> "Occupy"
+  | Fortify FromSelectF -> "Fortify Select"
+  | Fortify ToSelectF -> "Fortify To"
+  | Fortify CountF -> "Fortify Count"
 
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
-let turn_to_attack st = {st with turn = Attack}
+let turn_to_attack st = {st with turn = Attack AttackSelectA}
+
+let set_turn st turn = {st with turn = turn}
 
 (** [change_board_st st board_st] is the game state [st] with board state 
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
+
+let is_null st = match st.turn with
+  | Null -> true
+  | _ -> false
+
+let is_reinforce st = match st.turn with
+  | Reinforce _ -> true
+  | _ -> false
+
+let is_attack st = match st.turn with
+  | Attack _ -> true
+  | _ -> false
+
+let is_fortify st = match st.turn with
+  | Fortify _ -> true
+  | _ -> false
 
 (** [remaining_reinforcements st] is the number of armies the current [player] 
     of [st] has remaining. 
 
     Raises [InvalidState turn] when [turn] is not [Reinforce]. *)
 let remaining_reinforcements st =
-  let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
+  let () = if not (is_reinforce st) then raise (InvalidState st.turn) else () in
   st.remaining_reinforcements
 
 (** [reinforce st n] is the game state resulting from the current [player] of 
@@ -103,15 +144,18 @@ let remaining_reinforcements st =
 
     Raises [NotOwner n] if current [player] is not the owner of node [n] and
     [InvalidState turn] when [turn] is not [Reinforce]. *)
-let reinforce st n =
+let reinforce st n armies =
   let () = if Some st.current_player <> (node_owner st.board_state n)
     then raise (NotOwner n) else () in
-  let () = if st.turn <> Reinforce then raise (InvalidState st.turn) else () in
+  let () = if not (is_reinforce st) then raise (InvalidState st.turn) else () in
   let () = if st.remaining_reinforcements <= 0 then failwith "need more armies"
     else () in 
-  {st with board_state = place_army st.board_state n 1; 
-           remaining_reinforcements = st.remaining_reinforcements - 1;
-           turn = if st.remaining_reinforcements = 1 then Attack else Reinforce}
+  let () = if armies > st.remaining_reinforcements || armies <= 0
+    then raise (InsufficientArmies (n,armies)) else () in (*better exception*)
+  {st with board_state = place_army st.board_state n armies; 
+           remaining_reinforcements = st.remaining_reinforcements - armies;
+           turn = if st.remaining_reinforcements = armies
+             then Attack AttackSelectA else Reinforce SelectR}
 
 (*BISECT-IGNORE-BEGIN*) (* helper not exposed in mli, also play tested both*)
 (** [next_player curr_player lst] is the element in [lst] immediately after 
@@ -125,28 +169,62 @@ let next_player curr_player lst =
     | hd :: tl -> helper tl
   in helper lst
 
+let shuffle_lst lst = QCheck.Gen.(generate1 (shuffle_l lst))
+
 (** [assign_random_nodes st] is the game state [st] after assigning 
     ownership of the nodes in [st] as equally as possible to each [player] in
     [st]. *)
-let assign_random_nodes (st : t) : t = 
-  (* TODO not actually random right now *)
-  fold_nodes (board st.board_state)
-    (fun (node : node_id) ((st',player) : (t * Player.t)) ->
-       let next = next_player player st.players
-       in ({st' with board_state
-                     = place_army (set_owner st'.board_state node (Some next))
-                         node 1} : t), next)
-    (st,st.current_player) |> fst
+let assign_random_nodes (st : t) : t =
+  let unselected node = (node_owner st.board_state node) = None in
+  {begin
+    List.fold_left
+      (fun (st',player) (node : node_id) : (t * Player.t) ->
+         let next = next_player player st.players
+         in ({st' with board_state
+                       = place_army (set_owner st'.board_state node (Some next))
+                           node 1} : t), next)
+      (st,st.current_player) (board st.board_state |> nodes
+                              |> List.filter unselected |> shuffle_lst) |> fst
+  end with turn = Reinforce SelectR}
 (*BISECT-IGNORE-END*)
 
+let pick_nodes st node =
+  let () = if not (is_null st) then raise (InvalidState st.turn) else () in
+  let () = if node_owner st.board_state node <> None then raise (NotOwner node) else () in (*better exception*)
+  if List.mem None (owners st.board_state) then 
+    {st with board_state = place_army (set_owner st.board_state node (Some st.current_player))
+                 node 1; current_player = next_player st.current_player st.players}
+  else {st with current_player = List.hd st.players;
+                turn = Reinforce SelectR}
+
+let init_reinforce st = {st with current_player = List.hd st.players; turn = Reinforce SelectR}
+
+let setup_reinforce st =
+  let next = next_player st.current_player st.players
+  in {st with
+      current_player = next;
+      remaining_reinforcements = player_reinforcements st.board_state next;
+      turn = Reinforce SelectR}
+
 (*BISECT-IGNORE-BEGIN*) (* play tested *)
-(** [end_attack st] is the game state [st] with the next [player] as the 
-    [current player] and the [turn_state] [Reinforce]. *)
-let end_attack st = let next = next_player st.current_player st.players in 
-  {st with current_player = next; 
-           turn = Reinforce; 
-           remaining_reinforcements = player_reinforcements st.board_state next}
+(** [end_turn_step st] is the game state [st] resulting from skipping the
+    current turn step. If in reinforce, then moves to attack. If in attack,
+    then moves to fortify. If in fortify, then advances to the next player's
+    reinforce. *)
+let end_turn_step st =
+  match st.turn with
+  | Null -> st
+  | Reinforce _ -> {st with turn = Attack AttackSelectA}
+  | Attack _ -> {st with turn = Fortify FromSelectF}
+  | Fortify _ -> setup_reinforce st
 (*BISECT-IGNORE-END*)
+
+let back_turn st = 
+  match st.turn with
+  | Reinforce _ -> {st with turn = Reinforce SelectR}
+  | Attack _ -> {st with turn = Attack AttackSelectA}
+  | Fortify _ -> {st with turn = Fortify FromSelectF}
+  | Null -> st
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
     5, inclusive. *)
@@ -170,6 +248,33 @@ let rec battle attack defend (deatha,deathd) =
     else battle atl dtl (deatha + 1,deathd)(*BISECT-IGNORE-END*)
   | _ -> deatha,deathd
 
+(** [fortify st f t] sends one army from territory [f] to territory [t] if 
+    they are connected by a path of territories that the current player owns.
+
+    Raises:
+        - [InvalidState turn] when [turn] is not [Fortify]
+        - [NotOwner] if current [player] of [st] does not own [from_node]
+        - [NotOwner] if current [player] of [st] does not own [to_node]
+        - [SameNode n] if [n] is both the node fortifying from and to
+        - [NonconnectedNode n1, n2] if [n1] and [n2] are not connected by a path
+          of nodes owned by the current player
+        - [InsufficientArmies n] if [n] does not have enough armies to fortify
+          with *)
+let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
+  let () = if not (is_fortify st) then raise (InvalidState st.turn) else () 
+  in let () = if Some st.current_player <> (node_owner st.board_state from_node)
+       then raise (NotOwner from_node) else ()
+  in let () = if Some st.current_player <> (node_owner st.board_state to_node)
+       then raise (NotOwner to_node) else ()
+  in let () = if from_node = to_node
+       then raise (SameNode to_node) else ()
+  in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
+       then raise (NonconnectedNode (from_node,to_node)) else ()
+  in let () = if (node_army st.board_state from_node) <= 1
+       then raise (InsufficientArmies (from_node,1)) else ()
+  in setup_reinforce
+    {st with board_state = place_army (place_army st.board_state to_node 1) from_node (-1)}
+
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
     a battle in which the winner is determined according to rolling random die
@@ -189,9 +294,11 @@ let rec battle attack defend (deatha,deathd) =
         - [NonadjacentNode (a,d)] if [a] and [d] are not adjacent
         - [NotOwner] if current [player] of [st] does not own [a]
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
-          [a] and [d] *)
+          [a] and [d]
+        - [SameNode n] if [n] is both the attacking and defending node *)
 let attack st a d invading_armies = 
-  let () = if st.turn <> Attack then raise (InvalidState st.turn) else () in
+  let () = if not (is_attack st) then raise (InvalidState st.turn) else () in
+  let () = if a = d then raise (SameNode d) else () in
   let () = if not 
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
     then raise (NonadjacentNode (a,d)) else () in 
@@ -219,14 +326,16 @@ let attack st a d invading_armies =
                     (Board_state.set_army 
                        (Board_state.set_owner st.board_state d attacker) d 
                        (invading_armies - attack_deaths)) a 
-                    (total_attackers - invading_armies + 1)}, 
+                    (total_attackers - invading_armies + 1);
+                turn = Attack AttackSelectA}, 
        attack_dice, defend_dice
   (* attacker lost *)
-  else {st with board_state =               (*BISECT-IGNORE*) (* play tested *)
+  else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 
-                    (total_attackers - attack_deaths + 1)}, 
+                    (total_attackers - attack_deaths + 1);
+                turn = Attack AttackSelectA}, 
        attack_dice, defend_dice
 
 (* random seed *)
