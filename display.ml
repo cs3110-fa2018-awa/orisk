@@ -46,22 +46,31 @@ let column_spacing (s:string) (c_len:int) : string =
 let draw_stats (st : Interface.t) =
   let gs = Interface.game_state st in
   let col_len = max_column_len gs + spacing in
-  let header = "Player" ^ make_n_spaces (col_len - 6) ^ "(a)rmy" ^ make_n_spaces spacing ^ "(n)ode" ^ make_n_spaces spacing ^ "(c)ont" in
+  let header = "Player" ^ make_n_spaces (col_len - 6) ^ "(a)rmy" ^
+               make_n_spaces spacing ^ "(n)ode" ^ make_n_spaces spacing ^
+               "(c)ont" ^ make_n_spaces spacing in
   let draw_one_line (ps : Board_state.player_stats) : unit =
     match ps with
     | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
       let name = p |> Player.player_name in
-      print_endline (name ^ column_spacing name col_len ^ (string_of_int a) ^ 
+      print_string [] "| ";
+      print_string [Foreground (player_color p)] (player_name p);
+      print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
                      column_spacing (string_of_int a) (spacing+spacing_head) ^ (string_of_int n) ^
-                     column_spacing (string_of_int n) (spacing+spacing_head) ^ (string_of_int c)) in 
+                     column_spacing (string_of_int n) (spacing+spacing_head) ^ (string_of_int c) ^
+                     column_spacing (string_of_int c) (spacing+spacing_head) ^ " |") in 
   let rec draw_all (ps : Board_state.player_stats list) : unit =
     match ps with
     | [] -> ()
     | hd :: tl -> draw_one_line hd; draw_all tl in
-  print_endline "---------------------------------------";
-  print_endline header;
-  print_endline "---------------------------------------";
-  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs))
+  ANSITerminal.set_cursor 1 2; (* to account for the space in the ascii json *) 
+  print_string [Bold] "------------------------------------------\n";
+  print_string [Bold] ("| " ^ header ^ " |\n");
+  print_string [Bold] "------------------------------------------\n";
+  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
+  print_string [Bold] "------------------------------------------\n";
+  (* to account for the extra turn information being drawn? temporary hard code *)
+  ANSITerminal.set_cursor 0 (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 2) 
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
