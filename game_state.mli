@@ -5,14 +5,14 @@ open Player
 open Board_state
 open Board
 
-type reinforce_step = SelectR | PlaceR
-type attack_step = AttackSelectA | DefendSelectA | OccupyA
-type fortify_step = FromSelectF | ToSelectF | CountF
+type reinforce_step = SelectR | PlaceR of node_id
+type attack_step = AttackSelectA | DefendSelectA of node_id | OccupyA of (node_id * node_id)
+type fortify_step = FromSelectF | ToSelectF of node_id | CountF of (node_id * node_id)
 
 (** The type of a turn.*)
 type turn_state =
   | Null
-  | Reinforce of reinforce_step
+  | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
 
@@ -146,12 +146,12 @@ val remaining_reinforcements : t -> army
           of nodes owned by the current player
         - [InsufficientArmies n] if [n] does not have enough armies to fortify
           with *)
-val fortify : t -> node_id -> node_id -> t
+val fortify : t -> node_id -> node_id -> army -> t
 
 val pick_nodes : t -> node_id -> t
-
-val init_reinforce : t -> t
 
 val set_turn : t -> turn_state -> t
 
 val back_turn : t -> t
+
+val occupy : t -> node_id -> node_id -> army -> t
