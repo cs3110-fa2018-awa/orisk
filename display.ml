@@ -8,9 +8,10 @@ open Interface
 (** TODO *)
 let header_len = String.length "Player"
 
-(** TODO *)
+(** constant*)
 let spacing = 3
 
+(** constant *)
 let spacing_head = 6 (* (n)ode *)
 
 (** [format_2digit num] is the 2 digit string representation of [num]. 
@@ -37,6 +38,7 @@ let make_n_spaces (n:int) : string =
     if n > 0 then h (n-1) (acc ^ " ") else acc in 
   h n ""
 
+(** TODO *)
 let column_spacing (s:string) (c_len:int) : string =
   make_n_spaces (c_len - String.length s)
 

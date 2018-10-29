@@ -13,6 +13,10 @@ val board_state : t -> Board_state.t
 
 val board : t -> Board.t
 
+val leaderboard : t -> bool
+
+val toggle_leaderboard : t -> t
+
 val attacking_node : t -> node_id option
 
 val change_attack_node : t -> node_id option -> t
@@ -38,4 +42,4 @@ val change_game_st : t -> Game_state.t -> t
 val set_cursor_node : t -> node_id option -> t
 
 val turn_valid_nodes : t -> node_id list
-    
+
