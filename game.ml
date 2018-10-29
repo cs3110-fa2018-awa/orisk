@@ -72,7 +72,26 @@ let read_input () =
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio
   in Bytes.sub_string buf 0 len
 
-let char_regexp = Str.regexp "[A-Za-z]"
+let char_regexp = Str.regexp "[A-Za-z0-9]"
+
+let int_regexp = Str.regexp "[0-9]"
+
+let rec read_num str prev : string option =
+  ANSITerminal.move_cursor (~- (String.length prev)) 0;
+  ANSITerminal.erase Eol;
+  print_string str;
+  flush stdout;
+  match read_input () with
+  | c when Str.string_match int_regexp c 0
+    -> read_num (str ^ c) str
+  | "\127" -> if String.length str <= 0
+    then read_num str str
+    else read_num (String.sub str 0
+                     (String.length str - 1)) str
+  | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+  | " " | "\n" -> Some str
+  | "?" | "\\" -> None
+  | _ -> read_num str str
 
 let game_stage st = match st |> game_state |> turn with 
   | Null -> pick st,None
@@ -156,10 +175,17 @@ let rec game_loop_new ?(search : string * bool = "",false)
         end 
       | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _) ->
         begin
-          print_string "min [], max [] > ";
-          let num = read_line () |> int_of_string in
-          let st',msg' = game_nums st num in
-          game_loop_new st' msg'
+          let (min, max, default) = st |> game_state |> min_max_default in
+          let () = print_string ("min " ^ (string_of_int min) ^
+                                 ", max " ^ (string_of_int max) ^
+                                 ", default: " ^ (string_of_int default) ^ " > ") in
+          let handle num =
+            let st',msg' = game_nums st num in
+            game_loop_new st' msg' in
+          match read_num "" "" with
+          | Some str when str = "" -> handle default
+          | Some str -> handle (int_of_string str)
+          | None -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
         end
     end
   with

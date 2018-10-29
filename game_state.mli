@@ -155,3 +155,5 @@ val set_turn : t -> turn_state -> t
 val back_turn : t -> t
 
 val occupy : t -> node_id -> node_id -> army -> t
+
+val min_max_default : t -> army * army * army
