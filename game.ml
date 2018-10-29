@@ -163,6 +163,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
 
   draw_board st;
   win_yet (game_state st);
+  draw_stats (game_state st);
   begin match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 
@@ -186,6 +187,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
     | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
     | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+    | "=" -> failwith "todo"
     | c when Str.string_match char_regexp c 0
       -> perform_search ((fst search) ^ c)
     | "\127" -> if String.length (fst search) <= 1

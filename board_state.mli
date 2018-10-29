@@ -47,6 +47,9 @@ val player_conts : t -> Player.t -> cont_id list
     by [player] in [state]. *)
 val player_army : t -> Player.t -> army
 
+(** [get_players state] is the list of all existing players in [state]. *)
+val get_players: t -> Player.t list
+
 (** [player_stats] is the board statistics of a player, used internally.
     It contains the total number of armies, territories, and continents
     that a player owns. *)

@@ -5,6 +5,14 @@ open Game_state
 open Player
 open Interface
 
+(** TODO *)
+let header_len = String.length "Player"
+
+(** TODO *)
+let spacing = 3
+
+let spacing_head = 6 (* (n)ode *)
+
 (** [format_2digit num] is the 2 digit string representation of [num]. 
     Requires: 0 <= [num] <= 99 *)
 let format_2digit (i : int) : string =
@@ -16,20 +24,41 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
   ANSITerminal.set_cursor x y;
   ANSITerminal.print_string f s
 
-(** TODO: temporary for debugging *)
-let draw_stat (ps : Board_state.player_stats) : unit =
-  match ps with
-  | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
-    print_endline ((p |> Player.player_name) ^ "  Armies: " ^ (string_of_int a) ^ "  Territories: " ^ (string_of_int n) ^ "  Continents: " ^ (string_of_int c))
+(** TODO *)
+let max_column_len (gs : Game_state.t) : int =
+  let name_len = 
+    List.fold_left (fun acc p -> max acc (p |> Player.player_name |> String.length))
+      0 (gs |> Game_state.board_st |> Board_state.get_players) in 
+  max header_len name_len
 
-(** TODO: temporary for debugging *)
-let draw_stats (gs : Game_state.t) : unit = 
-  let rec internal (ps : Board_state.player_stats list) : unit =
+(** TODO *)
+let make_n_spaces (n:int) : string =
+  let rec h n acc =
+    if n > 0 then h (n-1) (acc ^ " ") else acc in 
+  h n ""
+
+let column_spacing (s:string) (c_len:int) : string =
+  make_n_spaces (c_len - String.length s)
+
+(** TODO: printing with proper headers *)
+let draw_stats (gs : Game_state.t) =
+  let col_len = max_column_len gs + spacing in
+  let header = "Player" ^ make_n_spaces (col_len - 6) ^ "(a)rmy" ^ make_n_spaces spacing ^ "(n)ode" ^ make_n_spaces spacing ^ "(c)ont" in
+  let draw_one_line (ps : Board_state.player_stats) : unit =
+    match ps with
+    | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
+      let name = p |> Player.player_name in
+      print_endline (name ^ column_spacing name col_len ^ (string_of_int a) ^ 
+                     column_spacing (string_of_int a) (spacing+spacing_head) ^ (string_of_int n) ^
+                     column_spacing (string_of_int n) (spacing+spacing_head) ^ (string_of_int c)) in 
+  let rec draw_all (ps : Board_state.player_stats list) : unit =
     match ps with
     | [] -> ()
-    | hd :: tl -> draw_stat hd; internal tl
-    (* change the string to whatever you want to sort by *)
-  in internal (Board_state.sorted_player_stats "territory" (Game_state.board_st gs))
+    | hd :: tl -> draw_one_line hd; draw_all tl in
+  print_endline "---------------------------------------";
+  print_endline header;
+  print_endline "---------------------------------------";
+  draw_all (Board_state.sorted_player_stats "territory" (Game_state.board_st gs))
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
