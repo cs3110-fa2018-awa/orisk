@@ -249,7 +249,17 @@ let rec battle attack defend (deatha,deathd) =
   | _ -> deatha,deathd
 
 (** [fortify st f t] sends one army from territory [f] to territory [t] if 
-    they are connected by a path of territories that the current player owns. *)
+    they are connected by a path of territories that the current player owns.
+
+    Raises:
+        - [InvalidState turn] when [turn] is not [Fortify]
+        - [NotOwner] if current [player] of [st] does not own [from_node]
+        - [NotOwner] if current [player] of [st] does not own [to_node]
+        - [SameNode n] if [n] is both the node fortifying from and to
+        - [NonconnectedNode n1, n2] if [n1] and [n2] are not connected by a path
+          of nodes owned by the current player
+        - [InsufficientArmies n] if [n] does not have enough armies to fortify
+          with *)
 let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
   let () = if not (is_fortify st) then raise (InvalidState st.turn) else () 
   in let () = if Some st.current_player <> (node_owner st.board_state from_node)
@@ -258,10 +268,10 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
        then raise (NotOwner to_node) else ()
   in let () = if from_node = to_node
        then raise (SameNode to_node) else ()
-  in let () = if (node_army st.board_state from_node) <= 1
-       then raise (InsufficientArmies (from_node,1)) else ()
   in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
        then raise (NonconnectedNode (from_node,to_node)) else ()
+  in let () = if (node_army st.board_state from_node) <= 1
+       then raise (InsufficientArmies (from_node,1)) else ()
   in setup_reinforce
     {st with board_state = place_army (place_army st.board_state to_node 1) from_node (-1)}
 
@@ -284,7 +294,8 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) : t =
         - [NonadjacentNode (a,d)] if [a] and [d] are not adjacent
         - [NotOwner] if current [player] of [st] does not own [a]
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
-          [a] and [d] *)
+          [a] and [d]
+        - [SameNode n] if [n] is both the attacking and defending node *)
 let attack st a d invading_armies = 
   let () = if not (is_attack st) then raise (InvalidState st.turn) else () in
   let () = if a = d then raise (SameNode d) else () in
