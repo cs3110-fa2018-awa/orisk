@@ -29,6 +29,9 @@ type player_state = {nodes : String_set.t; conts : String_set.t}
     that a player owns. *)
 type player_stats = {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
 
+(** TODO *)
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+
 (** [Board_state.t] is the state of a board. The underlying (and
     unchanging) board, the map of nodes to node states, the map
     of continents to continent states, and the map of players
@@ -151,16 +154,15 @@ let player_stats_make st p : player_stats =
     continents in descending order. 
 
     TODO: more clear documentation *)
-let compare_player_stats (c : string) ps1 ps2 : int = match c with 
-  | "player" -> Player.compare ps1.player ps2.player (* something janky happening here *)
-  | "army" -> - Pervasives.compare ps1.army_tot ps2.army_tot
-  | "territory" -> - Pervasives.compare ps1.node_tot ps2.node_tot
-  | "continent" -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
-  | _ -> failwith "not a valid comparison category"
+let compare_player_stats (c : stats_category) ps1 ps2 : int = match c with 
+  | CatPlayer -> Player.compare ps1.player ps2.player (* something janky happening here *)
+  | CatArmy -> - Pervasives.compare ps1.army_tot ps2.army_tot
+  | CatNode -> - Pervasives.compare ps1.node_tot ps2.node_tot
+  | CatCont -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
 
 (** [sorted_player_stats state category] is the list of all player statistics,
     sorted in based on [category] in [state]. *)
-let sorted_player_stats (c : string) st : player_stats list =
+let sorted_player_stats (c : stats_category) st : player_stats list =
   let lst = 
     List.fold_left 
       (fun acc player -> (player_stats_make st player)::acc) [] (get_players st)

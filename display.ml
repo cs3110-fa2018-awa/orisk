@@ -43,7 +43,8 @@ let column_spacing (s:string) (c_len:int) : string =
   make_n_spaces (c_len - String.length s)
 
 (** TODO: printing with proper headers *)
-let draw_stats (gs : Game_state.t) =
+let draw_stats (st : Interface.t) =
+  let gs = Interface.game_state st in
   let col_len = max_column_len gs + spacing in
   let header = "Player" ^ make_n_spaces (col_len - 6) ^ "(a)rmy" ^ make_n_spaces spacing ^ "(n)ode" ^ make_n_spaces spacing ^ "(c)ont" in
   let draw_one_line (ps : Board_state.player_stats) : unit =
@@ -60,7 +61,7 @@ let draw_stats (gs : Game_state.t) =
   print_endline "---------------------------------------";
   print_endline header;
   print_endline "---------------------------------------";
-  draw_all (Board_state.sorted_player_stats "territory" (Game_state.board_st gs))
+  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs))
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)

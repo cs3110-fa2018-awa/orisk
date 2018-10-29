@@ -115,7 +115,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
 
   draw_board st;
   win_yet (game_state st);
-  if (Interface.leaderboard st) then draw_stats (game_state st) else ();
+  if (Interface.leaderboard_on st) then draw_stats (st) else ();
   begin match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 
@@ -140,7 +140,12 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | " " | "\n" -> let st',msg' = game_stage st in game_loop_new st' msg'
           | "?" 
             -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
+          (* leaderboard toggles *)
           | "=" -> game_loop_new (toggle_leaderboard st) msg
+          | "'" -> game_loop_new (set_leaderboard_cat st CatPlayer) msg
+          | "," -> game_loop_new (set_leaderboard_cat st CatArmy) msg
+          | "." -> game_loop_new (set_leaderboard_cat st CatNode) msg
+          | "/" -> game_loop_new (set_leaderboard_cat st CatCont) msg
           | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
           | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
           | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0

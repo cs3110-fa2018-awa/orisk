@@ -9,4 +9,4 @@ val draw_board : Interface.t -> unit
 val draw_turn : Interface.t -> unit
 
 (** TODO: temporary for debugging *)
-val draw_stats : Game_state.t -> unit
+val draw_stats : Interface.t -> unit

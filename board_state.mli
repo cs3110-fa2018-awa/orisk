@@ -13,6 +13,9 @@ type t
 type player_stats = 
   {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
 
+(** TODO *)
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+
 val stats_player : player_stats -> Player.t
 val stats_army : player_stats -> army
 val stats_nodes : player_stats -> int
@@ -57,7 +60,7 @@ val player_stats_make : t -> Player.t -> player_stats
 
 (** [sorted_player_stats state category] is the list of all player statistics,
     sorted in descending order based on [category] in [state]. *)
-val sorted_player_stats : string -> t -> player_stats list
+val sorted_player_stats : stats_category -> t -> player_stats list
 
 (** [player_reinforcements state player] is the total number of
     reinforcements that [player] recieves given the current board

@@ -14,7 +14,7 @@ type t = {
   cursor_node : node_id;
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
-  leaderboard : bool;
+  leaderboard : (bool * stats_category);
 }
 
 let game_state st = st.game_state
@@ -27,7 +27,13 @@ let attacking_node st = match (turn st.game_state) with
   | Attack ((DefendSelectA node) | OccupyA (node,_)) -> Some node 
   | _ -> None
 
-let leaderboard st = st.leaderboard
+let leaderboard_on st = fst st.leaderboard
+
+let leaderboard_cat st = snd st.leaderboard
+
+let toggle_leaderboard st = {st with leaderboard = (not (leaderboard_on st), leaderboard_cat st)}
+
+let set_leaderboard_cat st cat = {st with leaderboard = (leaderboard_on st, cat)}
 
 let check_is_owner st (node:node_id option) =
   match node with 
@@ -116,7 +122,7 @@ let init gs =
     cursor_node = board_st gs |> Board_state.board |> nodes |> List.hd;
     scroll = (0, 0);
     move_map = build_move_map gs;
-    leaderboard = false;
+    leaderboard = (false, CatPlayer);
   }
 
 let cursor st = node_coords (board st) st.cursor_node
@@ -137,8 +143,6 @@ let move_arrow (st : t) (arrow : arrow) =
 let set_cursor_node st = function
   | None -> st
   | Some node_id -> {st with cursor_node = node_id} 
-
-let toggle_leaderboard st = {st with leaderboard = not (leaderboard st)}
 
 let pick st = {st with game_state = pick_nodes st.game_state st.cursor_node} 
 

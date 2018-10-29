@@ -1,5 +1,5 @@
-
 open Board
+open Board_state
 
 type t
 
@@ -13,9 +13,13 @@ val board_state : t -> Board_state.t
 
 val board : t -> Board.t
 
-val leaderboard : t -> bool
+val leaderboard_on : t -> bool
+
+val leaderboard_cat : t -> stats_category
 
 val toggle_leaderboard : t -> t
+
+val set_leaderboard_cat : t -> stats_category -> t
 
 val attacking_node : t -> node_id option
 
