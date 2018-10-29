@@ -95,18 +95,7 @@ let draw_turn (st : Interface.t) : unit =
   let player = game_state st |> current_player
   in print_string [Foreground (player_color player)] (player_name player);
   print_string [] " -- ";
-  print_string [] begin
-    match game_state st |> turn with
-    | Null -> "Picking territories"
-    | Reinforce _ -> "Reinforce " ^
-                     (game_state st |> remaining_reinforcements |> string_of_int)
-    | Attack AttackSelectA -> "Attack Select"
-    | Attack DefendSelectA -> "Defend"
-    | Attack OccupyA -> "eh"
-    | Fortify FromSelectF -> "Fortify Select"
-    | Fortify ToSelectF -> "Fortify To"
-    | Fortify CountF -> "singularity"
-  end;
+  print_string [] (turn_to_str (game_state st));
   print_string [] "\n"
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated

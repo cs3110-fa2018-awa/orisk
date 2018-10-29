@@ -14,9 +14,6 @@ type t = {
   cursor_node : node_id;
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
-  (* technically these would better as parameters of the state *)
-  attacking_node : node_id option;
-  from_fortify_node : node_id option;
   leaderboard : bool;
 }
 
@@ -26,7 +23,9 @@ let board_state st = game_state st |> board_st
 
 let board st = board_state st |> Board_state.board
 
-let attacking_node st = st.attacking_node
+let attacking_node st = match (turn st.game_state) with
+  | Attack ((DefendSelectA node) | OccupyA (node,_)) -> Some node 
+  | _ -> None
 
 let leaderboard st = st.leaderboard
 
@@ -40,15 +39,36 @@ let check_is_owner st (node:node_id option) =
 
 let change_attack_node st (node:node_id option) = 
   let () = check_is_owner st node in 
-  {st with attacking_node = node; 
-           game_state = set_turn st.game_state (Attack DefendSelectA)}
+  match node with 
+  | None -> st
+  | Some n -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
 
-let from_fortify_node st = st.from_fortify_node
+let from_fortify_node st = match (turn st.game_state) with 
+  | Fortify ((ToSelectF node) | CountF (node,_)) -> Some node
+  | _ -> None
 
 let change_from_fortify_node st node = 
   let () = check_is_owner st node in 
-  {st with from_fortify_node = node;
-           game_state = set_turn st.game_state (Fortify ToSelectF)}
+  match node with 
+  | None -> st
+  | Some n -> {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
+
+let reinforce_place st node =
+  let () = check_is_owner st node in
+  match node with
+  | None -> st
+  | Some n -> 
+    {st with game_state = 
+               set_turn st.game_state 
+                 (Reinforce ((PlaceR n),
+                             remaining_reinforcements st.game_state))}
+
+let fortify_select st node1 node2 = 
+  let () = check_is_owner st node2 in
+  match node1,node2 with 
+  | Some n1, Some n2 
+    -> {st with game_state = set_turn st.game_state (Fortify (CountF (n1,n2)))}
+  | _ -> st
 
 let pi = acos (~-. 1.)
 
@@ -96,8 +116,6 @@ let init gs =
     cursor_node = board_st gs |> Board_state.board |> nodes |> List.hd;
     scroll = (0, 0);
     move_map = build_move_map gs;
-    attacking_node = None;
-    from_fortify_node = None;
     leaderboard = false;
   }
 
@@ -122,23 +140,9 @@ let set_cursor_node st = function
 
 let toggle_leaderboard st = {st with leaderboard = not (leaderboard st)}
 
-let pick st = 
-  let new_st = {st with game_state = pick_nodes st.game_state st.cursor_node} in
-  if List.mem None (new_st |> board_state |> owners) then new_st else
-    {st with game_state = init_reinforce new_st.game_state}
+let pick st = {st with game_state = pick_nodes st.game_state st.cursor_node} 
 
-let change_game_st st game_st = print_endline "wds68";
-  {st with game_state = game_st;
-           attacking_node = if List.mem (turn game_st) 
-               [Attack DefendSelectA;Attack OccupyA] 
-             then st.attacking_node else None;
-           from_fortify_node = if List.mem (turn game_st) 
-               [Fortify ToSelectF; Fortify CountF] 
-             then st.from_fortify_node else None}
-
-let extract = function
-  | None -> failwith "extract failed"
-  | Some x -> x
+let change_game_st st game_st = {st with game_state = game_st}
 
 let turn_valid_nodes st =
   let gs = game_state st
@@ -147,22 +151,19 @@ let turn_valid_nodes st =
   in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
   in let pred = match turn gs with
       | Null -> fun node -> node_owner bs node = None
-      | Reinforce SelectR -> is_owner
-      | Reinforce PlaceR -> failwith "shouldn't happen"
+      | Reinforce (SelectR,_) -> is_owner
+      | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
       | Attack AttackSelectA
         -> fun node -> node_owner bs node = Some (current_player gs)
                        && node_army bs node > 1
-      | Attack DefendSelectA
+      | Attack (DefendSelectA n)
         -> fun node -> node_owner bs node <> Some (current_player gs)
-                       && st.attacking_node <> None
-                       && List.mem node (node_borders b (extract st.attacking_node))
-      | Attack OccupyA -> failwith "shouldn't happen"
+                       && List.mem node (node_borders b n)
+      | Attack (OccupyA _) -> failwith "shouldn't happen"
       | Fortify FromSelectF -> fun node -> is_owner node
                                            && node_army bs node > 1
-      | Fortify ToSelectF
-        -> let reachable = match st.from_fortify_node with
-            | None -> []
-            | Some from -> dfs bs from []
-        in fun node -> Some node <> st.from_fortify_node && List.mem node reachable
-      | Fortify CountF -> failwith "shouldn't happen"
+      | Fortify (ToSelectF n)
+        -> let reachable = dfs bs n []
+        in fun node -> node <> n && List.mem node reachable
+      | Fortify (CountF _) -> failwith "shouldn't happen"
   in nodes_filter b pred

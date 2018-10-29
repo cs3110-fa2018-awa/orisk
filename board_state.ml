@@ -211,15 +211,12 @@ let player_color_from_node (st : t) (node_id : Board.node_id) =
 (** [dfs node visited] is a special implementation of a depth first search that
     will only go along monochromatic paths. 
     Returns a list of nodes visited. *)
-let rec dfs (st : t) (n : node_id) (visited : node_id list) : node_id list =
-  let rec internal (borders:node_id list) =
-    match borders with
-    | [] -> n :: visited
-    | child :: rest ->
-      if ((not (List.mem child visited))
-          && (player_color_from_node st child = player_color_from_node st n))
-      then dfs st child (n::visited) else internal rest
-  in internal (Board.node_borders (board st) n)
+let rec dfs (st : t) (node : node_id) (visited : node_id list) : node_id list =
+  let internal lst n =
+    if (node_owner st n) = (node_owner st node) && not (List.mem n lst)
+    then dfs st n (n :: lst) else lst
+  in let filter (n : node_id) = not (List.mem n visited)
+  in List.fold_left internal visited (node_borders (board st) node |> List.filter filter)
 
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].

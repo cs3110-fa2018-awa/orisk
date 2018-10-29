@@ -2,6 +2,7 @@
 #require "yojson";;
 #require "bisect";;
 #require "ansiterminal";;
+#require "qcheck";;
 #load_rec "board.cmo";;
 (*#load_rec "game.cmo";;*)
 #load_rec "board_state.cmo";;

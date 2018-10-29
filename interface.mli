@@ -43,3 +43,6 @@ val set_cursor_node : t -> node_id option -> t
 
 val turn_valid_nodes : t -> node_id list
 
+val reinforce_place : t -> node_id option -> t
+
+val fortify_select : t -> node_id option -> node_id option -> t
