@@ -176,8 +176,7 @@ let shuffle_lst lst = QCheck.Gen.(generate1 (shuffle_l lst))
     [st]. *)
 let assign_random_nodes (st : t) : t =
   let unselected node = (node_owner st.board_state node) = None in
-  {begin
-    List.fold_left
+  let st' =  List.fold_left
       (fun (st',player) (node : node_id) : (t * Player.t) ->
          let next = next_player player st.players
          in ({st' with board_state
@@ -185,7 +184,7 @@ let assign_random_nodes (st : t) : t =
                            node 1} : t), next)
       (st,st.current_player) (board st.board_state |> nodes
                               |> List.filter unselected |> shuffle_lst) |> fst
-  end with turn = Reinforce SelectR}
+  in {st' with turn = Reinforce SelectR; current_player = List.hd st.players}
 (*BISECT-IGNORE-END*)
 
 let pick_nodes st node =
