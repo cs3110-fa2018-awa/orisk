@@ -203,7 +203,7 @@ let attack_state = lazy (change_board_st (~$ attack_0_armies)
 let player_a_set_armies = lazy 
   (change_board_st (~$ init_game_state) 
      (set_army (~$ player_a_own_RPCC_LR7) "RPCC" 3))
-let player_a_reinforce = lazy (reinforce (~$ player_a_set_armies) "LR7")
+let player_a_reinforce = lazy (reinforce (~$ player_a_set_armies) "LR7" 1)
 
 let attack_rpcc_hr5 = lazy (attack (~$ attack_state) "RPCC" "HR5" 1)
 
@@ -235,8 +235,8 @@ let game_state_tests = [
     (NotOwner "Keeton");
 
   (* reinforce *)
-  (*gen_comp "game state reinforce"
-    (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null;*)
+  (* gen_comp "game state reinforce"
+   *   (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null; *)
 
   (* attack *)
   gen_comp "game state attack"
@@ -244,12 +244,12 @@ let game_state_tests = [
                       in st' |> board_st) "HR5")) 1 null;
 
   (* others *)
-  gen_comp "string of attack" (lazy (turn_to_str (~$ attack_state))) "Attack" 
+  gen_comp "string of attack" (lazy (turn_to_str (~$ attack_state))) "Select attacker" 
     str;
   gen_comp "string of pick" (lazy (turn_to_str (~$ init_game_state))) 
     "Picking territories" str;
-  (*gen_comp "remaining reinforcement" 
-    (lazy (remaining_reinforcements (~$ init_game_state))) 3 int;*)
+  (* gen_comp "remaining reinforcement" 
+   *   (lazy (remaining_reinforcements (~$ init_game_state))) 3 int; *)
 ]
 
 let suite =

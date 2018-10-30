@@ -176,7 +176,7 @@ let shuffle_lst lst = QCheck.Gen.(generate1 (shuffle_l lst))
 let assign_random_nodes (st : t) : t =
   let unselected node = (node_owner st.board_state node) = None in
   let st' =  List.fold_left
-      (fun (st',player) (node : node_id) : (t * Player.t) ->
+      (fun (st',player) (node : node_id) ->
          let next = next_player player st.players
          in ({st' with board_state
                        = place_army (set_owner st'.board_state node (Some next))
