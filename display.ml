@@ -36,7 +36,7 @@ let draw_nodes (st : Interface.t) : unit =
     (fun id () ->
        (* only redraw if node is owned by a player *)
        let x = Board.node_coords brd id |> Board.x
-       in let y = Board.node_coords brd id |> Board.y
+       in let y = Board.node_coords brd id |> Board.y 
        in let is_cursor = cursor_node st = id
        in let is_selected = 
             from_fortify_node st = Some id || attacking_node st = Some id
@@ -53,15 +53,16 @@ let draw_nodes (st : Interface.t) : unit =
        in let str = Board_state.node_army brd_st id |> format_2digit
        in let crop =
             begin
-              if x > scrollx + 1 && x < width + scrollx - 1
+              if (x >= scrollx && x < width + scrollx - 1) 
               then str
-              else if x <= scrollx + 1
-              then String.sub str (scrollx - x - 1) (max (String.length str - scrollx + 1) 0)
-              else if x >= width + scrollx - 1
-              then String.sub str 0 (max 0 (width + scrollx - x))
-              else failwith "oops"
+              else if x = width + scrollx - 1
+              then String.sub str 0 1
+              else if x = scrollx - 1
+              then String.sub str 1 1
+              else ""
             end
-       in draw_str crop (x - scrollx + 1) (y - scrolly + 1) style;
+       in (*set_cursor 1 1; print_endline ("width: "^(string_of_int width)^" height: "^(string_of_int height)^" scrollx: "^(string_of_int scrollx)^" scrolly: "^(string_of_int scrolly)^" x: "^(string_of_int x)^" y: "^(string_of_int y)^id);
+          *)draw_str crop (x - scrollx + 1) (y - scrolly + 1) style;
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
