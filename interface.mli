@@ -41,6 +41,8 @@ val cursor_node : t -> node_id
 
 val scroll : t -> coords
 
+val scroll_by : t -> int -> int -> t
+
 val gs : t -> Game_state.t -> t
 
 val move_arrow : t -> arrow -> t

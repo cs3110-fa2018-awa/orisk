@@ -27,7 +27,9 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
-let draw_nodes (st : Interface.t) : unit = 
+let draw_nodes (st : Interface.t) : unit =
+  let width, height = size () in
+  let scrollx, scrolly = scroll st in
   let brd_st = game_state st |> Game_state.board_st in
   let brd = brd_st |> Board_state.board in
   Board.fold_nodes brd 
@@ -48,8 +50,18 @@ let draw_nodes (st : Interface.t) : unit =
               -> [Foreground (player_color player);Background White]
             | Some player,true,_ 
               -> [Foreground White;Background (player_color player)]
-       in draw_str (Board_state.node_army brd_st id |> format_2digit)
-         (x + 1) (y + 1) style 
+       in let str = Board_state.node_army brd_st id |> format_2digit
+       in let crop =
+            begin
+              if x > scrollx + 1 && x < width + scrollx - 1
+              then str
+              else if x <= scrollx + 1
+              then String.sub str (scrollx - x - 1) (max (String.length str - scrollx + 1) 0)
+              else if x >= width + scrollx - 1
+              then String.sub str 0 (max 0 (width + scrollx - x))
+              else failwith "oops"
+            end
+       in draw_str crop (x - scrollx + 1) (y - scrolly + 1) style;
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
@@ -61,16 +73,23 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] (turn_to_str (game_state st));
   print_string [] "\n"
 
+let draw_line st _ line : unit =
+  let width, _ = size ()
+  in let scrollx, scrolly = scroll st
+  in let disp = String.sub line scrollx (min width (String.length line - scrollx))
+  in print_string [white] (disp ^ "\n")
+
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gamestate]. *)
 let draw_board (st : Interface.t) : unit = 
   (* clear screen *)
   ANSITerminal.erase Screen;
   (* print topleft corner *)
-  ANSITerminal.set_cursor 1 1; 
+  ANSITerminal.set_cursor 1 2; 
   (* print static board *)
-  ANSITerminal.print_string [Foreground White] 
-    (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii);
+  (* ANSITerminal.print_string [Foreground White] 
+   *   (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii); *)
+  List.fold_left (draw_line st) () (st |> board |> board_ascii_lines);
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
@@ -78,8 +97,6 @@ let draw_board (st : Interface.t) : unit =
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
-
-
 
 (* leaderboard functions ---------------------------------------------------- *)
 

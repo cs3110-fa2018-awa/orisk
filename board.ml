@@ -102,13 +102,19 @@ let rec cont_list_to_map m = function
   | ({id} : cont) as cont :: tl
     -> cont_list_to_map (String_map.add id cont m) tl
 
+let newline_regexp = Str.regexp "\n"
+
+(** [board_ascii_lines board] is the list of lines in [board_ascii board]
+    (i.e. the ascii split by the newline character). *)
+let board_ascii_lines board = board.ascii |> Str.split newline_regexp
+
 (** [count_newlines str] is the number of newline characters in [str]. *)
-let count_newlines str = str |> Str.split (Str.regexp "\n") |> List.length
+let count_newlines str = str |> Str.split newline_regexp |> List.length
 
 (** [count_width str] is the number of characters across one line in [str]. 
     Requires that the ascii is "rectangular", i.e. each line in [str] contains
     the same number of characters. *)
-let count_width str = str |> Str.split (Str.regexp "\n") |> List.hd |> String.length
+let count_width str = str |> Str.split newline_regexp |> List.hd |> String.length
 
 (** [from_json json] is the board represented by [json]. Each of the fields
     is populated as expected using the helper functions above, except for

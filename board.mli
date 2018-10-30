@@ -43,6 +43,10 @@ val board_ascii_height : t -> int
     Requires that the ASCII art is "rectangular". *)
 val board_ascii_width : t -> int
 
+(** [board_ascii_lines board] is the list of lines in [board_ascii board]
+    (i.e. the ascii split by the newline character). *)
+val board_ascii_lines : t -> string list
+
 (** [nodes board] is the list of all [node_id] in [board]. *)
 val nodes : t -> node_id list
 
