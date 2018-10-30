@@ -24,6 +24,14 @@ type cont_state = {owner : Player.t option}
     Set of nodes and continents owned by the player. *)
 type player_state = {nodes : String_set.t; conts : String_set.t}
 
+(** [player_stats] is the board statistics of a player.
+    It contains the total number of armies, territories, and continents
+    that a player owns. *)
+type player_stats = {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
+
+(** [stats_category] is the category that the board leaderboard can be sorted by. *)
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+
 (** [Board_state.t] is the state of a board. The underlying (and
     unchanging) board, the map of nodes to node states, the map
     of continents to continent states, and the map of players
@@ -111,9 +119,52 @@ let player_conts st player =
 (** [player_army state player] is the total number of armies owned
     by [player] in [state]. This function performs the calculation
     as this information is not saved in the board state. *)
-let player_army st player : army =
+let player_army st (player:Player_map.key) : army =
   List.fold_left (fun acc node -> acc + (node_army st node))
     0 (player_nodes st player)
+
+(** [stats_player ps] is the player in [ps]. *)
+let stats_player ps = ps.player
+
+(** [stats_army ps] is the total armies owned by a player in [ps]. *)
+let stats_army ps = ps.army_tot
+
+(** [stats_nodes ps] is the total territories owned by a player in [ps]. *)
+let stats_nodes ps = ps.node_tot
+
+(** [stats_conts ps] is the total continents owned by a player in [ps]. *)
+let stats_conts ps = ps.cont_tot
+
+(** [get_players state] is the list of all existing players in [state]. *)
+let get_players st : Player.t list = 
+  Player_map.fold (fun key _ acc -> key::acc) st.players []
+
+(** [player_stats_make state player] is the data structure containing the total
+    number of territories, continents, and armies (in that order) owned by
+    [player] in [state]. *)
+let player_stats_make st p : player_stats =
+  let n = player_nodes st p |> List.length in
+  let c = player_conts st p |> List.length in
+  let a = player_army st p in
+  {player = p; army_tot = a; node_tot = n; cont_tot = c}
+
+(** [compare_player_stats category ps1 ps2] is a comparison function
+    (similar to Pervasives.compare) that accounts for each field in a record of
+    [player_stats], based on [category]. It will result in sorting players in
+    ascending order and armies, territories, and continents in descending order. *)
+let compare_player_stats (c : stats_category) ps1 ps2 : int = match c with 
+  | CatPlayer -> Player.compare ps1.player ps2.player (* TODO: something janky happening here *)
+  | CatArmy -> - Pervasives.compare ps1.army_tot ps2.army_tot
+  | CatNode -> - Pervasives.compare ps1.node_tot ps2.node_tot
+  | CatCont -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
+
+(** [sorted_player_stats state category] is the list of all player statistics,
+    sorted based on [category] in [state]. *)
+let sorted_player_stats (c : stats_category) st : player_stats list =
+  let lst = 
+    List.fold_left 
+      (fun acc player -> (player_stats_make st player)::acc) [] (get_players st)
+  in List.sort (compare_player_stats c) lst
 
 (** [extract ex a] extracts the value from the option [a]
     if that option is [Some value] and raises [ex] otherwise. *)

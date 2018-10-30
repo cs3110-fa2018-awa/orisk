@@ -14,6 +14,7 @@ type t = {
   cursor_node : node_id;
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
+  leaderboard : (bool * stats_category);
 }
 
 let game_state st = st.game_state
@@ -25,6 +26,20 @@ let board st = board_state st |> Board_state.board
 let attacking_node st = match (turn st.game_state) with
   | Attack ((DefendSelectA node) | OccupyA (node,_)) -> Some node 
   | _ -> None
+
+(** [leaderboard_on st] is whether or not the leaderboard is activated in [st]. *)
+let leaderboard_on st = fst st.leaderboard
+
+(** [leaderboard_cat st] is the category that the leaderboard is sorted by in [st]. *)
+let leaderboard_cat st = snd st.leaderboard
+
+(** [toggle_leaderboard st] is the interface with the leaderboard activation
+    opposite of the one in [st]. *)
+let toggle_leaderboard st = {st with leaderboard = (not (leaderboard_on st), leaderboard_cat st)}
+
+(** [set_leaderboard_cat st cat] is the interface [st] with the sorted by category
+    set to [cat]. *)
+let set_leaderboard_cat st cat = {st with leaderboard = (leaderboard_on st, cat)}
 
 let check_is_owner st (node:node_id option) =
   match node with 
@@ -113,6 +128,7 @@ let init gs =
     cursor_node = board_st gs |> Board_state.board |> nodes |> List.hd;
     scroll = (0, 0);
     move_map = build_move_map gs;
+    leaderboard = (false, CatPlayer);
   }
 
 let cursor st = node_coords (board st) st.cursor_node

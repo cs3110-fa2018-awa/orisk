@@ -4,8 +4,28 @@
 open Board
 open Player
 
-(** The abstract type respresenting a board state. *)
+(** The abstract type representing a board state. *)
 type t
+
+(** The type representing a player's board statistics. 
+    TODO: should this not be exposed? used for pattern matching *)
+type player_stats = 
+  {player : Player.t; army_tot : int; node_tot : int; cont_tot : int}
+
+(** [stats_category] is the category that the board leaderboard can be sorted by. *)
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+
+(** [stats_player ps] is the player in [ps]. *)
+val stats_player : player_stats -> Player.t
+
+(** [stats_army ps] is the total armies owned by a player in [ps]. *)
+val stats_army : player_stats -> army
+
+(** [stats_nodes ps] is the total territories owned by a player in [ps]. *)
+val stats_nodes : player_stats -> int
+
+(** [stats_conts ps] is the total continents owned by a player in [ps]. *)
+val stats_conts : player_stats -> int
 
 (** [init b players] is the default board state from board [b]. *)
 val init : Board.t -> Player.t list -> t
@@ -35,6 +55,18 @@ val player_conts : t -> Player.t -> cont_id list
 (** [player_army state player] is the total number of armies owned
     by [player] in [state]. *)
 val player_army : t -> Player.t -> army
+
+(** [get_players state] is the list of all existing players in [state]. *)
+val get_players: t -> Player.t list
+
+(** [player_stats] is the board statistics of a player, used internally.
+    It contains the total number of armies, territories, and continents
+    that a player owns. *)
+val player_stats_make : t -> Player.t -> player_stats
+
+(** [sorted_player_stats state category] is the list of all player statistics,
+    sorted in descending order based on [category] in [state]. *)
+val sorted_player_stats : stats_category -> t -> player_stats list
 
 (** [player_reinforcements state player] is the total number of
     reinforcements that [player] recieves given the current board
