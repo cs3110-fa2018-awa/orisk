@@ -232,17 +232,18 @@ let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) :
   print_players (List.rev pl);
   print_endline "";
   (* different inputs depending on whether you're adding a player or not *)
-  if (t) then (print_endline "Who is this player?\n";
+  if (t) then (print_endline (msg ^ "\n");
                begin match read_line (), c, pl with
-                 | name, color::rest, _ -> 
-                   insert_players ((Player.create name color) :: pl) rest false ("...")
+                 | name, color::rest, _ -> if (String.trim name <> "") then
+                     insert_players ((Player.create name color) :: pl) rest false ("...")
+                   else insert_players pl c t ("Can't have an empty name")
                  | _, _, _ -> insert_players pl c t msg
                end)
   else (print_endline (msg ^ "\n");
         begin
           match read_input (), c, pl with
           | "a", [], _ -> insert_players pl c t ("Can't add any more players!")
-          | "a", color::rest, _ -> insert_players pl c true "..."
+          | "a", color::rest, _ -> insert_players pl c true "Who is this player?"
           | "d", c, [] -> insert_players pl c t ("No players to delete!")
           | "d", c, player::rest -> insert_players rest ((player_color player)::c) t "..."
           | "s", _, [] -> insert_players pl c t ("Need at least one player!")
@@ -260,13 +261,16 @@ let risk f =
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
+let title =
+  "\r\n         _            _         _            _        \r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      \r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   \r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ \r\n     / / /\\ \\_\\     / /\\/_/ / / /\\ \\___\\ / / /__/ / / \r\n    / / /_/ / /    / / /    \\ \\ \\ \\/___// /\\_____/ /  \r\n   / / /__\\/ /    / / /      \\ \\ \\     / /\\_______/   \r\n  / / /_____/    / / /   _    \\ \\ \\   / / /\\ \\ \\      \r\n / / /\\ \\ \\  ___/ / /__ /_/\\__/ / /  / / /  \\ \\ \\     \r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    \r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\ "
+
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
     not exist. *)
 let rec game () = 
   ANSITerminal.(print_string [red]
-                  "\n\nWelcome to Risk!\n");
+                  ("\n\nWelcome to..." ^ title ^ "\n\n"));
   print_endline "Please enter the map file you want to load:";
   print_string  "> ";
   match read_line () with
