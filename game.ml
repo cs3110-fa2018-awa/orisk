@@ -206,17 +206,18 @@ let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) :
   print_players (List.rev pl);
   print_endline "";
   (* different inputs depending on whether you're adding a player or not *)
-  if (t) then (print_endline "Who is this player?\n";
+  if (t) then (print_endline (msg ^ "\n");
                begin match read_line (), c, pl with
-                 | name, color::rest, _ -> 
-                   insert_players ((Player.create name color) :: pl) rest false ("...")
+                 | name, color::rest, _ -> if (String.trim name <> "") then
+                     insert_players ((Player.create name color) :: pl) rest false ("...")
+                   else insert_players pl c t ("Can't have an empty name")
                  | _, _, _ -> insert_players pl c t msg
                end)
   else (print_endline (msg ^ "\n");
         begin
           match read_input (), c, pl with
           | "a", [], _ -> insert_players pl c t ("Can't add any more players!")
-          | "a", color::rest, _ -> insert_players pl c true "..."
+          | "a", color::rest, _ -> insert_players pl c true "Who is this player?"
           | "d", c, [] -> insert_players pl c t ("No players to delete!")
           | "d", c, player::rest -> insert_players rest ((player_color player)::c) t "..."
           | "s", _, [] -> insert_players pl c t ("Need at least one player!")
