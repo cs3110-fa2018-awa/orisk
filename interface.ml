@@ -50,7 +50,7 @@ let check_is_owner st (node:node_id option) =
     then raise (NotOwner node_id) else () 
 
 let change_attack_node st (node:node_id option) = 
-  let () = check_is_owner st node in 
+  check_is_owner st node;
   match node with 
   | None -> st
   | Some n -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
@@ -60,13 +60,13 @@ let from_fortify_node st = match (turn st.game_state) with
   | _ -> None
 
 let change_from_fortify_node st node = 
-  let () = check_is_owner st node in 
+  check_is_owner st node; 
   match node with 
   | None -> st
   | Some n -> {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
 
 let reinforce_place st node =
-  let () = check_is_owner st node in
+  check_is_owner st node;
   match node with
   | None -> st
   | Some n -> 
@@ -76,7 +76,7 @@ let reinforce_place st node =
                              remaining_reinforcements st.game_state))}
 
 let fortify_select st node1 node2 = 
-  let () = check_is_owner st node2 in
+  check_is_owner st node2;
   match node1,node2 with 
   | Some n1, Some n2 
     -> {st with game_state = set_turn st.game_state (Fortify (CountF (n1,n2)))}

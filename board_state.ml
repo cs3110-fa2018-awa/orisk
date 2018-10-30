@@ -107,13 +107,11 @@ let cont_owner st cont = (cont_state st cont).owner
 (** [player_nodes state player] is a list of the nodes
     owned by [player] in [state]. *)
 let player_nodes st player =
-  (* TODO this might be inefficient *)
   String_set.elements (player_state st player).nodes
 
 (** [player_conts state player] is a list of the continents
     owned by [player] in [state]. *)
 let player_conts st player =
-  (* TODO this might be inefficient *)
   String_set.elements (player_state st player).conts
 
 (** [player_army state player] is the total number of armies owned
@@ -218,6 +216,18 @@ let rec dfs (st : t) (node : node_id) (visited : node_id list) : node_id list =
   in let filter (n : node_id) = not (List.mem n visited)
   in List.fold_left internal visited (node_borders (board st) node |> List.filter filter)
 
+(* [update_map player_opt f map] runs [Map.replace] on [map]
+    with option handling for [player_opt] and [f]. *)
+let update_map
+    (player_opt : Player.t option)
+    (f : player_state -> player_state)
+    (map : player_state Player_map.t) =
+  let replacer player'' state_opt =
+    Some (f (extract (UnknownPlayer player'') state_opt))
+  in match player_opt with
+  | Some player' -> Player_map.update player' (replacer player') map
+  | None -> map
+
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].
 
@@ -229,21 +239,8 @@ let rec dfs (st : t) (node : node_id) (visited : node_id list) : node_id list =
      - update controlled node and cont lists in player state *)
 let set_owner (st : t) (node : node_id) (player : Player.t option) =
   (* this is a giant state transition function *)
-
-  (* [update_map player_opt f map] runs [Map.replace] on [map]
-      with option handling for [player_opt] and [f]. *)
-  let update_map
-      (player_opt : Player.t option)
-      (f : player_state -> player_state)
-      (map : player_state Player_map.t) =
-    let replacer player'' state_opt =
-      Some (f (extract (UnknownPlayer player'') state_opt))
-    in match player_opt with
-    | Some player' -> Player_map.update player' (replacer player') map
-    | None -> map
-
   (* the previous owner of the target node *)
-  in let prev_owner = node_owner st node
+  let prev_owner = node_owner st node
   (* all continents containing the target node *)
   in let node_conts = node_conts (board st) node
   (* the new state of the target node, with the owner updated *)

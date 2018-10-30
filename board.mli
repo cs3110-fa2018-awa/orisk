@@ -47,8 +47,7 @@ val board_ascii_width : t -> int
 val nodes : t -> node_id list
 
 (** [fold_nodes board f acc] is a tail-recursive fold over all of the nodes
-    in [board] with accumulator [acc]. [f] is a function that takes a node
-    ID and an [acc] and produces the next [acc]. *)
+    in [board] with accumulator [acc]. *)
 val fold_nodes : t -> (node_id -> 'a -> 'a) -> 'a -> 'a
 
 (** [has_node board node] is true iff [node] is a node of [board]. *)
@@ -74,8 +73,7 @@ val node_coords : t -> node_id -> coords
 val conts : t -> cont_id list
 
 (** [fold_conts board f acc] is a tail-recursive fold over all of the
-    continents in [board] with accumulator [acc]. [f] is a function that
-    takes a node ID and an [acc] and produces the next [acc]. *)
+    continents in [board] with accumulator [acc]. *)
 val fold_conts : t -> (cont_id -> 'a -> 'a) -> 'a -> 'a
 
 (** [has_cont board cont] is true iff [cont] is a continent of [board]. *)

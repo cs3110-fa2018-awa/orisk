@@ -144,13 +144,12 @@ let remaining_reinforcements st =
     Raises [NotOwner n] if current [player] is not the owner of node [n] and
     [InvalidState turn] when [turn] is not [Reinforce]. *)
 let reinforce st n armies =
-  let () = if Some st.current_player <> (node_owner st.board_state n)
-    then raise (NotOwner n) else () in
-  let () = if not (is_reinforce st) then raise (InvalidState st.turn) else () in
-  let () = if remaining_reinforcements st <= 0 then failwith "need more armies"
-    else () in 
-  let () = if armies > remaining_reinforcements st || armies < 0
-    then raise (InsufficientArmies (n,armies)) else () in (*better exception*)
+  if Some st.current_player <> (node_owner st.board_state n)
+  then raise (NotOwner n) else (); 
+  if not (is_reinforce st) then raise (InvalidState st.turn) else (); 
+  if remaining_reinforcements st <= 0 then failwith "need more armies" else ();  
+  if armies > remaining_reinforcements st || armies < 0
+  then raise (InsufficientArmies (n,armies)) else (); (*better exception*)
   {st with board_state = place_army st.board_state n armies; 
            turn = if remaining_reinforcements st = armies
              then Attack AttackSelectA 
@@ -189,8 +188,8 @@ let assign_random_nodes (st : t) : t =
 (*BISECT-IGNORE-END*)
 
 let pick_nodes st node =
-  let () = if not (is_null st) then raise (InvalidState st.turn) else () in
-  let () = if node_owner st.board_state node <> None then raise (NotOwner node) else () in (*better exception*)
+  if not (is_null st) then raise (InvalidState st.turn) else (); 
+  if node_owner st.board_state node <> None then raise (NotOwner node) else ();  (*better exception*)
   let board_state = place_army (set_owner st.board_state node (Some st.current_player)) node 1 in
   if List.mem None (owners board_state) then 
     {st with board_state = board_state; current_player = next_player st.current_player st.players}
@@ -260,18 +259,18 @@ let rec battle attack defend (deatha,deathd) =
         - [InsufficientArmies n] if [n] does not have enough armies to fortify
           with *)
 let fortify st (from_node : Board.node_id) (to_node : Board.node_id) armies : t =
-  let () = if not (is_fortify st) then raise (InvalidState st.turn) else () 
-  in let () = if Some st.current_player <> (node_owner st.board_state from_node)
-       then raise (NotOwner from_node) else ()
-  in let () = if Some st.current_player <> (node_owner st.board_state to_node)
-       then raise (NotOwner to_node) else ()
-  in let () = if from_node = to_node
-       then raise (SameNode to_node) else ()
-  in let () = if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
-       then raise (NonconnectedNode (from_node,to_node)) else ()
-  in let () = if (node_army st.board_state from_node) <= armies || armies < 0
-       then raise (InsufficientArmies (from_node,armies)) else ()
-  in setup_reinforce
+  if not (is_fortify st) then raise (InvalidState st.turn) else (); 
+  if Some st.current_player <> (node_owner st.board_state from_node)
+  then raise (NotOwner from_node) else ();
+  if Some st.current_player <> (node_owner st.board_state to_node)
+  then raise (NotOwner to_node) else ();
+  if from_node = to_node
+  then raise (SameNode to_node) else ();
+  if not ((Board_state.dfs (st |> board_st) from_node []) |> List.mem to_node)
+  then raise (NonconnectedNode (from_node,to_node)) else ();
+  if (node_army st.board_state from_node) <= armies || armies < 0
+  then raise (InsufficientArmies (from_node,armies)) else ();
+  setup_reinforce
     {st with board_state = place_army (place_army st.board_state to_node armies) from_node (-armies)}
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
@@ -296,20 +295,20 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) armies : t 
           [a] and [d]
         - [SameNode n] if [n] is both the attacking and defending node *)
 let attack st a d invading_armies = 
-  let () = if not (is_attack st) then raise (InvalidState st.turn) else () in
-  let () = if a = d then raise (SameNode d) else () in
-  let () = if not 
+  if not (is_attack st) then raise (InvalidState st.turn) else (); 
+  if a = d then raise (SameNode d) else ();
+  if not 
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
-    then raise (NonadjacentNode (a,d)) else () in 
+  then raise (NonadjacentNode (a,d)) else (); 
   let attacker = Board_state.node_owner st.board_state a in
-  let () = if Some st.current_player <> (node_owner st.board_state a)
-    then raise (NotOwner a) else () in
-  let () = if attacker = Board_state.node_owner st.board_state d 
-    then raise (FriendlyFire attacker) else () in
+  if Some st.current_player <> (node_owner st.board_state a)
+  then raise (NotOwner a) else ();
+  if attacker = Board_state.node_owner st.board_state d 
+  then raise (FriendlyFire attacker) else ();
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
   let attack_armies = min total_attackers 3 in
-  let () = if attack_armies <= 0 || invading_armies > attack_armies 
-    then raise (InsufficientArmies (a,attack_armies)) else () in
+  if attack_armies <= 0 || invading_armies > attack_armies 
+  then raise (InsufficientArmies (a,attack_armies)) else ();
   let total_defenders = Board_state.node_army st.board_state d in
   let defend_armies = min total_defenders 2 in
   let attack_dice = 
@@ -337,12 +336,12 @@ let attack st a d invading_armies =
        attack_dice, defend_dice
 
 let occupy st a d occupying_armies = 
-  let () = if st.turn <> Attack (OccupyA (a,d))
-    then raise (InvalidState st.turn) else () in
+  if st.turn <> Attack (OccupyA (a,d))
+  then raise (InvalidState st.turn) else ();
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
-  let () = if occupying_armies > total_attackers || occupying_armies < 0 
+  if occupying_armies > total_attackers || occupying_armies < 0 
   (*TODO: better exception*)
-    then raise (InsufficientArmies (a,occupying_armies)) else () in 
+  then raise (InsufficientArmies (a,occupying_armies)) else ();  
   {st with board_state = Board_state.place_army 
                (Board_state.place_army st.board_state a (~- occupying_armies)) d 
                occupying_armies;
@@ -350,13 +349,13 @@ let occupy st a d occupying_armies =
 
 let min_max_default st : (army * army * army) = match st.turn with
   | Reinforce ((PlaceR node), remaining)
-      -> (0, remaining, 1)
+    -> (0, remaining, 1)
   | Attack (OccupyA (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
-      in (0, max, max)
+    in (0, max, max)
   | _ -> failwith "shouldn't happen"
 
 (* random seed *)

@@ -180,9 +180,9 @@ let rec game_loop_new ?(search : string * bool = "",false)
       | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _) ->
         begin
           let (min, max, default) = st |> game_state |> min_max_default in
-          let () = print_string ("min " ^ (string_of_int min) ^
-                                 ", max " ^ (string_of_int max) ^
-                                 ", default: " ^ (string_of_int default) ^ " > ") in
+          print_string ("min " ^ (string_of_int min) ^
+                        ", max " ^ (string_of_int max) ^
+                        ", default: " ^ (string_of_int default) ^ " > "); 
           let handle num =
             let st',msg' = game_nums st num in
             game_loop_new st' msg' in

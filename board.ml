@@ -142,9 +142,6 @@ let board_ascii_width board = board.ascii_width
 
 (** [list_of_string_map map] is the string list containing all of the elements
     of [map]. *)
-
-(* TODO the current implementation is inefficient because it generates a
-   new list every time that it is applied. *)
 let list_of_string_map map = 
   List.map (fun (k, _) -> k) (String_map.bindings map)
 
@@ -157,8 +154,7 @@ let fold_internal (f : 'a -> 'b -> 'b) (acc : 'b) (map : 'c String_map.t) =
 let nodes board = list_of_string_map board.nodes 
 
 (** [fold_nodes board f acc] is a tail-recursive fold over all of the nodes
-    in [board] with accumulator [acc]. [f] is a function that takes a node
-    ID and an [acc] and produces the next [acc]. *)
+    in [board] with accumulator [acc]. *)
 let fold_nodes board (f : node_id -> 'a -> 'a) (acc : 'a) : 'a =
   fold_internal f acc board.nodes
 
@@ -194,8 +190,7 @@ let node_coords board node_id = (find_node board node_id).coords
 let conts board = list_of_string_map board.conts
 
 (** [fold_conts board f acc] is a tail-recursive fold over all of the
-    continents in [board] with accumulator [acc]. [f] is a function that
-    takes a node ID and an [acc] and produces the next [acc]. *)
+    continents in [board] with accumulator [acc]. *)
 let fold_conts board (f : cont_id -> 'a -> 'a) (acc : 'a) : 'a =
   fold_internal f acc board.conts
 
@@ -229,8 +224,6 @@ let cont_bonus board cont = (find_cont board cont).bonus
     in [board].
 
     Raises [UnknownNode node] iff [has_node board node] is false.*)
-
-(* TODO perhaps this could be computed ahead of time to speed things up. *)
 let node_conts board node =
   fold_conts board
     (fun cont_id acc -> if List.mem node
