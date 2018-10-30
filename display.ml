@@ -128,9 +128,10 @@ let draw_stats (st : Interface.t) =
                "(a)rmy" ^ make_n_chars spacing " " ^ "(n)ode" ^
                make_n_chars spacing " " ^ "(c)ont" ^ make_n_chars spacing " " ^ " |" in
   let divider = make_n_chars (String.length header) "-" in
+  let leaderboard_height = List.length (gs |> board_st |> get_players) + 4 in
   (* [set_cursor_y_incr] handles drawing each line at the correct height *)
   let set_cursor_y_incr = 
-    let counter = ref (centered_y_coord (board_ascii_height brd) 7) (*TODO: replace 7 with proper height of leaderboard*)
+    let counter = ref (centered_y_coord (board_ascii_height brd) leaderboard_height)
     in fun () -> incr counter; !counter in
   let draw_one_line (ps : Board_state.player_stats) : unit =
     match ps with
