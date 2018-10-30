@@ -132,7 +132,17 @@ let rec game_loop_new ?(search : string * bool = "",false)
     begin
       match game_state st |> turn with 
       | Null | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) | Fortify (FromSelectF | ToSelectF _) ->
-        begin match read_input () with
+        if (Interface.leaderboard_on st)
+        then begin match read_input() with
+          | "=" -> game_loop_new (toggle_leaderboard st) msg
+          | "p" -> game_loop_new (set_leaderboard_cat st CatPlayer) msg
+          | "a" -> game_loop_new (set_leaderboard_cat st CatArmy) msg
+          | "n" -> game_loop_new (set_leaderboard_cat st CatNode) msg
+          | "c" -> game_loop_new (set_leaderboard_cat st CatCont) msg
+          | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+          | _ -> game_loop_new st msg
+        end
+        else begin match read_input () with
           | "\027[A" -> game_loop_new (move_arrow st Up) msg
           | "\027[D" -> game_loop_new (move_arrow st Left) msg
           | "\027[B" -> game_loop_new (move_arrow st Down) msg
@@ -140,12 +150,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | " " | "\n" -> let st',msg' = game_stage st in game_loop_new st' msg'
           | "?" 
             -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
-          (* leaderboard toggles *)
           | "=" -> game_loop_new (toggle_leaderboard st) msg
-          | "'" -> game_loop_new (set_leaderboard_cat st CatPlayer) msg
-          | "," -> game_loop_new (set_leaderboard_cat st CatArmy) msg
-          | "." -> game_loop_new (set_leaderboard_cat st CatNode) msg
-          | "/" -> game_loop_new (set_leaderboard_cat st CatCont) msg
           | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
           | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
           | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0

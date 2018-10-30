@@ -29,7 +29,7 @@ type player_state = {nodes : String_set.t; conts : String_set.t}
     that a player owns. *)
 type player_stats = {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
 
-(** TODO *)
+(** [stats_category] is the category that the board leaderboard can be sorted by. *)
 type stats_category = CatPlayer | CatArmy | CatNode | CatCont
 
 (** [Board_state.t] is the state of a board. The underlying (and
@@ -148,20 +148,18 @@ let player_stats_make st p : player_stats =
   let a = player_army st p in
   {player = p; army_tot = a; node_tot = n; cont_tot = c}
 
-(** [compare_player_stats category ps1 ps2] is a comparison function that accounts
-    for each field in a record of [player_stats], based on [category]. It will
-    result in sorting players in ascending order and armies, territories, and
-    continents in descending order. 
-
-    TODO: more clear documentation *)
+(** [compare_player_stats category ps1 ps2] is a comparison function
+    (similar to Pervasives.compare) that accounts for each field in a record of
+    [player_stats], based on [category]. It will result in sorting players in
+    ascending order and armies, territories, and continents in descending order. *)
 let compare_player_stats (c : stats_category) ps1 ps2 : int = match c with 
-  | CatPlayer -> Player.compare ps1.player ps2.player (* something janky happening here *)
+  | CatPlayer -> Player.compare ps1.player ps2.player (* TODO: something janky happening here *)
   | CatArmy -> - Pervasives.compare ps1.army_tot ps2.army_tot
   | CatNode -> - Pervasives.compare ps1.node_tot ps2.node_tot
   | CatCont -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
 
 (** [sorted_player_stats state category] is the list of all player statistics,
-    sorted in based on [category] in [state]. *)
+    sorted based on [category] in [state]. *)
 let sorted_player_stats (c : stats_category) st : player_stats list =
   let lst = 
     List.fold_left 

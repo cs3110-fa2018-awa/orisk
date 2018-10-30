@@ -37,6 +37,12 @@ val board_ascii : t -> string
     associated with [board]. *)
 val board_ascii_height : t -> int
 
+(** [board_ascii_width board] is the number of characters in one line
+    of the ASCII art associated with [board]. 
+
+    Requires that the ASCII art is "rectangular". *)
+val board_ascii_width : t -> int
+
 (** [nodes board] is the list of all [node_id] in [board]. *)
 val nodes : t -> node_id list
 

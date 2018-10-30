@@ -8,17 +8,23 @@ open Player
 type t
 
 (** The type representing a player's board statistics. 
-
-    TODO: should this not be exposed? *)
+    TODO: should this not be exposed? used for pattern matching *)
 type player_stats = 
-  {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
+  {player : Player.t; army_tot : int; node_tot : int; cont_tot : int}
 
-(** TODO *)
+(** [stats_category] is the category that the board leaderboard can be sorted by. *)
 type stats_category = CatPlayer | CatArmy | CatNode | CatCont
 
+(** [stats_player ps] is the player in [ps]. *)
 val stats_player : player_stats -> Player.t
+
+(** [stats_army ps] is the total armies owned by a player in [ps]. *)
 val stats_army : player_stats -> army
+
+(** [stats_nodes ps] is the total territories owned by a player in [ps]. *)
 val stats_nodes : player_stats -> int
+
+(** [stats_conts ps] is the total continents owned by a player in [ps]. *)
 val stats_conts : player_stats -> int
 
 (** [init b players] is the default board state from board [b]. *)

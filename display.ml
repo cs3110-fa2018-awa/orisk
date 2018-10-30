@@ -5,15 +5,6 @@ open Game_state
 open Player
 open Interface
 
-(** TODO *)
-let header_len = String.length "Player"
-
-(** constant*)
-let spacing = 3
-
-(** constant *)
-let spacing_head = 6 (* (n)ode *)
-
 (** [format_2digit num] is the 2 digit string representation of [num]. 
     Requires: 0 <= [num] <= 99 *)
 let format_2digit (i : int) : string =
@@ -24,53 +15,6 @@ let format_2digit (i : int) : string =
 let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
   ANSITerminal.set_cursor x y;
   ANSITerminal.print_string f s
-
-(** TODO *)
-let max_column_len (gs : Game_state.t) : int =
-  let name_len = 
-    List.fold_left (fun acc p -> max acc (p |> Player.player_name |> String.length))
-      0 (gs |> Game_state.board_st |> Board_state.get_players) in 
-  max header_len name_len
-
-(** TODO *)
-let make_n_spaces (n:int) : string =
-  let rec h n acc =
-    if n > 0 then h (n-1) (acc ^ " ") else acc in 
-  h n ""
-
-(** TODO *)
-let column_spacing (s:string) (c_len:int) : string =
-  make_n_spaces (c_len - String.length s)
-
-(** TODO: printing with proper headers *)
-let draw_stats (st : Interface.t) =
-  let gs = Interface.game_state st in
-  let col_len = max_column_len gs + spacing in
-  let header = "Player" ^ make_n_spaces (col_len - 6) ^ "(a)rmy" ^
-               make_n_spaces spacing ^ "(n)ode" ^ make_n_spaces spacing ^
-               "(c)ont" ^ make_n_spaces spacing in
-  let draw_one_line (ps : Board_state.player_stats) : unit =
-    match ps with
-    | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
-      let name = p |> Player.player_name in
-      print_string [] "| ";
-      print_string [Foreground (player_color p)] (player_name p);
-      print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
-                     column_spacing (string_of_int a) (spacing+spacing_head) ^ (string_of_int n) ^
-                     column_spacing (string_of_int n) (spacing+spacing_head) ^ (string_of_int c) ^
-                     column_spacing (string_of_int c) (spacing+spacing_head) ^ " |") in 
-  let rec draw_all (ps : Board_state.player_stats list) : unit =
-    match ps with
-    | [] -> ()
-    | hd :: tl -> draw_one_line hd; draw_all tl in
-  ANSITerminal.set_cursor 1 2; (* to account for the space in the ascii json *) 
-  print_string [Bold] "------------------------------------------\n";
-  print_string [Bold] ("| " ^ header ^ " |\n");
-  print_string [Bold] "------------------------------------------\n";
-  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
-  print_string [Bold] "------------------------------------------\n";
-  (* to account for the extra turn information being drawn? temporary hard code *)
-  ANSITerminal.set_cursor 0 (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 2) 
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
@@ -125,3 +69,95 @@ let draw_board (st : Interface.t) : unit =
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
+
+
+
+(* leaderboard functions ---------------------------------------------------- *)
+
+(** [header_len_fst] is the length of the first column header in the leaderboard.
+    Used as an internal constant. *)
+let header_len_fst = String.length "(p)layer"
+
+(** [header_len] is the length of the other column headers in the leaderboard.
+    The headers are (a)rmy, (n)ode, and (c)ont.
+    Used as an internal constant. *)
+let header_len = 6 
+
+(** [spacing] is the number of spaces between columns in the leaderboard. 
+    Used as an internal constant. *)
+let spacing = 3
+
+(** [column_max_len gamestate] is either the length of the first header in
+    the leaderboard or the length of the longest player name in [gamestate]. *)
+let column_max_len (gs : Game_state.t) : int =
+  let name_len = 
+    List.fold_left (fun acc p -> max acc (p |> Player.player_name |> String.length))
+      0 (gs |> Game_state.board_st |> Board_state.get_players) in 
+  max header_len_fst name_len
+
+(** [make_n_chars n s] is the string created by repeating [s] [n] times. 
+    Example: [make_n_chars 5 "o"] is "ooooo". *)
+let make_n_chars (n : int) (s : string) : string =
+  let rec h n acc =
+    if n > 0 then h (n-1) (acc ^ s) else acc in 
+  h n ""
+
+(** [column_spacing text column_length] is the string spacing created for padding
+    after [text] in a column of [column_length]. *)
+let column_spacing (s : string) (col_len : int) : string =
+  make_n_chars (col_len - String.length s) " "
+
+(** [centered_x_coord board_width leaderboard_width] is the x coordinate that,
+    if drawn at, will result in a horizontally centered leaderboard. *)
+let centered_x_coord board_width leaderboard_width = 
+  board_width / 2 - leaderboard_width / 2
+
+(** [centered_y_coord board_width leaderboard_width] is the y coordinate that,
+    if drawn at, will result in a vertically centered leaderboard. *)
+let centered_y_coord board_height leaderboard_height =
+  (* +1 to account for newline at beginning of board ascii *)
+  board_height / 2 - (leaderboard_height / 2) + 1
+
+(** [draw_stats st] draws a leaderboard of players and their respective 
+    army, territory, and continent statistics on top of the board in [st]. *)
+let draw_stats (st : Interface.t) =
+  let gs = Interface.game_state st in
+  let brd = st |> board in
+  let col_len = column_max_len gs + spacing in
+  let header = "| " ^ "(p)layer" ^ make_n_chars (col_len - header_len_fst) " " ^
+               "(a)rmy" ^ make_n_chars spacing " " ^ "(n)ode" ^
+               make_n_chars spacing " " ^ "(c)ont" ^ make_n_chars spacing " " ^ " |" in
+  let divider = make_n_chars (String.length header) "-" in
+  (* [set_cursor_y_incr] handles drawing each line at the correct height *)
+  let set_cursor_y_incr = 
+    let counter = ref (centered_y_coord (board_ascii_height brd) 7) (*TODO: replace 7 with proper height of leaderboard*)
+    in fun () -> incr counter; !counter in
+  let draw_one_line (ps : Board_state.player_stats) : unit =
+    match ps with
+    | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
+      let name = p |> Player.player_name in
+      let total_col_space = header_len + spacing in
+      ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
+                                 (String.length header)) (set_cursor_y_incr ());
+      print_string [] "| ";
+      print_string [Foreground (player_color p)] (player_name p);
+      print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
+                     column_spacing (string_of_int a) (total_col_space) ^(string_of_int n) ^
+                     column_spacing (string_of_int n) (total_col_space) ^ (string_of_int c) ^
+                     column_spacing (string_of_int c) (total_col_space) ^ " |") in 
+  let rec draw_all (ps : Board_state.player_stats list) : unit =
+    match ps with
+    | [] -> ()
+    | hd :: tl -> draw_one_line hd; draw_all tl in
+  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
+                               (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (header ^ "\n") (centered_x_coord (board_ascii_width brd)
+                              (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
+                               (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
+  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
+                               (String.length header)) (set_cursor_y_incr ()) [Bold];
+  (* +2 to account for the extra turn information being drawn *)
+  ANSITerminal.set_cursor 0
+    (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 

@@ -8,5 +8,6 @@ val draw_board : Interface.t -> unit
     on [gamestate]. *)
 val draw_turn : Interface.t -> unit
 
-(** TODO: temporary for debugging *)
+(** [draw_stats st] prints a leaderboard of players and their respective 
+    army, territory, and continent statistics on top of the board in [st]. *)
 val draw_stats : Interface.t -> unit

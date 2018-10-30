@@ -48,13 +48,14 @@ type cont = {
   nodes : node_id list
 }
 
-(** The type of board. A name, an ASCII art string, the height
+(** The type of board. A name, an ASCII art string, the height and width
     of the ASCII art string (calculated in advance), a map
     of nodes, and a map of continents. *)
 type t = {
   name : string;
   ascii : string;
   ascii_height : int;
+  ascii_width : int;
   nodes : node String_map.t;
   conts : cont String_map.t
 }
@@ -104,6 +105,11 @@ let rec cont_list_to_map m = function
 (** [count_newlines str] is the number of newline characters in [str]. *)
 let count_newlines str = str |> Str.split (Str.regexp "\n") |> List.length
 
+(** [count_width str] is the number of characters across one line in [str]. 
+    Requires that the ascii is "rectangular", i.e. each line in [str] contains
+    the same number of characters. *)
+let count_width str = str |> Str.split (Str.regexp "\n") |> List.hd |> String.length
+
 (** [from_json json] is the board represented by [json]. Each of the fields
     is populated as expected using the helper functions above, except for
     [ascii_height], which is calculated from the [ascii] field. *)
@@ -113,6 +119,7 @@ let from_json json =
     name = json |> member "map" |> to_string;
     ascii = ascii;
     ascii_height = (count_newlines ascii) + 1;
+    ascii_width = count_width ascii;
     nodes = json |> member "territories" |> to_list
             |> List.map node_of_json |> node_list_to_map String_map.empty;
     conts = json |> member "continents" |> to_list
@@ -128,6 +135,10 @@ let board_ascii board = board.ascii
 (** [board_ascii_height board] is the number of lines in the ASCII art
     associated with [board]. *)
 let board_ascii_height board = board.ascii_height
+
+(** [board_ascii_width board] is the number of characters in one line
+    of the ASCII art associated with [board]. *)
+let board_ascii_width board = board.ascii_width
 
 (** [list_of_string_map map] is the string list containing all of the elements
     of [map]. *)
