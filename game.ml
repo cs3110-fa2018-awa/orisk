@@ -234,13 +234,16 @@ let risk f =
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
+let title =
+  "\r\n         _            _         _            _        \r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      \r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   \r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ \r\n     / / /\\ \\_\\     / /\\/_/ / / /\\ \\___\\ / / /__/ / / \r\n    / / /_/ / /    / / /    \\ \\ \\ \\/___// /\\_____/ /  \r\n   / / /__\\/ /    / / /      \\ \\ \\     / /\\_______/   \r\n  / / /_____/    / / /   _    \\ \\ \\   / / /\\ \\ \\      \r\n / / /\\ \\ \\  ___/ / /__ /_/\\__/ / /  / / /  \\ \\ \\     \r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    \r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\ "
+
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
     not exist. *)
 let rec game () = 
   ANSITerminal.(print_string [red]
-                  "\n\nWelcome to Risk!\n");
+                  ("\n\nWelcome to..." ^ title ^ "\n\n"));
   print_endline "Please enter the map file you want to load:";
   print_string  "> ";
   match read_line () with
