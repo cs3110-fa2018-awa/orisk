@@ -10,6 +10,15 @@ open Interface
 let format_2digit (i : int) : string =
   if i < 10 then "0" ^ (string_of_int i) else (string_of_int i)
 
+(** [print_players pl] prints the name of each player in [pl] in their
+    respective color. *)
+let rec print_players (pl : Player.t list) : unit =
+  match pl with
+  | [] -> ()
+  | player :: rest -> 
+    print_string [Foreground (player_color player)] (player_name player ^ "\n");
+    print_players rest
+
 (** [draw_str s x y color] prints [s] at terminal coordinates [x,y] 
     in [color]. *)
 let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =

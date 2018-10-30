@@ -6,14 +6,6 @@ open Display
 open Player
 open Interface
 
-(** [helpmsg] is the string containing all possible commands, which is displayed 
-    to the player when they enter the command [Help]. *)
-let helpmsg = "[attack t1 t2 n] - attack t2 with n invading armies from t1\n
-[reinforce t] - reinforce territory t with 1 army\n
-[end] - end your turn\n
-[help] - list possible commands\n 
-[quit] - quit game" (* TODO: seems kind of weird to put help in help y'know *)
-
 (** [string_of_dice dice] is a string of the list [dice]. *)
 let string_of_dice dice =
   (** [internal acc d] recursively concatenates the elements of [d]. 
@@ -202,20 +194,43 @@ let rec game_loop_new ?(search : string * bool = "",false)
   | Failure s when s = "int_of_string" -> game_loop_new st (Some "Invalid integer")
   | _ -> game_loop_new st msg
 
-(* [players] is a temporarily hard-coded set of players. Only used for the 
-    demo as we will implement the ability to enter your own players in the
-    future. *)
-let players = [
-  Player.create "player_a" Red; 
-  Player.create "player_b" Green;
-  Player.create "player_c" Blue
-]
+(** [insert_players pl msg t c] continuously prompts the user for commands involving
+    the creation of players, saved in [pl]. Reprompts if invalid commands are
+    given and displays error message [msg].Caps at however many colors are provided
+    in [c]. [t] is a flag indicating whether the add player message is activated. *)
+let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) : Player.t list = 
+  ANSITerminal.erase Screen;
+  print_endline "(a)dd a player";
+  print_endline "(d)elete the last player added";
+  print_endline "(s)tart the game with current players\n";
+  print_players (List.rev pl);
+  print_endline "";
+  (* different inputs depending on whether you're adding a player or not *)
+  if (t) then (print_endline "Who is this player?\n";
+               begin match read_line (), c, pl with
+                 | name, color::rest, _ -> 
+                   insert_players ((Player.create name color) :: pl) rest false ("...")
+                 | _, _, _ -> insert_players pl c t msg
+               end)
+  else (print_endline (msg ^ "\n");
+        begin
+          match read_input (), c, pl with
+          | "a", [], _ -> insert_players pl c t ("Can't add any more players!")
+          | "a", color::rest, _ -> insert_players pl c true "..."
+          | "d", c, [] -> insert_players pl c t ("No players to delete!")
+          | "d", c, player::rest -> insert_players rest ((player_color player)::c) t "..."
+          | "s", _, [] -> insert_players pl c t ("Need at least one player!")
+          | "s", _, _ -> pl 
+          | "\004", _, _ | "\027", _, _ -> print_endline("\nThanks for playing!\n"); exit 0
+          | _, _, _ -> insert_players pl c t msg
+        end)
 
 (** [risk f] starts the game in [f]. 
 
     Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
 let risk f = 
-  let board = Board.from_json (Yojson.Basic.from_file f) in 
+  let board = Board.from_json (Yojson.Basic.from_file f) in
+  let players = List.rev (insert_players [] [Red; Blue; Green; Yellow; Magenta; Cyan] false "...") in
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
