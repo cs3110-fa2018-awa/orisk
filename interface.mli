@@ -27,6 +27,17 @@ val toggle_leaderboard : t -> t
     set to [cat]. *)
 val set_leaderboard_cat : t -> stats_category -> t
 
+(** [help_on st] is whether the help menu is activated in [st]. *)
+val help_on : t -> bool
+
+(** [help_cat st] is the category of gameplay state in [st] that help 
+    is being displayed for. *)
+val help_cat : t -> string
+
+(** [toggle_help st] is the interface with the help activation opposite
+    of the one in [st]. *)
+val toggle_help : t -> t
+
 val attacking_node : t -> node_id option
 
 val change_attack_node : t -> node_id option -> t

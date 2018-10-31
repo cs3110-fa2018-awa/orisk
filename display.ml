@@ -125,11 +125,6 @@ let centered_y_coord board_height leaderboard_height =
   (* +1 to account for newline at beginning of board ascii *)
   board_height / 2 - (leaderboard_height / 2) + 1
 
-(** TODO *)
-let set_cursor_y height1 height2 = 
-  let counter = ref (centered_y_coord (height1) height2)
-  in fun () -> incr counter; !counter
-
 (** [draw_stats st] draws a leaderboard of players and their respective 
     army, territory, and continent statistics on top of the board in [st]. *)
 let draw_stats (st : Interface.t) =
@@ -184,6 +179,7 @@ let help_str_pick = [
   "[ ], [enter]  select territory\n";
   "[a-z 0-9]     search the board\n";
   "[`]           populate the board territories randomly\n";
+  "[-]           toggle help sidebar";
   "[esc]         quit game\n"
 ]
 
@@ -195,6 +191,7 @@ let help_str_leaderboard = [
   "[n]    sort by territory count\n";
   "[c]    sort by continent count\n";
   "[=]    untoggle leaderboard\n";
+  "[-]    toggle help sidebar";
   "[esc]  quit game\n"
 ]
 
@@ -208,15 +205,16 @@ let help_str_game = [
   "[tab]         cycle through relevant nodes\n";
   "[a-z 0-9]     search the board\n";
   "[=]           toggle leaderboard\n";
+  "[-]           toggle help sidebar";
   "[esc]         quit game\n"
 ]
 
 (** [draw_help st] prints the list of possible actions the current player can
-    take, given by [s]. This list will be printed to the right of the board
-    ascii art corresponding to [st], and centered vertically. *)
+    take, given by [cat]. This list will be printed to the right of the board
+    ascii art corresponding to [st]. *)
 let draw_help (st : Interface.t) (cat : string list) : unit =
   let set_cursor_y = 
-    let counter = ref 1
+    let counter = ref 1 (* draw at top of board *)
     in fun () -> incr counter; !counter
   in let rec internal = function
       | [] -> ()
@@ -228,7 +226,9 @@ let draw_help (st : Interface.t) (cat : string list) : unit =
   ANSITerminal.set_cursor 0
     (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
 
-(** TODO *)
+(** [pick_help st cat] prints a help menu containing the list of possible
+    actions the current player can take, given by the provided status [cat] in
+    [st]. *)
 let pick_help (st : Interface.t ) = function
   | "pick" -> draw_help st help_str_pick
   | "leaderboard" -> draw_help st help_str_leaderboard
