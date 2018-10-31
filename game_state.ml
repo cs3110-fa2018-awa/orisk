@@ -2,11 +2,43 @@ open Player
 open Board_state
 open Board
 
-type reinforce_step = SelectR | PlaceR of node_id
-type attack_step = AttackSelectA | DefendSelectA of node_id | OccupyA of (node_id * node_id)
-type fortify_step = FromSelectF | ToSelectF of node_id | CountF of (node_id * node_id)
+(** [reinforce_step] is the type of step within the reinforce stage:
+    either [SelectR], in which the player selects a territory to
+    reinforce, or [PlaceR node], in which the player places armies
+    onto [node]. *)
+type reinforce_step =
+  | SelectR
+  | PlaceR of node_id
 
-(** The type of a turn.*)
+(** [attack_step] is the type of step within the attack stage:
+    either [AttackSelectA], in which the player selects the node
+    to attack with, [DefendSelectA attacker], in which the player
+    selects the node to attack to from [attacker], and [OccupyA
+    (attacker, defender)], in which the player chooses how many
+    armies to move from [attacker] to [defender] (after winning). *)
+type attack_step =
+  | AttackSelectA
+  | DefendSelectA of node_id
+  | OccupyA of (node_id * node_id)
+
+(** [turn_state] is the type of step within the fortify stage:
+    either [FromSelectF], in which the player selects the node
+    to fortify from, [ToSelectF from], in which the player selects
+    the node to fortify to from [from], and [CountF (from, to)],
+    in which the player chooses how many troops to move from [from]
+    to [to]. *)
+type fortify_step =
+  | FromSelectF
+  | ToSelectF of node_id
+  | CountF of (node_id * node_id)
+
+(** The type of a turn. Either [Pick], in which the players rotate
+    through to select nodes at the beginning of the game, [Reinforce
+    (reinforce_step, army)], in which the player reinforces [army]
+    troops to nodes of their choosing, [Attack attack_step], in which
+    the player attacks other players' nodes, and [Fortify fortify_step],
+    in which the player fortifies troops from one node that they
+    control to another that they control. *)
 type turn_state =
   | Pick
   | Reinforce of (reinforce_step * army)
@@ -107,7 +139,7 @@ let turn_to_str st =
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
 let turn_to_attack st = {st with turn = Attack AttackSelectA}
 
-(** [set_turn state turn] is [state] with its turn state changed to [turn]. *)
+(** [set_turn st turn] is [st] with its turn state changed to [turn]. *)
 let set_turn st turn = {st with turn = turn}
 
 (** [change_board_st st board_st] is the game state [st] with board state 
@@ -204,9 +236,17 @@ let assign_random_nodes (st : t) : t =
             current_player = first_player}
 (*BISECT-IGNORE-END*)
 
+(** [pick_nodes st node] is the result of the current player in [st] picking
+    [node] during the [Pick] phase of the game; [node] becomes owned by the
+    current player and has an army added.
+
+    If all nodes have been picked, then advances to the first turn, with game
+    state [Reinforce SelectR].
+
+    Raises [InvalidState st] if [turn] is not [Pick]. *)
 let pick_nodes st node =
   if not (is_pick st) then raise (InvalidState st.turn) else (); 
-  if node_owner st.board_state node <> None then raise (NotOwner node) else ();  (*better exception*)
+  if node_owner st.board_state node <> None then raise (NotOwner node) else ();
   let board_state = place_army (set_owner st.board_state node (Some st.current_player)) node 1 in
   if List.mem None (owners board_state) then 
     {st with board_state = board_state; current_player = next_player st.current_player st.players}
@@ -215,6 +255,10 @@ let pick_nodes st node =
              turn = Reinforce (SelectR,player_reinforcements st.board_state first_player);
              current_player = first_player}
 
+(** [setup_reinforce st] is the new state resulting from advancing [st] to the
+    reinforce turn. [st.current_player] is advanced to the next player in the
+    list and [st.turn] becomes [Reinforce (SelectR, n)], where [n] is the number
+    of reinforcements that the next player should receive. *)
 let setup_reinforce st =
   let next = next_player st.current_player st.players
   in {st with
@@ -234,6 +278,17 @@ let end_turn_step st =
   | Fortify _ -> setup_reinforce st
 (*BISECT-IGNORE-END*)
 
+(** [back_turn st] is [st] with the turn state reverted one step, but
+    not leaving the current general turn state. This function behaves
+    according to the following rules:
+
+      - Pick -> Pick
+      - Reinforce _ -> Reinforce SelectR
+      - Attack _ -> Attack AttackSelectA
+      - Fortify _ -> Fortify FromSelectF
+
+    If the turn state was already in the result of applying this function,
+    then the resulting turn state is unchanged. *)
 let back_turn st = 
   match st.turn with
   | Reinforce _ -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
@@ -293,16 +348,19 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) armies : t 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
     a battle in which the winner is determined according to rolling random die
-    and following the rules specified in [battle]. If a battle is successful,
-    i.e. in favor of [a], then [d] loses one army. If a battle is not 
-    successful, [a] loses one army. 
+    and the greater roll wins. If there is a tie, [d] wins. 
+    If [a] wins the battle, [d] loses one army and vice versa. 
 
     If [d] reaches 0 armies, the current [player] of [st] moves 
-    [invading_armies] amount of armies to node [d] and takes ownership of [d]. 
+    [invading_armies] armies (minus those lost in the battle) to node [d] and
+    takes ownership of [d]. 
 
     [d] can only defend with [min 2 n1] where [n1] is the total number of armies
-    on node [d]. [a] can only attack with [min 3 n2] where [n2] is the total
-    number of armies on node [a]. 
+    on node [d]. [a] can only attack with [min 3 invading_armies].
+    [invading_armies] must be less than or equal to [n2], where [n2] is the
+    total number of armies on node [a].
+
+    The resulting turn state is Attack OccupyA.
 
     Raises: 
         - [InvalidState turn] when [turn] is not [Attack]
@@ -352,6 +410,14 @@ let attack st a d invading_armies =
                 turn = Attack AttackSelectA}, 
        attack_dice, defend_dice
 
+(** [occupy st a d occupying_armies] is the result of occupying node [d] from
+    node [a] by moving [occupying_armies] from [a] to [d]. The resulting turn
+    state is reset to [Attack AttackSelectA].
+
+    Raises:
+        - [InvalidState st] when [turn] is not [Attack OccupyA]
+        - [InsufficientArmies (a, occupying_armies)] if node [a] does not have
+          enough armies to fortify with [occupying_armies]. *)
 let occupy st a d occupying_armies = 
   if st.turn <> Attack (OccupyA (a,d))
   then raise (InvalidState st.turn) else ();
@@ -364,6 +430,12 @@ let occupy st a d occupying_armies =
                occupying_armies;
            turn = Attack AttackSelectA}
 
+(** [min_max_default st] is a tuple of the minimum, maximum, and default
+    number of troops that can be filled for [st].
+
+    This function is only defined for turn states that involve the selection
+    of a number of troops - i.e. Reinforce PlacR, attack OccupyA, and Fortify
+    CountF. For all other turn states, raises [InvalidState state]. *)
 let min_max_default st : (army * army * army) = match st.turn with
   | Reinforce ((PlaceR node), remaining)
     -> (0, remaining, 1)
@@ -373,7 +445,7 @@ let min_max_default st : (army * army * army) = match st.turn with
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
-  | _ -> failwith "shouldn't happen"
+  | _ -> raise (InvalidState st.turn)
 
 (* random seed *)
 let () = Random.self_init ()
