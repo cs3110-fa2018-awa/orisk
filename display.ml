@@ -27,14 +27,16 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
-let draw_nodes (st : Interface.t) : unit = 
+let draw_nodes (st : Interface.t) : unit =
+  let width, height = size () in
+  let scrollx, scrolly = scroll st in
   let brd_st = game_state st |> Game_state.board_st in
   let brd = brd_st |> Board_state.board in
   Board.fold_nodes brd 
     (fun id () ->
        (* only redraw if node is owned by a player *)
        let x = Board.node_coords brd id |> Board.x
-       in let y = Board.node_coords brd id |> Board.y
+       in let y = Board.node_coords brd id |> Board.y 
        in let is_cursor = cursor_node st = id
        in let is_selected = 
             from_fortify_node st = Some id || attacking_node st = Some id
@@ -48,8 +50,19 @@ let draw_nodes (st : Interface.t) : unit =
               -> [Foreground (player_color player);Background White]
             | Some player,true,_ 
               -> [Foreground White;Background (player_color player)]
-       in draw_str (Board_state.node_army brd_st id |> format_2digit)
-         (x + 1) (y + 1) style 
+       in let str = Board_state.node_army brd_st id |> format_2digit
+       in let crop,x_off =
+            begin
+              if x >= scrollx && x < width + scrollx - 1
+              then str,0
+              else if x = width + scrollx - 1
+              then String.sub str 0 1,0
+              else if x = scrollx - 1
+              then String.sub str 1 1,1
+              else "",0
+            end
+       in if y - 1 >= scrolly && y - 1 < height + scrolly - 3 
+       then draw_str crop (x - scrollx + 1 + x_off) (y - scrolly) style else ()
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
@@ -61,25 +74,32 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] (turn_to_str (game_state st));
   print_string [] "\n"
 
+let draw_line st num line : int =
+  let width, height = size ()
+  in let scrollx, scrolly = scroll st
+  in let disp = String.sub line scrollx (min width (String.length line - scrollx))
+  in if num >= scrolly && num < height + scrolly - 3
+  then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
+
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gamestate]. *)
 let draw_board (st : Interface.t) : unit = 
+  let _,height = size () in
   (* clear screen *)
   ANSITerminal.erase Screen;
   (* print topleft corner *)
   ANSITerminal.set_cursor 1 1; 
   (* print static board *)
-  ANSITerminal.print_string [Foreground White] 
-    (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii);
+  (* ANSITerminal.print_string [Foreground White] 
+   *   (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii); *)
+  ignore (List.fold_left (draw_line st) 0 (st |> board |> board_ascii_lines));
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
-  set_cursor 0 (game_state st |> board_st |> Board_state.board |> board_ascii_height);
+  set_cursor 0 (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height - 3));
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
-
-
 
 (* leaderboard functions ---------------------------------------------------- *)
 

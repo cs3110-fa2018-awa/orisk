@@ -137,6 +137,16 @@ let cursor_node st = st.cursor_node
 
 let scroll st = st.scroll
 
+let constrain num minim maxim =
+  max (min num maxim) minim
+
+let scroll_by st xscroll yscroll =
+  let width, height = ANSITerminal.size () in
+  let board_width = st |> board |> board_ascii_width in
+  let board_height = st |> board |> board_ascii_height in
+  {st with scroll = (constrain (x st.scroll + xscroll) 0 (board_width - width),
+                     constrain (y st.scroll + yscroll) 0 (board_height - height + 3))}
+
 let gs st gs =
   {st with game_state = gs}
 
