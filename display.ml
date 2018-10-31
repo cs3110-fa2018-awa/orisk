@@ -208,56 +208,76 @@ let draw_stats (st : Interface.t) =
 (** [help_str_pick] is the string containing information about the 
     possible player commands valid during the territory initialization phase .*)
 let help_str_pick = [
-  "[arrow keys]  navigate the board\n";
-  "[ ], [enter]  select territory\n";
-  "[a-z 0-9]     search the board\n";
-  "[`]           populate the board territories randomly\n";
-  "[-]           toggle help sidebar";
-  "[esc]         quit game\n"
+  "[arrow keys]  navigate the board";
+  "[ ], [enter]  select territory";
+  "[tab]         cycle through nodes";
+  "[a-z 0-9]     search the board";
+  "[`]           populate the board territories randomly";
+  "[-]           toggle help";
+  "[esc]         quit game"
 ]
 
 (** [help_str_leaderboard] is the string containing information about the 
     possible player commands valid during when the leaderboard is on. *)
 let help_str_leaderboard = [
-  "[p]    sort by player\n"; 
-  "[a]    sort by army count\n";
-  "[n]    sort by territory count\n";
-  "[c]    sort by continent count\n";
-  "[=]    untoggle leaderboard\n";
-  "[-]    toggle help sidebar";
-  "[esc]  quit game\n"
+  "[p]    sort by player"; 
+  "[a]    sort by army count";
+  "[n]    sort by territory count";
+  "[c]    sort by continent count";
+  "[=]    untoggle leaderboard";
+  "[-]    toggle help";
+  "[esc]  quit game"
 ]
 
 (** [help_str_game] is the string containing information about the 
     possible player commands valid during the main game.*)
 let help_str_game = [
-  "[arrow keys]  navigate the board\n";
-  "[ ], [enter]  confirm action\n";
-  "[?]           end turn\n";
-  "[\\]           cancel current action\n";
-  "[tab]         cycle through relevant nodes\n";
-  "[a-z 0-9]     search the board\n";
-  "[=]           toggle leaderboard\n";
-  "[-]           toggle help sidebar";
-  "[esc]         quit game\n"
+  "[arrow keys]  navigate the board";
+  "[ ], [enter]  confirm action";
+  "[?]           end turn";
+  "[\\]           cancel current action";
+  "[tab]         cycle through relevant nodes";
+  "[a-z 0-9]     search the board";
+  "[=]           toggle leaderboard";
+  "[-]           toggle help";
+  "[esc]         quit game"
 ]
+
+(** TODO *)
+let max_help_str cat =
+  List.fold_left (fun acc s -> max acc (String.length s))
+    0 cat
 
 (** [draw_help st] prints the list of possible actions the current player can
     take, given by [cat]. This list will be printed to the right of the board
-    ascii art corresponding to [st]. *)
+    ascii art corresponding to [st]. 
+
+    TODO: Factor out drawing function, prettify code before midnight *)
 let draw_help (st : Interface.t) (cat : string list) : unit =
-  let set_cursor_y = 
-    let counter = ref 1 (* draw at top of board *)
-    in fun () -> incr counter; !counter
-  in let rec internal = function
-      | [] -> ()
-      | s :: rest -> 
-        draw_str s (board_ascii_width (board st) + 5) (set_cursor_y ()) [];
-        internal rest
-  in internal cat;
-  (* +2 to account for the extra turn information being drawn *)
-  ANSITerminal.set_cursor 0
-    (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
+  let brd = st |> board in
+  let col_len = max_help_str cat in
+  let divider = make_n_chars (col_len + 4) "-" in
+  let help_height = (List.length cat) + 2 in
+  let set_cursor_y_incr = 
+    let counter = ref (centered_y_coord (board_ascii_height brd) help_height)
+    in fun () -> incr counter; !counter in
+  let draw_one_line (str : string) = 
+    ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
+                               (String.length divider)) (set_cursor_y_incr ());
+    print_string [] ("| " ^ str ^ (column_spacing str col_len) ^ " |\n") in
+  let rec draw_all = function 
+    | [] -> () 
+    | hd :: tl -> draw_one_line hd; draw_all tl in 
+  draw_str (divider ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length divider)) (set_cursor_y_incr ()) [Bold];
+  draw_all cat;
+  draw_str (divider ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length divider)) (set_cursor_y_incr ()) [Bold];
+  set_cursor 0 
+    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
+       (height))
 
 (** [pick_help st cat] prints a help menu containing the list of possible
     actions the current player can take, given by the provided status [cat] in
