@@ -5,11 +5,43 @@ open Player
 open Board_state
 open Board
 
-type reinforce_step = SelectR | PlaceR of node_id
-type attack_step = AttackSelectA | DefendSelectA of node_id | OccupyA of (node_id * node_id)
-type fortify_step = FromSelectF | ToSelectF of node_id | CountF of (node_id * node_id)
+(** [reinforce_step] is the type of step within the reinforce stage:
+    either [SelectR], in which the player selects a territory to
+    reinforce, or [PlaceR node], in which the player places armies
+    onto [node]. *)
+type reinforce_step =
+  | SelectR
+  | PlaceR of node_id
 
-(** The type of a turn.*)
+(** [attack_step] is the type of step within the attack stage:
+    either [AttackSelectA], in which the player selects the node
+    to attack with, [DefendSelectA attacker], in which the player
+    selects the node to attack to from [attacker], and [OccupyA
+    (attacker, defender)], in which the player chooses how many
+    armies to move from [attacker] to [defender] (after winning). *)
+type attack_step =
+  | AttackSelectA
+  | DefendSelectA of node_id
+  | OccupyA of (node_id * node_id)
+
+(** [turn_state] is the type of step within the fortify stage:
+    either [FromSelectF], in which the player selects the node
+    to fortify from, [ToSelectF from], in which the player selects
+    the node to fortify to from [from], and [CountF (from, to)],
+    in which the player chooses how many troops to move from [from]
+    to [to]. *)
+type fortify_step =
+  | FromSelectF
+  | ToSelectF of node_id
+  | CountF of (node_id * node_id)
+
+(** The type of a turn. Either [Pick], in which the players rotate
+    through to select nodes at the beginning of the game, [Reinforce
+    (reinforce_step, army)], in which the player reinforces [army]
+    troops to nodes of their choosing, [Attack attack_step], in which
+    the player attacks other players' nodes, and [Fortify fortify_step],
+    in which the player fortifies troops from one node that they
+    control to another that they control. *)
 type turn_state =
   | Pick
   | Reinforce of (reinforce_step * army)
@@ -106,11 +138,15 @@ val reinforce : t -> node_id -> army -> t
     If [a] wins the battle, [d] loses one army and vice versa. 
 
     If [d] reaches 0 armies, the current [player] of [st] moves 
-    [invading_armies] amount of armies to node [d] and takes ownership of [d]. 
+    [invading_armies] armies (minus those lost in the battle) to node [d] and
+    takes ownership of [d]. 
 
     [d] can only defend with [min 2 n1] where [n1] is the total number of armies
-    on node [d]. [a] can only attack with [min 3 n2] where [n2] is the total
-    number of armies on node [a]. 
+    on node [d]. [a] can only attack with [min 3 invading_armies].
+    [invading_armies] must be less than or equal to [n2], where [n2] is the
+    total number of armies on node [a].
+
+    The resulting turn state is Attack OccupyA.
 
     Raises: 
         - [InvalidState turn] when [turn] is not [Attack]
@@ -118,7 +154,9 @@ val reinforce : t -> node_id -> army -> t
         - [NotOwner] if current [player] of [st] does not own [a]
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
           [a] and [d]
-        - [SameNode n] if [n] is both the attacking and defending node *)
+        - [SameNode n] if [n] is both the attacking and defending node
+        - [InsufficientArmies (a, invading_armies)] if node [a] does not have
+          enough armies to attack with [invading_armies]. *)
 val attack : t -> node_id -> node_id -> army -> t * int list * int list
 
 (** [assign_random_nodes st] is the game state [st] after assigning 
@@ -132,10 +170,9 @@ val assign_random_nodes : t -> t
     reinforce. *)
 val end_turn_step : t -> t
 
-val remaining_reinforcements : t -> army
-
-(** [fortify st f t] sends one army from territory [f] to territory [t] if 
-    they are connected by a path of territories that the current player owns.
+(** [fortify st f t army] sends [army] armies from territory [f] to territory
+    [t] if they are connected by a path of territories that the current player
+    owns.
 
     Raises:
         - [InvalidState turn] when [turn] is not [Fortify]
@@ -144,17 +181,50 @@ val remaining_reinforcements : t -> army
         - [SameNode n] if [n] is both the node fortifying from and to
         - [NonconnectedNode n1, n2] if [n1] and [n2] are not connected by a path
           of nodes owned by the current player
-        - [InsufficientArmies n] if [n] does not have enough armies to fortify
-          with *)
+        - [InsufficientArmies (f, army)] if node [f] does not have enough
+          armies to fortify with [army] *)
 val fortify : t -> node_id -> node_id -> army -> t
 
+(** [pick_nodes st node] is the result of the current player in [st] picking
+    [node] during the [Pick] phase of the game; [node] becomes owned by the
+    current player and has an army added.
+
+    If all nodes have been picked, then advances to the first turn, with game
+    state [Reinforce SelectR].
+
+    Raises [InvalidState st] if [turn] is not [Pick]. *)
 val pick_nodes : t -> node_id -> t
 
-(** [set_turn state turn] is [state] with its turn state changed to [turn]. *)
+(** [set_turn st turn] is [st] with its turn state changed to [turn]. *)
 val set_turn : t -> turn_state -> t
 
+(** [back_turn st] is [st] with the turn state reverted one step, but
+    not leaving the current general turn state. This function behaves
+    according to the following rules:
+
+      - Pick -> Pick
+      - Reinforce _ -> Reinforce SelectR
+      - Attack _ -> Attack AttackSelectA
+      - Fortify _ -> Fortify FromSelectF
+
+    If the turn state was already in the result of applying this function,
+    then the resulting turn state is unchanged. *)
 val back_turn : t -> t
 
+(** [occupy st a d occupying_armies] is the result of occupying node [d] from
+    node [a] by moving [occupying_armies] from [a] to [d]. The resulting turn
+    state is reset to [Attack AttackSelectA].
+
+    Raises:
+        - [InvalidState st] when [turn] is not [Attack OccupyA]
+        - [InsufficientArmies (a, occupying_armies)] if node [a] does not have
+          enough armies to fortify with [occupying_armies]. *)
 val occupy : t -> node_id -> node_id -> army -> t
 
+(** [min_max_default st] is a tuple of the minimum, maximum, and default
+    number of troops that can be filled for [st].
+
+    This function is only defined for turn states that involve the selection
+    of a number of troops - i.e. reinforce place, attack occupy, and fortify
+    count. For all other turn states, raises [InvalidState st]. *)
 val min_max_default : t -> army * army * army
