@@ -158,9 +158,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | "\027[D" -> game_loop_new (move_arrow st Left) msg
           | "\027[B" -> game_loop_new (move_arrow st Down) msg
           | "\027[C" -> game_loop_new (move_arrow st Right) msg
-          | "\027[1;2A" -> game_loop_new (scroll_by st 0 (-1)) msg
+          (* : and ; because macs are inferior *)
+          | "\027[1;2A" | ":" -> game_loop_new (scroll_by st 0 (-1)) msg
           | "\027[1;2D" -> game_loop_new (scroll_by st (-1) 0) msg
-          | "\027[1;2B" -> game_loop_new (scroll_by st 0 1) msg
+          | "\027[1;2B" | ";" -> game_loop_new (scroll_by st 0 1) msg
           | "\027[1;2C" -> game_loop_new (scroll_by st 1 0) msg
           | " " | "\n" -> let st',msg' = game_stage st in game_loop_new st' msg'
           | "?" 

@@ -145,7 +145,7 @@ let scroll_by st xscroll yscroll =
   let board_width = st |> board |> board_ascii_width in
   let board_height = st |> board |> board_ascii_height in
   {st with scroll = (constrain (x st.scroll + xscroll) 0 (board_width - width),
-                     constrain (y st.scroll + yscroll) 0 (board_height - height))}
+                     constrain (y st.scroll + yscroll) 0 (board_height - height + 3))}
 
 let gs st gs =
   {st with game_state = gs}

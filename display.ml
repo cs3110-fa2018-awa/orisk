@@ -61,7 +61,8 @@ let draw_nodes (st : Interface.t) : unit =
               then String.sub str 1 1,1
               else "",0
             end
-       in draw_str crop (x - scrollx + 1 + x_off) (y - scrolly + 1) style;
+       in if y - 1 >= scrolly && y - 1 < height + scrolly - 3 
+       then draw_str crop (x - scrollx + 1 + x_off) (y - scrolly) style else ()
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
@@ -73,27 +74,29 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] (turn_to_str (game_state st));
   print_string [] "\n"
 
-let draw_line st _ line : unit =
-  let width, _ = size ()
+let draw_line st num line : int =
+  let width, height = size ()
   in let scrollx, scrolly = scroll st
   in let disp = String.sub line scrollx (min width (String.length line - scrollx))
-  in print_string [white] (disp ^ "\n")
+  in if num >= scrolly && num < height + scrolly - 3
+  then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gamestate]. *)
 let draw_board (st : Interface.t) : unit = 
+  let _,height = size () in
   (* clear screen *)
   ANSITerminal.erase Screen;
   (* print topleft corner *)
-  ANSITerminal.set_cursor 1 2; 
+  ANSITerminal.set_cursor 1 1; 
   (* print static board *)
   (* ANSITerminal.print_string [Foreground White] 
    *   (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii); *)
-  List.fold_left (draw_line st) () (st |> board |> board_ascii_lines);
+  ignore (List.fold_left (draw_line st) 0 (st |> board |> board_ascii_lines));
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
-  set_cursor 0 (game_state st |> board_st |> Board_state.board |> board_ascii_height);
+  set_cursor 0 (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height - 3));
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
