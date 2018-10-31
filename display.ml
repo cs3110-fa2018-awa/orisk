@@ -51,18 +51,17 @@ let draw_nodes (st : Interface.t) : unit =
             | Some player,true,_ 
               -> [Foreground White;Background (player_color player)]
        in let str = Board_state.node_army brd_st id |> format_2digit
-       in let crop =
+       in let crop,x_off =
             begin
-              if (x >= scrollx && x < width + scrollx - 1) 
-              then str
+              if x >= scrollx && x < width + scrollx - 1
+              then str,0
               else if x = width + scrollx - 1
-              then String.sub str 0 1
+              then String.sub str 0 1,0
               else if x = scrollx - 1
-              then String.sub str 1 1
-              else ""
+              then String.sub str 1 1,1
+              else "",0
             end
-       in (*set_cursor 1 1; print_endline ("width: "^(string_of_int width)^" height: "^(string_of_int height)^" scrollx: "^(string_of_int scrollx)^" scrolly: "^(string_of_int scrolly)^" x: "^(string_of_int x)^" y: "^(string_of_int y)^id);
-          *)draw_str crop (x - scrollx + 1) (y - scrolly + 1) style;
+       in draw_str crop (x - scrollx + 1 + x_off) (y - scrolly + 1) style;
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
