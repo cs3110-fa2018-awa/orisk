@@ -86,7 +86,7 @@ let rec read_num str prev : string option =
   | _ -> read_num str str
 
 let game_stage st = match st |> game_state |> turn with 
-  | Null -> pick st,None
+  | Pick -> pick st,None
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
   | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
@@ -145,7 +145,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
   if (Interface.help_on st) then
     (begin match (leaderboard_on st), (turn (game_state st)) with
        | true, _ -> pick_help st "leaderboard"
-       | false, Null -> pick_help st "pick"
+       | false, Pick -> pick_help st "pick"
        | false, _ -> pick_help st "game"
      end;)
   else ();
@@ -153,7 +153,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
   try 
     begin
       match game_state st |> turn with 
-      | Null | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) | Fortify (FromSelectF | ToSelectF _) ->
+      | Pick | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) | Fortify (FromSelectF | ToSelectF _) ->
         if (Interface.leaderboard_on st)
         then begin match read_input() with
           | "=" -> game_loop_new (toggle_leaderboard st) msg
@@ -189,7 +189,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
             then game_loop_new st msg
             else perform_search (String.sub (fst search) 0
                                    (String.length (fst search) - 1))
-          | "`" -> if (game_state st |> turn) = Null
+          | "`" -> if (game_state st |> turn) = Pick
             then game_loop_new (game_state st |> assign_random_nodes
                                 |> change_game_st st) msg
             else game_loop_new st msg

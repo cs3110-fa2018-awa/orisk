@@ -11,7 +11,7 @@ type fortify_step = FromSelectF | ToSelectF of node_id | CountF of (node_id * no
 
 (** The type of a turn.*)
 type turn_state =
-  | Null
+  | Pick
   | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
@@ -150,6 +150,7 @@ val fortify : t -> node_id -> node_id -> army -> t
 
 val pick_nodes : t -> node_id -> t
 
+(** [set_turn state turn] is [state] with its turn state changed to [turn]. *)
 val set_turn : t -> turn_state -> t
 
 val back_turn : t -> t
