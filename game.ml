@@ -127,6 +127,11 @@ let rec game_loop_new ?(search : string * bool = "",false)
   draw_board st;
   win_yet (game_state st);
   if (Interface.leaderboard_on st) then draw_stats (st) else ();
+  begin match (leaderboard_on st), (turn (game_state st)) with
+    | true, _ -> pick_help st "leaderboard"
+    | false, Null -> pick_help st "pick"
+    | false, _ -> pick_help st "game"
+  end;
   begin match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 

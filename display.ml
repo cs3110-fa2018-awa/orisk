@@ -79,8 +79,6 @@ let draw_board (st : Interface.t) : unit =
   (* print out current turn information *)
   draw_turn st
 
-
-
 (* leaderboard functions ---------------------------------------------------- *)
 
 (** [header_len_fst] is the length of the first column header in the leaderboard.
@@ -127,6 +125,11 @@ let centered_y_coord board_height leaderboard_height =
   (* +1 to account for newline at beginning of board ascii *)
   board_height / 2 - (leaderboard_height / 2) + 1
 
+(** TODO *)
+let set_cursor_y height1 height2 = 
+  let counter = ref (centered_y_coord (height1) height2)
+  in fun () -> incr counter; !counter
+
 (** [draw_stats st] draws a leaderboard of players and their respective 
     army, territory, and continent statistics on top of the board in [st]. *)
 let draw_stats (st : Interface.t) =
@@ -171,3 +174,63 @@ let draw_stats (st : Interface.t) =
   (* +2 to account for the extra turn information being drawn *)
   ANSITerminal.set_cursor 0
     (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
+
+(* help functions ---------------------------------------------------- *)
+
+(** [help_str_pick] is the string containing information about the 
+    possible player commands valid during the territory initialization phase .*)
+let help_str_pick = [
+  "[arrow keys]  navigate the board\n";
+  "[ ], [enter]  select territory\n";
+  "[a-z 0-9]     search the board\n";
+  "[`]           populate the board territories randomly\n";
+  "[esc]         quit game\n"
+]
+
+(** [help_str_leaderboard] is the string containing information about the 
+    possible player commands valid during when the leaderboard is on. *)
+let help_str_leaderboard = [
+  "[p]    sort by player\n"; 
+  "[a]    sort by army count\n";
+  "[n]    sort by territory count\n";
+  "[c]    sort by continent count\n";
+  "[=]    untoggle leaderboard\n";
+  "[esc]  quit game\n"
+]
+
+(** [help_str_game] is the string containing information about the 
+    possible player commands valid during the main game.*)
+let help_str_game = [
+  "[arrow keys]  navigate the board\n";
+  "[ ], [enter]  confirm action\n";
+  "[?]           end turn\n";
+  "[\\]           cancel current action\n";
+  "[tab]         cycle through relevant nodes\n";
+  "[a-z 0-9]     search the board\n";
+  "[=]           toggle leaderboard\n";
+  "[esc]         quit game\n"
+]
+
+(** [draw_help st] prints the list of possible actions the current player can
+    take, given by [s]. This list will be printed to the right of the board
+    ascii art corresponding to [st], and centered vertically. *)
+let draw_help (st : Interface.t) (cat : string list) : unit =
+  let set_cursor_y = 
+    let counter = ref 1
+    in fun () -> incr counter; !counter
+  in let rec internal = function
+      | [] -> ()
+      | s :: rest -> 
+        draw_str s (board_ascii_width (board st) + 5) (set_cursor_y ()) [];
+        internal rest
+  in internal cat;
+  (* +2 to account for the extra turn information being drawn *)
+  ANSITerminal.set_cursor 0
+    (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
+
+(** TODO *)
+let pick_help (st : Interface.t ) = function
+  | "pick" -> draw_help st help_str_pick
+  | "leaderboard" -> draw_help st help_str_leaderboard
+  | "game" -> draw_help st help_str_game
+  | _ -> failwith "invalid category"

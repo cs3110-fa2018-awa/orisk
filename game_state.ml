@@ -350,13 +350,13 @@ let occupy st a d occupying_armies =
 
 let min_max_default st : (army * army * army) = match st.turn with
   | Reinforce ((PlaceR node), remaining)
-      -> (0, remaining, 1)
+    -> (0, remaining, 1)
   | Attack (OccupyA (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
-      in (0, max, max)
+    in (0, max, max)
   | _ -> failwith "shouldn't happen"
 
 (* random seed *)
