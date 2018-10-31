@@ -153,9 +153,16 @@ let rec game_loop_new ?(search : string * bool = "",false)
   try 
     begin
       match game_state st |> turn with 
-      | Null | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) | Fortify (FromSelectF | ToSelectF _) ->
-        if (Interface.leaderboard_on st)
-        then begin match read_input() with
+      | Null | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) 
+      | Fortify (FromSelectF | ToSelectF _) ->
+        if (help_on st)
+        then begin match read_input () with
+          | "-" -> game_loop_new (toggle_help st) msg
+          | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+          | _ -> game_loop_new st msg
+        end
+        else if (Interface.leaderboard_on st)
+        then begin match read_input () with
           | "=" -> game_loop_new (toggle_leaderboard st) msg
           | "p" -> game_loop_new (set_leaderboard_cat st CatPlayer) msg
           | "a" -> game_loop_new (set_leaderboard_cat st CatArmy) msg
@@ -243,6 +250,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
     given and displays error message [msg].Caps at however many colors are provided
     in [c]. [t] is a flag indicating whether the add player message is activated. *)
 let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) : Player.t list = 
+  ANSITerminal.set_cursor 0 (height ());
   ANSITerminal.erase Screen;
   print_endline "(a)dd a player";
   print_endline "(d)elete the last player added";
