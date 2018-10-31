@@ -90,6 +90,8 @@ val set_owner : t -> node_id -> Player.t option -> t
     Returns a list of nodes visited. *)
 val dfs : t -> node_id -> node_id list -> node_id list
 
+(** [owners state] is the list of players that control at least one
+    node in [state]. *)
 val owners : t -> (Player.t option) list
 
 (** [UnknownPlayer player] is raised if [player] is not in the [players] of 
