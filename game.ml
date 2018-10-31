@@ -133,7 +133,8 @@ let rec game_loop_new ?(search : string * bool = "",false)
       then print_endline ("Search: " ^ s)
       else begin
         ANSITerminal.(print_string [] "Failing search: "; 
-                      print_string [red] s)
+                      print_string [red] s);
+        print_endline ""
       end
     | None, _ -> print_endline "..."
   end;
