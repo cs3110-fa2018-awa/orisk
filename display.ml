@@ -26,10 +26,10 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
   ANSITerminal.print_string f s
 
 (** TODO *)
-let width = fst (size ())
+let width () = size () |> fst
 
 (** TODO *)
-let height = snd (size ())
+let height () = size () |> snd
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
@@ -58,15 +58,15 @@ let draw_nodes (st : Interface.t) : unit =
        in let str = Board_state.node_army brd_st id |> format_2digit
        in let crop,x_off =
             begin
-              if x >= scrollx && x < width + scrollx - 1
+              if x >= scrollx && x < width () + scrollx - 1
               then str,0
-              else if x = width + scrollx - 1
+              else if x = width () + scrollx - 1
               then String.sub str 0 1,0
               else if x = scrollx - 1
               then String.sub str 1 1,1
               else "",0
             end
-       in if y - 1 >= scrolly && y - 1 < height + scrolly - 3 
+       in if y - 1 >= scrolly && y - 1 < height () + scrolly - 3 
        then draw_str crop (x - scrollx + 1 + x_off) (y - scrolly) style else ()
     ) ()
 
@@ -81,8 +81,8 @@ let draw_turn (st : Interface.t) : unit =
 
 let draw_line st num line : int =
   let scrollx, scrolly = scroll st
-  in let disp = String.sub line scrollx (min width (String.length line - scrollx))
-  in if num >= scrolly && num < height + scrolly - 3
+  in let disp = String.sub line scrollx (min (width ()) (String.length line - scrollx))
+  in if num >= scrolly && num < height () + scrolly - 3
   then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated
@@ -99,7 +99,7 @@ let draw_board (st : Interface.t) : unit =
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
-  set_cursor 0 (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height - 3));
+  set_cursor 0 (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height () - 3));
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
@@ -142,14 +142,14 @@ let column_spacing (s : string) (col_len : int) : string =
 (** [centered_x_coord board_width leaderboard_width] is the x coordinate that,
     if drawn at, will result in a horizontally centered leaderboard. *)
 let centered_x_coord board_width leaderboard_width = 
-  let terminal_width = width in
+  let terminal_width = width () in
   min (terminal_width / 2 - leaderboard_width / 2)
     (board_width / 2 - leaderboard_width / 2)
 
 (** [centered_y_coord board_width leaderboard_width] is the y coordinate that,
     if drawn at, will result in a vertically centered leaderboard. *)
 let centered_y_coord board_height leaderboard_height =
-  let terminal_height = height in 
+  let terminal_height = height () in 
   min ((terminal_height - 3) / 2 - (leaderboard_height / 2) + 1)
     (board_height / 2 - (leaderboard_height / 2) + 1)
 
@@ -201,7 +201,7 @@ let draw_stats (st : Interface.t) =
        (String.length header)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
     (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
-       (height))
+       (height ()))
 
 (* help functions ---------------------------------------------------- *)
 
@@ -277,7 +277,7 @@ let draw_help (st : Interface.t) (cat : string list) : unit =
        (String.length divider)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
     (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
-       (height))
+       (height ()))
 
 (** [pick_help st cat] prints a help menu containing the list of possible
     actions the current player can take, given by the provided status [cat] in
