@@ -8,7 +8,7 @@ type fortify_step = FromSelectF | ToSelectF of node_id | CountF of (node_id * no
 
 (** The type of a turn.*)
 type turn_state =
-  | Null
+  | Pick
   | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
@@ -77,7 +77,7 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Null;
+    turn = Pick;
   }
 
 (** [board_st st] is the board state of [st]. *)
@@ -95,7 +95,7 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
-  | Null -> "Picking territories"
+  | Pick -> "Picking territories"
   | Reinforce (_,remaining) -> "Reinforce " ^ (string_of_int remaining)
   | Attack AttackSelectA -> "Select attacker"
   | Attack DefendSelectA node -> "Attacking from " ^ node ^ ", select defender"
@@ -107,24 +107,41 @@ let turn_to_str st =
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
 let turn_to_attack st = {st with turn = Attack AttackSelectA}
 
+(** [set_turn state turn] is [state] with its turn state changed to [turn]. *)
 let set_turn st turn = {st with turn = turn}
 
 (** [change_board_st st board_st] is the game state [st] with board state 
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
 
-let is_null st = match st.turn with
-  | Null -> true
+(** [is_pick st] is true iff the turn state of [st] is [Pick].
+    This is useful because the turn state may be parameterized, making
+    it more difficult to determine the general term state without pattern
+    matching. *)
+let is_pick st = match st.turn with
+  | Pick -> true
   | _ -> false
 
+(** [is_reinforce st] is true iff the turn state of [st] is Reinforce.
+    This is useful because the turn state may be parameterized, making
+    it more difficult to determine the general term state without pattern
+    matching. *)
 let is_reinforce st = match st.turn with
   | Reinforce _ -> true
   | _ -> false
 
+(** [is_attack st] is true iff the turn state of [st] is Attack.
+    This is useful because the turn state may be parameterized, making
+    it more difficult to determine the general term state without pattern
+    matching. *)
 let is_attack st = match st.turn with
   | Attack _ -> true
   | _ -> false
 
+(** [is_fortify st] is true iff the turn state of [st] is Fortify.
+    This is useful because the turn state may be parameterized, making
+    it more difficult to determine the general term state without pattern
+    matching. *)
 let is_fortify st = match st.turn with
   | Fortify _ -> true
   | _ -> false
@@ -188,7 +205,7 @@ let assign_random_nodes (st : t) : t =
 (*BISECT-IGNORE-END*)
 
 let pick_nodes st node =
-  if not (is_null st) then raise (InvalidState st.turn) else (); 
+  if not (is_pick st) then raise (InvalidState st.turn) else (); 
   if node_owner st.board_state node <> None then raise (NotOwner node) else ();  (*better exception*)
   let board_state = place_army (set_owner st.board_state node (Some st.current_player)) node 1 in
   if List.mem None (owners board_state) then 
@@ -211,7 +228,7 @@ let setup_reinforce st =
     reinforce. *)
 let end_turn_step st =
   match st.turn with
-  | Null -> st
+  | Pick -> st
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
   | Fortify _ -> setup_reinforce st
@@ -222,7 +239,7 @@ let back_turn st =
   | Reinforce _ -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
   | Attack _ -> {st with turn = Attack AttackSelectA}
   | Fortify _ -> {st with turn = Fortify FromSelectF}
-  | Null -> st
+  | Pick -> st
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
     5, inclusive. *)

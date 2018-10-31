@@ -95,7 +95,10 @@ let player_state st player =
     [player], or [None] if [id] is not owned by anyone. *)
 let node_owner st node = (node_state st node).owner
 
-let owners st = String_map.fold (fun k (d:node_state) acc -> d.owner :: acc) st.nodes []
+(** [owners state] is the list of players that control at least one
+    node in [state]. *)
+let owners st =
+  String_map.fold (fun k (d : node_state) acc -> d.owner :: acc) st.nodes []
 
 (** [node_army state id] is the army stationed at node [id] in [state]. *)
 let node_army st node = (node_state st node).army
@@ -135,7 +138,8 @@ let stats_conts ps = ps.cont_tot
 
 (** [get_players state] is the list of all existing players in [state]. *)
 let get_players st : Player.t list = 
-  Player_map.fold (fun key _ acc -> key::acc) st.players []
+  Player_map.fold (fun key _ acc ->
+      if List.mem key acc then acc else key :: acc) st.players []
 
 (** [player_stats_make state player] is the data structure containing the total
     number of territories, continents, and armies (in that order) owned by

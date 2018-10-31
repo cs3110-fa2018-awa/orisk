@@ -186,7 +186,7 @@ let turn_valid_nodes st =
   in let b = board st
   in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
   in let pred = match turn gs with
-      | Null -> fun node -> node_owner bs node = None
+      | Pick -> fun node -> node_owner bs node = None
       | Reinforce (SelectR,_) -> is_owner
       | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
       | Attack AttackSelectA

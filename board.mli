@@ -105,8 +105,13 @@ val cont_bonus : t -> cont_id -> army
     Raises [UnknownNode node] iff [has_node board node] is false. *)
 val node_conts : t -> node_id -> cont_id list
 
+(** [node_search board str] is [Some node_id] of the alphabetically
+    first node in [board] that begins with [str], or [None] if such
+    a node could not be found. *)
 val node_search : t -> string -> node_id option
 
+(** [nodes_filter board predicate] is the list of nodes in [board]
+    for which [predicate node_id] is true. *)
 val nodes_filter : t -> (node_id -> bool) -> node_id list
 
 (** [UnknownNode node] is the exception raised when [node] is not found. *)

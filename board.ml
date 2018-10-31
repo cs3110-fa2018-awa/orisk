@@ -7,10 +7,10 @@ module String_map = Map.Make (String)
 (** The type of a coordinate pair (x, y). *)
 type coords = (int * int)
 
-(** [x (a,b)] is [a]. *)
+(** [x (a,b)] is [a]. This is used for accessing values from [coords]. *)
 let x = fst
 
-(** [y (a,b)] is [b]. *)
+(** [y (a,b)] is [b]. This is used for accessing values from [coords]. *)
 let y = snd
 
 (** [make_coords x y] is the coords tuple (x, y). This is a convenience
@@ -240,11 +240,18 @@ let start_with start compare_to =
   if String.length start > String.length compare_to then false 
   else Str.string_before compare_to (String.length start) = start
 
-let node_search board str = 
-  String_map.filter (fun k _ -> start_with str k) board.nodes 
+(** [node_search board str] is [Some node_id] of the alphabetically
+    first node that begins with [str], or [None] if such a node could
+    not be found. *)
+let node_search board str =
+  (* get only nodes starting with str *)
+  String_map.filter (fun k _ -> start_with str k) board.nodes
+  (* get first alphabetically *)
   |> String_map.min_binding_opt |> function 
   | Some (k,_) -> Some k
   | None -> None
 
+(** [nodes_filter board predicate] is the list of nodes in [board]
+    for which [predicate node_id] is true. *)
 let nodes_filter board predicate =
   String_map.filter (fun k v -> predicate k) board.nodes |> list_of_string_map
