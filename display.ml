@@ -201,4 +201,69 @@ let draw_stats (st : Interface.t) =
        (String.length header)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
     (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
-       (height));
+       (height))
+
+(* help functions ---------------------------------------------------- *)
+
+(** [help_str_pick] is the string containing information about the 
+    possible player commands valid during the territory initialization phase .*)
+let help_str_pick = [
+  "[arrow keys]  navigate the board\n";
+  "[ ], [enter]  select territory\n";
+  "[a-z 0-9]     search the board\n";
+  "[`]           populate the board territories randomly\n";
+  "[-]           toggle help sidebar";
+  "[esc]         quit game\n"
+]
+
+(** [help_str_leaderboard] is the string containing information about the 
+    possible player commands valid during when the leaderboard is on. *)
+let help_str_leaderboard = [
+  "[p]    sort by player\n"; 
+  "[a]    sort by army count\n";
+  "[n]    sort by territory count\n";
+  "[c]    sort by continent count\n";
+  "[=]    untoggle leaderboard\n";
+  "[-]    toggle help sidebar";
+  "[esc]  quit game\n"
+]
+
+(** [help_str_game] is the string containing information about the 
+    possible player commands valid during the main game.*)
+let help_str_game = [
+  "[arrow keys]  navigate the board\n";
+  "[ ], [enter]  confirm action\n";
+  "[?]           end turn\n";
+  "[\\]           cancel current action\n";
+  "[tab]         cycle through relevant nodes\n";
+  "[a-z 0-9]     search the board\n";
+  "[=]           toggle leaderboard\n";
+  "[-]           toggle help sidebar";
+  "[esc]         quit game\n"
+]
+
+(** [draw_help st] prints the list of possible actions the current player can
+    take, given by [cat]. This list will be printed to the right of the board
+    ascii art corresponding to [st]. *)
+let draw_help (st : Interface.t) (cat : string list) : unit =
+  let set_cursor_y = 
+    let counter = ref 1 (* draw at top of board *)
+    in fun () -> incr counter; !counter
+  in let rec internal = function
+      | [] -> ()
+      | s :: rest -> 
+        draw_str s (board_ascii_width (board st) + 5) (set_cursor_y ()) [];
+        internal rest
+  in internal cat;
+  (* +2 to account for the extra turn information being drawn *)
+  ANSITerminal.set_cursor 0
+    (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
+
+(** [pick_help st cat] prints a help menu containing the list of possible
+    actions the current player can take, given by the provided status [cat] in
+    [st]. *)
+let pick_help (st : Interface.t ) = function
+  | "pick" -> draw_help st help_str_pick
+  | "leaderboard" -> draw_help st help_str_leaderboard
+  | "game" -> draw_help st help_str_game
+  | _ -> failwith "invalid category"

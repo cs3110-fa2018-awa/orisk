@@ -15,6 +15,7 @@ type t = {
   scroll : coords;
   move_map : ((arrow * node_id option) list) String_map.t;
   leaderboard : (bool * stats_category);
+  help : (bool * string);
 }
 
 let game_state st = st.game_state
@@ -40,6 +41,20 @@ let toggle_leaderboard st = {st with leaderboard = (not (leaderboard_on st), lea
 (** [set_leaderboard_cat st cat] is the interface [st] with the sorted by category
     set to [cat]. *)
 let set_leaderboard_cat st cat = {st with leaderboard = (leaderboard_on st, cat)}
+
+(** [help_on st] is whether the help menu is activated in [st]. *)
+let help_on st = fst st.help
+
+(** [help_cat st] is the category of gameplay state in [st] that help 
+    is being displayed for. 
+
+    BIG TODO? make a separate type for help categories?
+*)
+let help_cat st = snd st.help
+
+(** [toggle_help st] is the interface with the help activation opposite
+    of the one in [st]. *)
+let toggle_help st = {st with help = (not (help_on st), help_cat st)}
 
 let check_is_owner st (node:node_id option) =
   match node with 
@@ -129,6 +144,7 @@ let init gs =
     scroll = (0, 0);
     move_map = build_move_map gs;
     leaderboard = (false, CatPlayer);
+    help = (true, "pick")
   }
 
 let cursor st = node_coords (board st) st.cursor_node

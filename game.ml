@@ -126,6 +126,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
 
   draw_board st;
   win_yet (game_state st);
+  (* print message *)
   begin match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 
@@ -138,7 +139,17 @@ let rec game_loop_new ?(search : string * bool = "",false)
       end
     | None, _ -> print_endline "..."
   end;
+  (* drawing leaderboard *)
   if (Interface.leaderboard_on st) then draw_stats (st) else ();
+  (* drawing help menu *)
+  if (Interface.help_on st) then
+    (begin match (leaderboard_on st), (turn (game_state st)) with
+       | true, _ -> pick_help st "leaderboard"
+       | false, Null -> pick_help st "pick"
+       | false, _ -> pick_help st "game"
+     end;)
+  else ();
+  (* parsing commands *)
   try 
     begin
       match game_state st |> turn with 
@@ -150,6 +161,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | "a" -> game_loop_new (set_leaderboard_cat st CatArmy) msg
           | "n" -> game_loop_new (set_leaderboard_cat st CatNode) msg
           | "c" -> game_loop_new (set_leaderboard_cat st CatCont) msg
+          | "-" -> game_loop_new (toggle_help st) msg
           | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
           | _ -> game_loop_new st msg
         end
@@ -167,6 +179,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | "?" 
             -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
           | "=" -> game_loop_new (toggle_leaderboard st) msg
+          | "-" -> game_loop_new (toggle_help st) msg
           | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
           | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
           | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
