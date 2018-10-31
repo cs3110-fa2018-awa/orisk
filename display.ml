@@ -25,10 +25,15 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
   ANSITerminal.set_cursor x y;
   ANSITerminal.print_string f s
 
+(** TODO *)
+let width = fst (size ())
+
+(** TODO *)
+let height = snd (size ())
+
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
 let draw_nodes (st : Interface.t) : unit =
-  let width, height = size () in
   let scrollx, scrolly = scroll st in
   let brd_st = game_state st |> Game_state.board_st in
   let brd = brd_st |> Board_state.board in
@@ -75,8 +80,7 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] "\n"
 
 let draw_line st num line : int =
-  let width, height = size ()
-  in let scrollx, scrolly = scroll st
+  let scrollx, scrolly = scroll st
   in let disp = String.sub line scrollx (min width (String.length line - scrollx))
   in if num >= scrolly && num < height + scrolly - 3
   then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
@@ -84,7 +88,6 @@ let draw_line st num line : int =
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gamestate]. *)
 let draw_board (st : Interface.t) : unit = 
-  let _,height = size () in
   (* clear screen *)
   ANSITerminal.erase Screen;
   (* print topleft corner *)
@@ -139,27 +142,27 @@ let column_spacing (s : string) (col_len : int) : string =
 (** [centered_x_coord board_width leaderboard_width] is the x coordinate that,
     if drawn at, will result in a horizontally centered leaderboard. *)
 let centered_x_coord board_width leaderboard_width = 
-  let terminal_width, _ = ANSITerminal.size () in
+  let terminal_width = width in
   min (terminal_width / 2 - leaderboard_width / 2)
     (board_width / 2 - leaderboard_width / 2)
 
 (** [centered_y_coord board_width leaderboard_width] is the y coordinate that,
     if drawn at, will result in a vertically centered leaderboard. *)
 let centered_y_coord board_height leaderboard_height =
-  let _, terminal_height = ANSITerminal.size () in 
+  let terminal_height = height in 
   min ((terminal_height - 3) / 2 - (leaderboard_height / 2) + 1)
     (board_height / 2 - (leaderboard_height / 2) + 1)
 
 (** [draw_stats st] draws a leaderboard of players and their respective 
     army, territory, and continent statistics on top of the board in [st]. *)
 let draw_stats (st : Interface.t) =
-  let _, height = ANSITerminal.size () in
   let gs = Interface.game_state st in
   let brd = st |> board in
   let col_len = column_max_len gs + spacing in
   let header = "| " ^ "(p)layer" ^ make_n_chars (col_len - header_len_fst) " " ^
                "(a)rmy" ^ make_n_chars spacing " " ^ "(n)ode" ^
-               make_n_chars spacing " " ^ "(c)ont" ^ make_n_chars spacing " " ^ " |" in
+               make_n_chars spacing " " ^ "(c)ont" ^ make_n_chars spacing " " ^
+               " |" in
   let divider = make_n_chars (String.length header) "-" in
   let leaderboard_height = List.length (gs |> board_st |> get_players) + 4 in
   (* [set_cursor_y_incr] handles drawing each line at the correct height *)
@@ -176,22 +179,26 @@ let draw_stats (st : Interface.t) =
       print_string [] "| ";
       print_string [Foreground (player_color p)] (player_name p);
       print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
-                     column_spacing (string_of_int a) (total_col_space) ^(string_of_int n) ^
+                     column_spacing (string_of_int a) (total_col_space) ^ (string_of_int n) ^
                      column_spacing (string_of_int n) (total_col_space) ^ (string_of_int c) ^
                      column_spacing (string_of_int c) (total_col_space) ^ " |") in 
   let rec draw_all (ps : Board_state.player_stats list) : unit =
     match ps with
     | [] -> ()
     | hd :: tl -> draw_one_line hd; draw_all tl in
-  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
-                               (String.length header)) (set_cursor_y_incr ()) [Bold];
-  draw_str (header ^ "\n") (centered_x_coord (board_ascii_width brd)
-                              (String.length header)) (set_cursor_y_incr ()) [Bold];
-  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
-                               (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (divider ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (header ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (divider ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length header)) (set_cursor_y_incr ()) [Bold];
   draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
-  draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
-                               (String.length header)) (set_cursor_y_incr ()) [Bold];
+  draw_str (divider ^ "\n")
+    (centered_x_coord (board_ascii_width brd)
+       (String.length header)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
     (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
        (height));
