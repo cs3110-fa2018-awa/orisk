@@ -126,7 +126,6 @@ let rec game_loop_new ?(search : string * bool = "",false)
 
   draw_board st;
   win_yet (game_state st);
-  if (Interface.leaderboard_on st) then draw_stats (st) else ();
   begin match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 
@@ -134,11 +133,11 @@ let rec game_loop_new ?(search : string * bool = "",false)
       then print_endline ("Search: " ^ s)
       else begin
         ANSITerminal.(print_string [] "Failing search: "; 
-                      print_string [red] s);
-        print_endline ""
+                      print_string [red] s)
       end
     | None, _ -> print_endline "..."
   end;
+  if (Interface.leaderboard_on st) then draw_stats (st) else ();
   try 
     begin
       match game_state st |> turn with 

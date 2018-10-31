@@ -139,17 +139,24 @@ let column_spacing (s : string) (col_len : int) : string =
 (** [centered_x_coord board_width leaderboard_width] is the x coordinate that,
     if drawn at, will result in a horizontally centered leaderboard. *)
 let centered_x_coord board_width leaderboard_width = 
-  board_width / 2 - leaderboard_width / 2
+  let terminal_width = fst (ANSITerminal.size ()) in
+  if terminal_width > board_width 
+  then terminal_width / 2 - leaderboard_width
+  else board_width / 2 - leaderboard_width / 2
 
 (** [centered_y_coord board_width leaderboard_width] is the y coordinate that,
     if drawn at, will result in a vertically centered leaderboard. *)
 let centered_y_coord board_height leaderboard_height =
   (* +1 to account for newline at beginning of board ascii *)
-  board_height / 2 - (leaderboard_height / 2) + 1
+  let terminal_height = snd (ANSITerminal.size ()) in 
+  if terminal_height - 3 > board_height
+  then terminal_height / 2 - (leaderboard_height) + 1
+  else board_height / 2 - (leaderboard_height / 2) + 1
 
 (** [draw_stats st] draws a leaderboard of players and their respective 
     army, territory, and continent statistics on top of the board in [st]. *)
 let draw_stats (st : Interface.t) =
+  let _, height = ANSITerminal.size () in
   let gs = Interface.game_state st in
   let brd = st |> board in
   let col_len = column_max_len gs + spacing in
@@ -188,6 +195,5 @@ let draw_stats (st : Interface.t) =
   draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
   draw_str (divider ^ "\n") (centered_x_coord (board_ascii_width brd)
                                (String.length header)) (set_cursor_y_incr ()) [Bold];
-  (* +2 to account for the extra turn information being drawn *)
-  ANSITerminal.set_cursor 0
-    (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+)2) 
+  set_cursor 0 
+    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height));
