@@ -84,8 +84,8 @@ let change_attack_node st (node:node_id option) =
   check_is_owner st node;
   match node with 
   | None -> st
-  | Some n -> 
-    {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
+  | Some n 
+    -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
 
 (** [from_fortify_node st] is the node that the current player is fortifying
     from in interface [st]. *)
@@ -100,8 +100,8 @@ let change_from_fortify_node st node =
   check_is_owner st node; 
   match node with 
   | None -> st
-  | Some n -> 
-    {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
+  | Some n 
+    -> {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
 
 (** [reinforce_place st node] is the interface [st] with the game state's turn
     state set to reinforce where the player can place armies onto [node]. *)
@@ -209,8 +209,8 @@ let scroll_by st xscroll yscroll =
   let board_width = st |> board |> board_ascii_width in
   let board_height = st |> board |> board_ascii_height in
   {st with scroll = (constrain (x st.scroll + xscroll) 0 (board_width - width),
-                     constrain (y st.scroll + yscroll) 0 
-                       (board_height - height + 3))}
+                     constrain 
+                       (y st.scroll + yscroll) 0 (board_height - height + 3))}
 
 (** [gs st gs] is the interface [st] with game state [gs]. *)
 let gs st gs =

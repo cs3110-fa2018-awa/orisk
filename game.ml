@@ -1,5 +1,4 @@
 open Game_state
-open Command
 open Board
 open Board_state
 open Display
@@ -44,6 +43,8 @@ let win_yet (st:Game_state.t) : unit =
       else ()
   in check (st |> Game_state.players)
 
+(** [next_valid_node st] is the next node that is valid for the player to select 
+    according to the current turn state of [st]. *)
 let next_valid_node st =
   let node = cursor_node st
   in let lst = turn_valid_nodes st
@@ -54,9 +55,12 @@ let next_valid_node st =
       | hd :: tl -> helper tl
   in if List.length lst = 0 then None else Some (helper lst)
 
+(** [read_input ()] reads a key input into a string without waiting 
+    for a return key. 
+
+    Implementation was inspired by https://stackoverflow.com/a/13410456. *)
 let read_input () =
   let buf = Bytes.create 8
-  (* Inspired by https://stackoverflow.com/a/13410456 *)
   in let termio = Unix.tcgetattr Unix.stdin
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN
          {termio with c_icanon = false; c_echo = false}
@@ -64,27 +68,37 @@ let read_input () =
   in let () = Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio
   in Bytes.sub_string buf 0 len
 
+(** [char_regexp] is the regular expression for valid characters when searching 
+    for a node. *)
 let char_regexp = Str.regexp "[A-Za-z0-9]"
 
+(** [int_regexp] is the regular expression for valid characters when inputting
+    an integer. *)
 let int_regexp = Str.regexp "[0-9]"
 
+(** [read_num str prev] is [Some s] where [s] is the string entered by the user
+    before pressing either the spacebar or return key and [None] if the user
+    inputs "?"" or "\\"". 
+
+    This prevents users from entering anything except 
+    integers when [read_num] is applied. However, they will still be able to 
+    quit and rewind the turn. *)
 let rec read_num str prev : string option =
-  ANSITerminal.move_cursor (~- (String.length prev)) 0;
+  ANSITerminal.move_cursor (- (String.length prev)) 0;
   ANSITerminal.erase Eol;
   print_string str;
   flush stdout;
   match read_input () with
-  | c when Str.string_match int_regexp c 0
-    -> read_num (str ^ c) str
-  | "\127" -> if String.length str <= 0
-    then read_num str str
-    else read_num (String.sub str 0
-                     (String.length str - 1)) str
+  | c when Str.string_match int_regexp c 0 -> read_num (str ^ c) str
+  | "\127" -> if String.length str <= 0 then read_num str str
+    else read_num (String.sub str 0 (String.length str - 1)) str
   | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
   | " " | "\n" -> Some str
   | "?" | "\\" -> None
   | _ -> read_num str str
 
+(** [game_stage st] is [(st',x)] where [st'] is the new state from evaluating
+    the turn state of [st] and [x] is [Some msg] or [None]. *)
 let game_stage st = match st |> game_state |> turn with 
   | Pick -> pick st,None
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
@@ -100,19 +114,26 @@ let game_stage st = match st |> game_state |> turn with
      , (Some ("A: " ^ (string_of_dice attack) 
               ^ " vs D: " ^ (string_of_dice defend))) 
   | Attack (OccupyA (n1,n2)) -> failwith "shouldn't happen"
-  | Fortify FromSelectF -> Some (cursor_node st) |> change_from_fortify_node st,None
-  | Fortify (ToSelectF node) -> fortify_select st (Some node) (Some (cursor_node st)),None
+  | Fortify FromSelectF 
+    -> Some (cursor_node st) |> change_from_fortify_node st,None
+  | Fortify (ToSelectF node) 
+    -> fortify_select st (Some node) (Some (cursor_node st)),None
   | Fortify (CountF (n1,n2)) -> failwith "):"
 
+(** [game_nums st num] is [(st',x)] where [st'] is the new state from evaluating
+    the turn state of [st] using [num] and [x] is [Some msg] or [None]. *)
 let game_nums st num = match st |> game_state |> turn with 
-  | Reinforce ((PlaceR node),_) -> change_game_st st (reinforce (game_state st) (cursor_node st) num),None
-  | Attack (OccupyA (n1,n2)) -> change_game_st st (occupy (game_state st) n1 n2 num),None
-  | Fortify (CountF (n1,n2)) -> fortify (game_state st) n1 n2 num |> change_game_st st,None
-  | _ -> failwith "why numbers"
+  | Reinforce ((PlaceR node),_) 
+    -> change_game_st st (reinforce (game_state st) (cursor_node st) num),None
+  | Attack (OccupyA (n1,n2)) 
+    -> change_game_st st (occupy (game_state st) n1 n2 num),None
+  | Fortify (CountF (n1,n2)) 
+    -> fortify (game_state st) n1 n2 num |> change_game_st st,None
+  | _ -> failwith "shouldnt happen"
 
-(** [game_loop_new st msg] continuously prompts the player for commands
+(** [game_loop_new st msg] continuously prompts the player for input
     and updates the game state according to the user input and the current 
-    state [st]. Reprompts if invalid commands are given and displays error
+    state [st]. Reprompts if invalid inputs are given and displays error
     message [msg].
 
     Helper for [risk f]. *)
@@ -149,12 +170,15 @@ let rec game_loop_new ?(search : string * bool = "",false)
        | false, _ -> pick_help st "game"
      end;)
   else ();
-  (* parsing commands *)
+  (* parsing inputs *)
   try 
     begin
       match game_state st |> turn with 
-      | Pick | Reinforce (SelectR,_) | Attack (AttackSelectA | DefendSelectA _) 
-      | Fortify (FromSelectF | ToSelectF _) ->
+      | Pick 
+      | Reinforce (SelectR,_) 
+      | Attack (AttackSelectA | DefendSelectA _) 
+      | Fortify (FromSelectF | ToSelectF _)
+        -> 
         if (help_on st)
         then begin match read_input () with
           | "-" -> game_loop_new (toggle_help st) msg
@@ -183,12 +207,13 @@ let rec game_loop_new ?(search : string * bool = "",false)
           | "\027[1;2B" | ";" -> game_loop_new (scroll_by st 0 1) msg
           | "\027[1;2C" -> game_loop_new (scroll_by st 1 0) msg
           | " " | "\n" -> let st',msg' = game_stage st in game_loop_new st' msg'
-          | "?" 
-            -> game_loop_new (change_game_st st (game_state st |> end_turn_step)) msg
+          | "?" -> game_loop_new 
+                     (change_game_st st (game_state st |> end_turn_step)) msg
           | "=" -> game_loop_new (toggle_leaderboard st) msg
           | "-" -> game_loop_new (toggle_help st) msg
           | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
-          | "\\" -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
+          | "\\" -> game_loop_new 
+                      (change_game_st st (game_state st |> back_turn)) msg
           | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
           | c when Str.string_match char_regexp c 0
             -> perform_search ((fst search) ^ c)
@@ -214,24 +239,29 @@ let rec game_loop_new ?(search : string * bool = "",false)
           match read_num "" "" with
           | Some str when str = "" -> handle default
           | Some str -> handle (int_of_string str)
-          | None -> game_loop_new (change_game_st st (game_state st |> back_turn)) msg
+          | None -> game_loop_new 
+                      (change_game_st st (game_state st |> back_turn)) msg
         end
     end
   with
   | NoPlayers
     -> game_loop_new st (Some "No players!")
   | NonadjacentNode (node_id1,node_id2)
-    -> game_loop_new st (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
+    -> game_loop_new st 
+         (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
   | NonconnectedNode (node_id1,node_id2)
-    -> game_loop_new st (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!"))
+    -> game_loop_new st 
+         (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!"))
   | SameNode node_id
-    -> game_loop_new st (Some ("You can't perform this action on the same territory!"))
+    -> game_loop_new st 
+         (Some ("You can't perform this action on the same territory!"))
   | InvalidState (turn_state)
     -> game_loop_new st (Some "Wrong type of turn.")
   | InsufficientArmies (node_id,army)
-    -> game_loop_new st (Some ("You only have " ^ (string_of_int army) ^
-                               " armies to attack with! You can't attack from " ^
-                               node_id ^ "!"))
+    -> game_loop_new st 
+         (Some ("You only have " ^ (string_of_int army) ^
+                " armies to attack with! You can't attack from " ^
+                node_id ^ "!"))
   | FriendlyFire player
     -> game_loop_new st (Some "You can't attack yourself!")
   | UnknownNode n
@@ -242,14 +272,20 @@ let rec game_loop_new ?(search : string * bool = "",false)
     -> game_loop_new st (Some "Player does not exist.")
   | NotOwner n
     -> game_loop_new st (Some "You don't control this territory")
-  | Failure s when s = "int_of_string" -> game_loop_new st (Some "Invalid integer")
+  | Failure s when s = "int_of_string" 
+    -> game_loop_new st (Some "Invalid integer")
   | _ -> game_loop_new st msg
 
-(** [insert_players pl msg t c] continuously prompts the user for commands involving
-    the creation of players, saved in [pl]. Reprompts if invalid commands are
-    given and displays error message [msg].Caps at however many colors are provided
-    in [c]. [t] is a flag indicating whether the add player message is activated. *)
-let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) : Player.t list = 
+(** [insert_players pl msg t c] continuously prompts the user for input 
+    involving the creation of players, saved in [pl]. Reprompts if invalid 
+    inputs are given and displays error message [msg].Caps at however many 
+    colors are provided in [c]. [t] is a flag indicating whether the add player 
+    message is activated. *)
+let rec insert_players 
+    (pl:Player.t list) 
+    (c:color list) 
+    (t:bool) 
+    (msg:string) : Player.t list = 
   ANSITerminal.set_cursor 0 (height ());
   ANSITerminal.erase Screen;
   print_endline "(a)dd a player";
@@ -260,8 +296,12 @@ let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) :
   (* different inputs depending on whether you're adding a player or not *)
   if (t) then (print_endline (msg ^ "\n");
                begin match read_line (), c, pl with
-                 | name, color::rest, _ -> if (String.trim name <> "") then
-                     insert_players ((Player.create name color) :: pl) rest false ("...")
+                 | name, color::rest, _ 
+                   -> if (String.trim name <> "") then
+                     begin
+                       insert_players ((Player.create name color) :: pl) 
+                         rest false ("...")
+                     end
                    else insert_players pl c t ("Can't have an empty name")
                  | _, _, _ -> insert_players pl c t msg
                end)
@@ -269,12 +309,15 @@ let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) :
         begin
           match read_input (), c, pl with
           | "a", [], _ -> insert_players pl c t ("Can't add any more players!")
-          | "a", color::rest, _ -> insert_players pl c true "Who is this player?"
+          | "a", color::rest, _ 
+            -> insert_players pl c true "Who is this player?"
           | "d", c, [] -> insert_players pl c t ("No players to delete!")
-          | "d", c, player::rest -> insert_players rest ((player_color player)::c) t "..."
+          | "d", c, player::rest 
+            -> insert_players rest ((player_color player)::c) t "..."
           | "s", _, [] -> insert_players pl c t ("Need at least one player!")
           | "s", _, _ -> pl 
-          | "\004", _, _ | "\027", _, _ -> print_endline("\nThanks for playing!\n"); exit 0
+          | "\004", _, _ | "\027", _, _ 
+            -> print_endline("\nThanks for playing!\n"); exit 0
           | _, _, _ -> insert_players pl c t msg
         end)
 
@@ -283,10 +326,13 @@ let rec insert_players (pl:Player.t list) (c:color list) (t:bool) (msg:string) :
     Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in
-  let players = List.rev (insert_players [] [Red; Blue; Green; Yellow; Magenta; Cyan] false "...") in
+  let players = List.rev 
+      (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false "...") in
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
+(* This is used to jazz up the initial load up screen. Yes it is over 80 char 
+   but that's just a fact of life when you want pretty ASCII art. *)
 let title =
   "\r\n         _            _         _            _        \r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      \r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   \r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ \r\n     / / /\\ \\_\\     / /\\/_/ / / /\\ \\___\\ / / /__/ / / \r\n    / / /_/ / /    / / /    \\ \\ \\ \\/___// /\\_____/ /  \r\n   / / /__\\/ /    / / /      \\ \\ \\     / /\\_______/   \r\n  / / /_____/    / / /   _    \\ \\ \\   / / /\\ \\ \\      \r\n / / /\\ \\ \\  ___/ / /__ /_/\\__/ / /  / / /  \\ \\ \\     \r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    \r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\ "
 

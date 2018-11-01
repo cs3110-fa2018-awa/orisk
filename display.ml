@@ -81,7 +81,8 @@ let draw_turn (st : Interface.t) : unit =
 
 let draw_line st num line : int =
   let scrollx, scrolly = scroll st
-  in let disp = String.sub line scrollx (min (width ()) (String.length line - scrollx))
+  in let disp = 
+       String.sub line scrollx (min (width ()) (String.length line - scrollx))
   in if num >= scrolly && num < height () + scrolly - 3
   then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
 
@@ -93,21 +94,20 @@ let draw_board (st : Interface.t) : unit =
   (* print topleft corner *)
   ANSITerminal.set_cursor 1 1; 
   (* print static board *)
-  (* ANSITerminal.print_string [Foreground White] 
-   *   (game_state st |> Game_state.board_st |> Board_state.board |> Board.board_ascii); *)
   ignore (List.fold_left (draw_line st) 0 (st |> board |> board_ascii_lines));
   (* populate nodes *)
   draw_nodes st;
   (* move to bottom of board *)
-  set_cursor 0 (min (game_state st |> board_st |> Board_state.board |> board_ascii_height) (height () - 3));
+  set_cursor 0 (min (game_state st |> board_st |> Board_state.board 
+                     |> board_ascii_height) (height () - 3));
   print_string [] "\n";
   (* print out current turn information *)
   draw_turn st
 
 (* leaderboard functions ---------------------------------------------------- *)
 
-(** [header_len_fst] is the length of the first column header in the leaderboard.
-    Used as an internal constant. *)
+(** [header_len_fst] is the length of the first column header in the 
+    leaderboard. Used as an internal constant. *)
 let header_len_fst = String.length "(p)layer"
 
 (** [header_len] is the length of the other column headers in the leaderboard.
@@ -123,9 +123,10 @@ let spacing = 3
     the leaderboard or the length of the longest player name in [gamestate]. *)
 let column_max_len (gs : Game_state.t) : int =
   let name_len = 
-    List.fold_left (fun acc p -> max acc (p |> Player.player_name |> String.length))
-      0 (gs |> Game_state.board_st |> Board_state.get_players) in 
-  max header_len_fst name_len
+    List.fold_left 
+      (fun acc p -> max acc (p |> Player.player_name |> String.length))
+      0 (gs |> Game_state.board_st |> Board_state.get_players)
+  in max header_len_fst name_len
 
 (** [make_n_chars n s] is the string created by repeating [s] [n] times. 
     Example: [make_n_chars 5 "o"] is "ooooo". *)
@@ -134,8 +135,8 @@ let make_n_chars (n : int) (s : string) : string =
     if n > 0 then h (n-1) (acc ^ s) else acc in 
   h n ""
 
-(** [column_spacing text column_length] is the string spacing created for padding
-    after [text] in a column of [column_length]. *)
+(** [column_spacing text column_length] is the string spacing created for 
+    padding after [text] in a column of [column_length]. *)
 let column_spacing (s : string) (col_len : int) : string =
   make_n_chars (col_len - String.length s) " "
 
@@ -167,7 +168,8 @@ let draw_stats (st : Interface.t) =
   let leaderboard_height = List.length (gs |> board_st |> get_players) + 4 in
   (* [set_cursor_y_incr] handles drawing each line at the correct height *)
   let set_cursor_y_incr = 
-    let counter = ref (centered_y_coord (board_ascii_height brd) leaderboard_height)
+    let counter = 
+      ref (centered_y_coord (board_ascii_height brd) leaderboard_height)
     in fun () -> incr counter; !counter in
   let draw_one_line (ps : Board_state.player_stats) : unit =
     match ps with
@@ -179,13 +181,15 @@ let draw_stats (st : Interface.t) =
       print_string [] "| ";
       print_string [Foreground (player_color p)] (player_name p);
       print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
-                     column_spacing (string_of_int a) (total_col_space) ^ (string_of_int n) ^
-                     column_spacing (string_of_int n) (total_col_space) ^ (string_of_int c) ^
-                     column_spacing (string_of_int c) (total_col_space) ^ " |") in 
-  let rec draw_all (ps : Board_state.player_stats list) : unit =
-    match ps with
-    | [] -> ()
-    | hd :: tl -> draw_one_line hd; draw_all tl in
+                     column_spacing (string_of_int a) (total_col_space) ^ 
+                     (string_of_int n) ^
+                     column_spacing (string_of_int n) (total_col_space) ^ 
+                     (string_of_int c) ^
+                     column_spacing (string_of_int c) (total_col_space) ^ " |") 
+  in let rec draw_all (ps : Board_state.player_stats list) : unit =
+       match ps with
+       | [] -> ()
+       | hd :: tl -> draw_one_line hd; draw_all tl in
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
        (String.length header)) (set_cursor_y_incr ()) [Bold];
@@ -195,18 +199,19 @@ let draw_stats (st : Interface.t) =
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
        (String.length header)) (set_cursor_y_incr ()) [Bold];
-  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) (Game_state.board_st gs));
+  draw_all (Board_state.sorted_player_stats (leaderboard_cat st) 
+              (Game_state.board_st gs));
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
        (String.length header)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
-    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
-       (height ()))
+    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height 
+          |> (+) 3) (height ()))
 
 (* help functions ---------------------------------------------------- *)
 
 (** [help_str_pick] is the string containing information about the 
-    possible player commands valid during the territory initialization phase .*)
+    possible player inputs valid during the territory initialization phase .*)
 let help_str_pick = [
   "[arrow keys]  navigate the board";
   "[ ], [enter]  select territory";
@@ -218,7 +223,7 @@ let help_str_pick = [
 ]
 
 (** [help_str_leaderboard] is the string containing information about the 
-    possible player commands valid during when the leaderboard is on. *)
+    possible player inputs valid during when the leaderboard is on. *)
 let help_str_leaderboard = [
   "[p]    sort by player"; 
   "[a]    sort by army count";
@@ -230,7 +235,7 @@ let help_str_leaderboard = [
 ]
 
 (** [help_str_game] is the string containing information about the 
-    possible player commands valid during the main game.*)
+    possible player inputs valid during the main game.*)
 let help_str_game = [
   "[arrow keys]  navigate the board";
   "[ ], [enter]  confirm action";
@@ -276,8 +281,8 @@ let draw_help (st : Interface.t) (cat : string list) : unit =
     (centered_x_coord (board_ascii_width brd)
        (String.length divider)) (set_cursor_y_incr ()) [Bold];
   set_cursor 0 
-    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height |> (+) 3) 
-       (height ()))
+    (min (game_state st |> board_st |> Board_state.board |> board_ascii_height 
+          |> (+) 3) (height ()))
 
 (** [pick_help st cat] prints a help menu containing the list of possible
     actions the current player can take, given by the provided status [cat] in

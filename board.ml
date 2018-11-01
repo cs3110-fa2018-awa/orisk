@@ -114,7 +114,8 @@ let count_newlines str = str |> Str.split newline_regexp |> List.length
 (** [count_width str] is the number of characters across one line in [str]. 
     Requires that the ascii is "rectangular", i.e. each line in [str] contains
     the same number of characters. *)
-let count_width str = str |> Str.split newline_regexp |> List.hd |> String.length
+let count_width str = 
+  str |> Str.split newline_regexp |> List.hd |> String.length
 
 (** [from_json json] is the board represented by [json]. Each of the fields
     is populated as expected using the helper functions above, except for
@@ -236,6 +237,8 @@ let node_conts board node =
         (let ({nodes} : cont) = (find_cont board cont_id) in nodes)
       then cont_id :: acc else acc) []
 
+(** [start_with start compare_to] performs a structural comparison
+    of the strings [start] and [compare_to]. *)
 let start_with start compare_to = 
   if String.length start > String.length compare_to then false 
   else Str.string_before compare_to (String.length start) = start

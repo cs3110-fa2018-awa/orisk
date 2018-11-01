@@ -72,7 +72,7 @@ exception NonconnectedNode of (node_id * node_id)
     action meant for two different nodes on the same node. *)
 exception SameNode of node_id
 
-(** [InvalidState turn_st] is raised when a players inputs a 
+(** [InvalidState turn_st] is raised when a players attempts a 
     command that does not correspond to the current state of their
     turn [turn_st]. *)
 exception InvalidState of turn_state
