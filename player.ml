@@ -13,7 +13,7 @@ let id_counter =
   in fun () -> incr counter; !counter
 
 (** [create name color] is the player with [name] and [color]. *)
-let create name color = {id=id_counter (); name=name; color=color}
+let create name color = {id = id_counter (); name = name; color = color}
 
 (** [player_id player] is the [id] of [player]. *)
 let player_id player = player.id

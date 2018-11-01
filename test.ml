@@ -127,6 +127,7 @@ let demo_players = lazy [
 let false_player = lazy (Player.create "foo" Black)
 
 let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
+let init_ps = lazy (player_stats_make (~$ init_board_state) (~$ player_a))
 
 let set_armies_state = lazy (set_army (~$ init_board_state) "JAM" 2)
 let add_armies_state = lazy 
@@ -186,7 +187,28 @@ let board_state_tests = [
   (* others *)
   gen_comp "continent bonus" 
     (lazy (player_reinforcements (~$ player_a_own_cont) (~$ player_a))) 6 int;
+  gen_comp "board lines" (lazy (board_ascii_lines (~$ map_schema))) 
+    ["............XX..";"..........//....";".........//.....";
+     "........XX==XX..";"............||..";"............XX..";
+     "....XX==XX......";"................"] (pp_list str);
+  gen_comp "board width" (lazy (board_ascii_width (~$ map_schema))) 16 int;
+  gen_comp "node search" 
+    (lazy (node_search (~$ map_schema) "Kee")) (Some "Keeton") (opt str);
+  gen_comp "node search none" 
+    (lazy (node_search (~$ map_schema) "equations are cool ya")) None (opt str);
+  gen_comp "node filter" 
+    (lazy (nodes_filter (~$ map_schema) (fun k -> k = "Rose"))) ["Rose"] 
+    (pp_list str);
+  gen_comp "owners" (lazy (owners (~$ init_board_state))) 
+    [None;None;None;None;None;None] null;
 
+  (* player stats *)
+  gen_comp "stats player" 
+    (lazy (stats_player (~$ init_ps))) (~$ player_a) player_p;
+  gen_comp "stats army" (lazy (stats_army (~$ init_ps))) 0 int;
+  gen_comp "stats nodes" (lazy (stats_nodes (~$ init_ps))) 0 int;
+  gen_comp "stats conts" (lazy (stats_conts (~$ init_ps))) 0 int;
+  gen_comp "get players" (lazy (get_players (~$ init_board_state))) (~$ demo_players) null;
 ]
 
 let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
@@ -244,8 +266,8 @@ let game_state_tests = [
                       in st' |> board_st) "HR5")) 1 null;
 
   (* others *)
-  gen_comp "string of attack" (lazy (turn_to_str (~$ attack_state))) "Select attacker" 
-    str;
+  gen_comp "string of attack" 
+    (lazy (turn_to_str (~$ attack_state))) "Select attacker" str;
   gen_comp "string of pick" (lazy (turn_to_str (~$ init_game_state))) 
     "Picking territories" str;
   (* gen_comp "remaining reinforcement" 
