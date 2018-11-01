@@ -7,8 +7,7 @@ open Player
 (** The abstract type representing a board state. *)
 type t
 
-(** The type representing a player's board statistics. 
-    TODO: should this not be exposed? used for pattern matching *)
+(** The type representing a player's board statistics. *)
 type player_stats = 
   {player : Player.t; army_tot : int; node_tot : int; cont_tot : int}
 
