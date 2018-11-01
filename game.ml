@@ -355,10 +355,19 @@ let risk f =
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
-(* This is used to jazz up the initial load up screen. Yes it is over 80 char 
-   but that's just a fact of life when you want pretty ASCII art. *)
+(** Ascii art splash screen. *)
 let title =
-  "\r\n         _            _         _            _        \r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      \r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   \r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ \r\n     / / /\\ \\_\\     / /\\/_/ / / /\\ \\___\\ / / /__/ / / \r\n    / / /_/ / /    / / /    \\ \\ \\ \\/___// /\\_____/ /  \r\n   / / /__\\/ /    / / /      \\ \\ \\     / /\\_______/   \r\n  / / /_____/    / / /   _    \\ \\ \\   / / /\\ \\ \\      \r\n / / /\\ \\ \\  ___/ / /__ /_/\\__/ / /  / / /  \\ \\ \\     \r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    \r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\ "
+   "\r\n         _            _         _            _        "
+  ^"\r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      "
+  ^"\r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   "
+  ^"\r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ "
+  ^"\r\n     / / /\\ \\_\\     / /\\/_/ / / /\\ \\___\\ / / /__/ / / "
+  ^"\r\n    / / /_/ / /    / / /    \\ \\ \\ \\/___// /\\_____/ /  "
+  ^"\r\n   / / /__\\/ /    / / /      \\ \\ \\     / /\\_______/   "
+  ^"\r\n  / / /_____/    / / /   _    \\ \\ \\   / / /\\ \\ \\      "
+  ^"\r\n / / /\\ \\ \\  ___/ / /__ /_/\\__/ / /  / / /  \\ \\ \\     "
+  ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
+  ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
