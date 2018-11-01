@@ -430,7 +430,6 @@ let occupy st a d occupying_armies =
   then raise (InvalidState st.turn) else ();
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
   if occupying_armies > total_attackers || occupying_armies < 0 
-  (*TODO: better exception*)
   then raise (InsufficientArmies (a,occupying_armies)) else ();  
   {st with board_state = Board_state.place_army 
                (Board_state.place_army st.board_state a (~- occupying_armies)) d 
