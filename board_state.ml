@@ -242,6 +242,13 @@ let update_map
   | Some player' -> Player_map.update player' (replacer player') map
   | None -> map
 
+(** [is_owner st player node cont] is true iff [player] is the owner of [cont]
+     after owning the target [node] in state [st]. *)
+let is_owner st player node cont =
+  List.for_all
+    (fun n -> (n = node) || ((node_owner st n) = player))
+    (cont_nodes (board st) cont)
+
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].
 
@@ -261,13 +268,6 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
       Some ({(extract (UnknownNode node) state)
              with owner = player} : node_state)
 
-  (* [is_owner cont] is true iff [player] is the owner of [cont]
-      after owning the target node. *)
-  in let is_owner cont =
-       List.for_all
-         (fun n -> (n = node) || ((node_owner st n) = player))
-         (cont_nodes (board st) cont)
-
   (* update state of new owner *)
   in let new_player_st
       ({nodes=nodes'; conts=conts'} : player_state) : player_state =
@@ -276,7 +276,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
          nodes = String_set.add node nodes';
          (* add continents that the player now fully controls *)
          conts = List.fold_left
-             (fun acc cont -> if is_owner cont
+             (fun acc cont -> if is_owner st player node cont
                then String_set.add cont acc else acc)
              conts' node_conts
        }
@@ -299,13 +299,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
   in let new_conts conts' player' = List.fold_left
          (fun acc cont ->
             String_map.update cont (fun cont_st_opt ->
-                if is_owner cont then begin
-                  (* this gives us a warning now,
-                     but we may want to be able to add
-                     additional record fields later *)
-                  Some {(extract (UnknownCont cont) cont_st_opt)
-                        with owner = player'}
-                end
+                if is_owner st player node cont then Some {owner = player'}
                 else None) conts'
          ) conts' node_conts
 

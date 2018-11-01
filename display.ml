@@ -266,46 +266,44 @@ let help_str_game = [
   "[esc]         quit game"
 ]
 
-(** TODO *)
-let max_help_str cat =
-  List.fold_left (fun acc s -> max acc (String.length s))
-    0 cat
+(** [max_help_str] is the length of the longest line in [s]. *)
+let max_help_str s =
+  List.fold_left (fun acc s -> max acc (String.length s)) 0 s
 
 (** [draw_help st] prints the list of possible actions the current player can
-    take, given by [cat]. This list will be printed to the right of the board
-    ascii art corresponding to [st]. 
-
-    TODO: Factor out drawing function, prettify code before midnight *)
-let draw_help (st : Interface.t) (cat : string list) : unit =
+    take, given by help string [s]. This list will be printed on top of the
+    ascii art corresponding to [st]. *)
+let draw_help (st : Interface.t) (s : string list) : unit =
   let brd = st |> board in
-  let col_len = max_help_str cat in
+  let col_len = max_help_str s in
   let divider = make_n_chars (col_len + 4) "-" in
-  let help_height = (List.length cat) + 2 in
-  let set_cursor_y_incr = 
+  let help_height = (List.length s) + 2 in
+  let cursor_y_incr = 
     let counter = ref (centered_y_coord (board_ascii_height brd) help_height)
     in fun () -> incr counter; !counter in
   let draw_one_line (str : string) = 
     ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
-                               (String.length divider)) (set_cursor_y_incr ());
+                               (String.length divider)) (cursor_y_incr ());
     print_string [] ("| " ^ str ^ (column_spacing str col_len) ^ " |\n") in
   let rec draw_all = function 
     | [] -> () 
     | hd :: tl -> draw_one_line hd; draw_all tl in 
+  (* drawing the help box*)
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
-       (String.length divider)) (set_cursor_y_incr ()) [Bold];
-  draw_all cat;
+       (String.length divider)) (cursor_y_incr ()) [Bold];
+  draw_all s;
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
-       (String.length divider)) (set_cursor_y_incr ()) [Bold];
+       (String.length divider)) (cursor_y_incr ()) [Bold];
   set_cursor 0 
     (min (game_state st |> board_st |> Board_state.board |> board_ascii_height 
           |> (+) 3) (height ()))
 
 (** [pick_help st cat] prints a help menu containing the list of possible
-    actions the current player can take, given by the provided status [cat] in
-    [st]. *)
-let pick_help (st : Interface.t ) = function
+    actions the current player can take, given by the provided turn category
+    [cat] in [st]. *)
+let pick_help (st : Interface.t) = function
   | "pick" -> draw_help st help_str_pick
   | "leaderboard" -> draw_help st help_str_leaderboard
   | "game" -> draw_help st help_str_game

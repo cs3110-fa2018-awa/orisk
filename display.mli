@@ -11,6 +11,8 @@ val height : unit -> int
     respective color. *)
 val print_players : Player.t list -> unit
 
+(** [draw_str s x y color] prints [s] at terminal coordinates [x,y] 
+    in [color]. *)
 val draw_str : string -> int -> int -> style list -> unit
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated
@@ -26,6 +28,6 @@ val draw_turn : Interface.t -> unit
 val draw_stats : Interface.t -> unit
 
 (** [pick_help st cat] prints a help menu containing the list of possible
-    actions the current player can take, given by the provided status [cat] in
-    [st]. *)
+    actions the current player can take, given by the provided turn category
+    [cat] in [st]. *)
 val pick_help : Interface.t -> string -> unit
