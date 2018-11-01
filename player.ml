@@ -16,7 +16,8 @@ let id_counter =
 let create name color = {id = id_counter (); name = name; color = color}
 
 (** [player_id player] is the [id] of [player]. *)
-let player_id player = player.id
+let player_id player = player.id (*BISECT-IGNORE*) 
+(* ignored bc eval issues due to using laziness *)
 
 (** [player_name player] is the [name] of [player]. *)
 let player_name player = player.name

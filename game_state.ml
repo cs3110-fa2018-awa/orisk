@@ -146,6 +146,7 @@ let set_turn st turn = {st with turn = turn}
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
 
+(*BISECT-IGNORE-BEGIN*) (*helpers not exposed and also play tested*)
 (** [is_pick st] is true iff the turn state of [st] is [Pick].
     This is useful because the turn state may be parameterized, making
     it more difficult to determine the general term state without pattern
@@ -177,6 +178,7 @@ let is_attack st = match st.turn with
 let is_fortify st = match st.turn with
   | Fortify _ -> true
   | _ -> false
+(*BISECT-IGNORE-END*)
 
 (** [remaining_reinforcements st] is the number of armies the current [player] 
     of [st] has remaining. 
@@ -187,6 +189,7 @@ let remaining_reinforcements st =
   | Reinforce (_,remaining) -> remaining
   | _ -> raise (InvalidState st.turn)
 
+(*BISECT-IGNORE-BEGIN*) (* extensive play testing*)
 (** [reinforce st n] is the game state resulting from the current [player] of 
     [st] adding one army to node [n]. 
 
@@ -204,7 +207,6 @@ let reinforce st n armies =
              then Attack AttackSelectA 
              else Reinforce (SelectR,remaining_reinforcements st - armies)}
 
-(*BISECT-IGNORE-BEGIN*) (* helper not exposed in mli, also play tested both*)
 (** [next_player curr_player lst] is the element in [lst] immediately after 
     [curr_player]. Returns the head of [lst] if [curr_player] is the last 
     element. *)
@@ -216,6 +218,7 @@ let next_player curr_player lst =
     | hd :: tl -> helper tl
   in helper lst
 
+(** [shuffle_lst lst] is list with the elements of [lst] randomly shuffled. *)
 let shuffle_lst lst = QCheck.Gen.(generate1 (shuffle_l lst))
 
 (** [assign_random_nodes st] is the game state [st] after assigning 
@@ -236,7 +239,6 @@ let assign_random_nodes (st : t) : t =
                 (SelectR,
                  Board_state.player_reinforcements st.board_state first_player);
             current_player = first_player}
-(*BISECT-IGNORE-END*)
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
     [node] during the [Pick] phase of the game; [node] becomes owned by the
@@ -270,7 +272,6 @@ let setup_reinforce st =
       current_player = next;
       turn = Reinforce (SelectR,player_reinforcements st.board_state next)}
 
-(*BISECT-IGNORE-BEGIN*) (* play tested *)
 (** [end_turn_step st] is the game state [st] resulting from skipping the
     current turn step. If in reinforce, then moves to attack. If in attack,
     then moves to fortify. If in fortify, then advances to the next player's
@@ -281,7 +282,6 @@ let end_turn_step st =
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
   | Fortify _ -> setup_reinforce st
-(*BISECT-IGNORE-END*)
 
 (** [back_turn st] is [st] with the turn state reverted one step, but
     not leaving the current general turn state. This function behaves
@@ -301,6 +301,7 @@ let back_turn st =
   | Attack _ -> {st with turn = Attack AttackSelectA}
   | Fortify _ -> {st with turn = Fortify FromSelectF}
   | Pick -> st
+(*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
     5, inclusive. *)
@@ -324,6 +325,7 @@ let rec battle attack defend (deatha,deathd) =
     else battle atl dtl (deatha + 1,deathd)(*BISECT-IGNORE-END*)
   | _ -> deatha,deathd
 
+(*BISECT-IGNORE-BEGIN*) (*extensive play test*)
 (** [fortify st f t] sends one army from territory [f] to territory [t] if 
     they are connected by a path of territories that the current player owns.
 
@@ -351,6 +353,7 @@ let fortify st from_node to_node armies : t =
   setup_reinforce 
     {st with board_state =  place_army 
                  (place_army st.board_state to_node armies) from_node (-armies)}
+(*BISECT-IGNORE-END*)
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
@@ -417,6 +420,7 @@ let attack st a d invading_armies =
                 turn = Attack AttackSelectA}, 
        attack_dice, defend_dice
 
+(*BISECT-IGNORE-BEGIN*) (*extensive play test*)
 (** [occupy st a d occupying_armies] is the result of occupying node [d] from
     node [a] by moving [occupying_armies] from [a] to [d]. The resulting turn
     state is reset to [Attack AttackSelectA].
@@ -452,6 +456,7 @@ let min_max_default st : (army * army * army) = match st.turn with
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
   | _ -> raise (InvalidState st.turn)
+(*BISECT-IGNORE-END*)
 
 (* random seed *)
 let () = Random.self_init ()
