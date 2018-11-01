@@ -156,6 +156,7 @@ let player_stats_make st p : player_stats =
   let a = player_army st p in
   {player = p; army_tot = a; node_tot = n; cont_tot = c}
 
+(*BISECT-IGNORE-BEGIN*) (*play test*)
 (** [compare_player_stats category ps1 ps2] is a comparison function
     (similar to Pervasives.compare) that accounts for each field in a record of
     [player_stats], based on [category]. It will result in sorting players in
@@ -174,6 +175,7 @@ let sorted_player_stats (c : stats_category) st : player_stats list =
     List.fold_left 
       (fun acc player -> (player_stats_make st player)::acc) [] (get_players st)
   in List.sort (compare_player_stats c) lst
+(*BISECT-IGNORE-END*)
 
 (** [extract ex a] extracts the value from the option [a]
     if that option is [Some value] and raises [ex] otherwise. *)

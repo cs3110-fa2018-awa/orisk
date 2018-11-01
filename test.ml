@@ -127,7 +127,7 @@ let demo_players = lazy [
 let false_player = lazy (Player.create "foo" Black)
 
 let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
-let init_ps = lazy (player_stats_make (~$ init_board_state) (~$ player_a))
+let init_ps_a = lazy (player_stats_make (~$ init_board_state) (~$ player_a))
 
 let set_armies_state = lazy (set_army (~$ init_board_state) "JAM" 2)
 let add_armies_state = lazy 
@@ -204,14 +204,32 @@ let board_state_tests = [
 
   (* player stats *)
   gen_comp "stats player" 
-    (lazy (stats_player (~$ init_ps))) (~$ player_a) player_p;
-  gen_comp "stats army" (lazy (stats_army (~$ init_ps))) 0 int;
-  gen_comp "stats nodes" (lazy (stats_nodes (~$ init_ps))) 0 int;
-  gen_comp "stats conts" (lazy (stats_conts (~$ init_ps))) 0 int;
-  gen_comp "get players" (lazy (get_players (~$ init_board_state))) (~$ demo_players) null;
+    (lazy (stats_player (~$ init_ps_a))) (~$ player_a) player_p;
+  gen_comp "stats army" (lazy (stats_army (~$ init_ps_a))) 0 int;
+  gen_comp "stats nodes" (lazy (stats_nodes (~$ init_ps_a))) 0 int;
+  gen_comp "stats conts" (lazy (stats_conts (~$ init_ps_a))) 0 int;
+  gen_comp "get players" 
+    (lazy (get_players (~$ init_board_state))) (~$ demo_players) null;
+
+  gen_comp "player color" (lazy (player_color (~$ player_a))) Red null;
+  gen_comp "dfs" (lazy (dfs (~$ init_board_state) "Rose" [])) 
+    ["HR5"; "RPCC"; "LR7"; "JAM"; "Rose"; "Keeton"] (pp_list str);
 ]
 
 let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
+
+let turn_reinforce = 
+  lazy (set_turn (~$ init_game_state) (Reinforce (SelectR,0)))
+let turn_attack_defend = 
+  lazy (set_turn (~$ init_game_state) (Attack (DefendSelectA "Rose")))
+let turn_attack_occupy = 
+  lazy (set_turn (~$ init_game_state) (Attack (OccupyA ("Rose","LR7"))))
+let turn_fortify_fromselect = 
+  lazy (set_turn (~$ init_game_state) (Fortify FromSelectF))
+let turn_fortify_toselect = 
+  lazy (set_turn (~$ init_game_state) (Fortify (ToSelectF "Rose")))
+let turn_fortify_count = 
+  lazy (set_turn (~$ init_game_state) (Fortify (CountF ("Rose","LR7"))))
 
 let player_a_own_RPCC_LR7 = lazy 
   (set_owner (set_owner (~$ init_board_state) "RPCC" (Some (~$ player_a))) 
@@ -256,10 +274,6 @@ let game_state_tests = [
     (lazy (attack (~$ attack_state) "Keeton" "Rose" 2))
     (NotOwner "Keeton");
 
-  (* reinforce *)
-  (* gen_comp "game state reinforce"
-   *   (lazy (node_army ((~$ player_a_reinforce) |> board_st) "LR7")) 1 null; *)
-
   (* attack *)
   gen_comp "game state attack"
     (lazy (node_army (let st', _, _ = (~$ attack_rpcc_hr5)
@@ -270,8 +284,20 @@ let game_state_tests = [
     (lazy (turn_to_str (~$ attack_state))) "Select attacker" str;
   gen_comp "string of pick" (lazy (turn_to_str (~$ init_game_state))) 
     "Picking territories" str;
-  (* gen_comp "remaining reinforcement" 
-   *   (lazy (remaining_reinforcements (~$ init_game_state))) 3 int; *)
+  gen_comp "set turn1" 
+    (lazy (turn_to_str (~$ turn_reinforce))) "Reinforce 0" str;
+  gen_comp "set turn2" (lazy (turn_to_str (~$ turn_attack_defend))) 
+    "Attacking from Rose, select defender" str;
+  gen_comp "set turn3" (lazy (turn_to_str (~$ turn_attack_occupy))) 
+    "Move troops from Rose to LR7" str;
+  gen_comp "set turn4" (lazy (turn_to_str (~$ turn_fortify_fromselect))) 
+    "Select territory to fortify from" str;
+  gen_comp "set turn5" (lazy (turn_to_str (~$ turn_fortify_toselect))) 
+    "Fortifying from Rose, select destination" str;
+  gen_comp "set turn6" (lazy (turn_to_str (~$ turn_fortify_count))) 
+    "Move troops from Rose to LR7" str;
+  gen_comp "remaining" 
+    (lazy (remaining_reinforcements (~$ turn_reinforce))) 0 int;
 ]
 
 let suite =
