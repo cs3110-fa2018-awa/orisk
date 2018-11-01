@@ -1,6 +1,12 @@
 (** Dynamically draw board to terminal. *)
 open ANSITerminal
 
+(** [width ()] is the width of the terminal screen in character cells. *)
+val width : unit -> int
+
+(** [height ()] is the height of the terminal screen in character cells. *)
+val height : unit -> int
+
 (** [print_players pl] prints the name of each player in [pl] in their
     respective color. *)
 val print_players : Player.t list -> unit

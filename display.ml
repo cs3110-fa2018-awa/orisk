@@ -25,10 +25,10 @@ let draw_str (s : string) (x : int) (y : int) (f : style list) : unit =
   ANSITerminal.set_cursor x y;
   ANSITerminal.print_string f s
 
-(** TODO *)
+(** [width ()] is the width of the terminal screen in character cells. *)
 let width () = size () |> fst
 
-(** TODO *)
+(** [height ()] is the height of the terminal screen in character cells. *)
 let height () = size () |> snd
 
 (** [draw_nodes gamestate] populates the screen with all node army values at
