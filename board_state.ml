@@ -27,9 +27,15 @@ type player_state = {nodes : String_set.t; conts : String_set.t}
 (** [player_stats] is the board statistics of a player.
     It contains the total number of armies, territories, and continents
     that a player owns. *)
-type player_stats = {player : Player.t; army_tot : army; node_tot : int; cont_tot : int}
+type player_stats = {
+  player : Player.t; 
+  army_tot : army; 
+  node_tot : int; 
+  cont_tot : int
+}
 
-(** [stats_category] is the category that the board leaderboard can be sorted by. *)
+(** [stats_category] is the category that the board leaderboard can be 
+    sorted by. *)
 type stats_category = CatPlayer | CatArmy | CatNode | CatCont
 
 (** [Board_state.t] is the state of a board. The underlying (and
@@ -153,9 +159,10 @@ let player_stats_make st p : player_stats =
 (** [compare_player_stats category ps1 ps2] is a comparison function
     (similar to Pervasives.compare) that accounts for each field in a record of
     [player_stats], based on [category]. It will result in sorting players in
-    ascending order and armies, territories, and continents in descending order. *)
+    ascending order and armies, territories, and continents in descending order. 
+*)
 let compare_player_stats (c : stats_category) ps1 ps2 : int = match c with 
-  | CatPlayer -> Player.compare ps1.player ps2.player (* TODO: something janky happening here *)
+  | CatPlayer -> Player.compare ps1.player ps2.player 
   | CatArmy -> - Pervasives.compare ps1.army_tot ps2.army_tot
   | CatNode -> - Pervasives.compare ps1.node_tot ps2.node_tot
   | CatCont -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
@@ -218,9 +225,10 @@ let rec dfs (st : t) (node : node_id) (visited : node_id list) : node_id list =
     if (node_owner st n) = (node_owner st node) && not (List.mem n lst)
     then dfs st n (n :: lst) else lst
   in let filter (n : node_id) = not (List.mem n visited)
-  in List.fold_left internal visited (node_borders (board st) node |> List.filter filter)
+  in List.fold_left 
+    internal visited (node_borders (board st) node |> List.filter filter)
 
-(* [update_map player_opt f map] runs [Map.replace] on [map]
+(** [update_map player_opt f map] runs [Map.replace] on [map]
     with option handling for [player_opt] and [f]. *)
 let update_map
     (player_opt : Player.t option)
@@ -242,7 +250,6 @@ let update_map
          newly controlled by [player] as a result
      - update controlled node and cont lists in player state *)
 let set_owner (st : t) (node : node_id) (player : Player.t option) =
-  (* this is a giant state transition function *)
   (* the previous owner of the target node *)
   let prev_owner = node_owner st node
   (* all continents containing the target node *)

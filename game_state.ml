@@ -76,7 +76,7 @@ exception NonconnectedNode of (node_id * node_id)
     action meant for two different nodes on the same node. *)
 exception SameNode of node_id
 
-(** [InvalidState turn_st] is raised when a players inputs a 
+(** [InvalidState turn_st] is raised when a players attempts a 
     command that does not correspond to the current state of their
     turn [turn_st]. *)
 exception InvalidState of turn_state
@@ -232,7 +232,9 @@ let assign_random_nodes (st : t) : t =
       (st,st.current_player) (board st.board_state |> nodes
                               |> List.filter unselected |> shuffle_lst) |> fst
   in let first_player = List.hd st.players in 
-  {st' with turn = Reinforce (SelectR,Board_state.player_reinforcements st.board_state first_player);
+  {st' with turn = Reinforce 
+                (SelectR,
+                 Board_state.player_reinforcements st.board_state first_player);
             current_player = first_player}
 (*BISECT-IGNORE-END*)
 
@@ -247,12 +249,15 @@ let assign_random_nodes (st : t) : t =
 let pick_nodes st node =
   if not (is_pick st) then raise (InvalidState st.turn) else (); 
   if node_owner st.board_state node <> None then raise (NotOwner node) else ();
-  let board_state = place_army (set_owner st.board_state node (Some st.current_player)) node 1 in
+  let board_state = place_army 
+      (set_owner st.board_state node (Some st.current_player)) node 1 in
   if List.mem None (owners board_state) then 
-    {st with board_state = board_state; current_player = next_player st.current_player st.players}
+    {st with board_state = board_state; 
+             current_player = next_player st.current_player st.players}
   else let first_player = List.hd st.players in 
     {st with board_state = board_state;
-             turn = Reinforce (SelectR,player_reinforcements st.board_state first_player);
+             turn = Reinforce 
+                 (SelectR,player_reinforcements st.board_state first_player);
              current_player = first_player}
 
 (** [setup_reinforce st] is the new state resulting from advancing [st] to the
@@ -291,7 +296,8 @@ let end_turn_step st =
     then the resulting turn state is unchanged. *)
 let back_turn st = 
   match st.turn with
-  | Reinforce _ -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
+  | Reinforce _ 
+    -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
   | Attack _ -> {st with turn = Attack AttackSelectA}
   | Fortify _ -> {st with turn = Fortify FromSelectF}
   | Pick -> st
@@ -330,7 +336,7 @@ let rec battle attack defend (deatha,deathd) =
           of nodes owned by the current player
         - [InsufficientArmies n] if [n] does not have enough armies to fortify
           with *)
-let fortify st (from_node : Board.node_id) (to_node : Board.node_id) armies : t =
+let fortify st from_node to_node armies : t =
   if not (is_fortify st) then raise (InvalidState st.turn) else (); 
   if Some st.current_player <> (node_owner st.board_state from_node)
   then raise (NotOwner from_node) else ();
@@ -342,8 +348,9 @@ let fortify st (from_node : Board.node_id) (to_node : Board.node_id) armies : t 
   then raise (NonconnectedNode (from_node,to_node)) else ();
   if (node_army st.board_state from_node) <= armies || armies < 0
   then raise (InsufficientArmies (from_node,armies)) else ();
-  setup_reinforce
-    {st with board_state = place_army (place_army st.board_state to_node armies) from_node (-armies)}
+  setup_reinforce 
+    {st with board_state =  place_army 
+                 (place_army st.board_state to_node armies) from_node (-armies)}
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 

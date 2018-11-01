@@ -12,7 +12,8 @@ type t
 type player_stats = 
   {player : Player.t; army_tot : int; node_tot : int; cont_tot : int}
 
-(** [stats_category] is the category that the board leaderboard can be sorted by. *)
+(** [stats_category] is the category that the board leaderboard can be sorted 
+    by. *)
 type stats_category = CatPlayer | CatArmy | CatNode | CatCont
 
 (** [stats_player ps] is the player in [ps]. *)

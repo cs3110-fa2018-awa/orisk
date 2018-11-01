@@ -36,11 +36,13 @@ let leaderboard_cat st = snd st.leaderboard
 
 (** [toggle_leaderboard st] is the interface with the leaderboard activation
     opposite of the one in [st]. *)
-let toggle_leaderboard st = {st with leaderboard = (not (leaderboard_on st), leaderboard_cat st)}
+let toggle_leaderboard st = 
+  {st with leaderboard = (not (leaderboard_on st), leaderboard_cat st)}
 
 (** [set_leaderboard_cat st cat] is the interface [st] with the sorted by category
     set to [cat]. *)
-let set_leaderboard_cat st cat = {st with leaderboard = (leaderboard_on st, cat)}
+let set_leaderboard_cat st cat = 
+  {st with leaderboard = (leaderboard_on st, cat)}
 
 (** [help_on st] is whether the help menu is activated in [st]. *)
 let help_on st = fst st.help
@@ -68,7 +70,8 @@ let change_attack_node st (node:node_id option) =
   check_is_owner st node;
   match node with 
   | None -> st
-  | Some n -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
+  | Some n 
+    -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
 
 let from_fortify_node st = match (turn st.game_state) with 
   | Fortify ((ToSelectF node) | CountF (node,_)) -> Some node
@@ -78,7 +81,8 @@ let change_from_fortify_node st node =
   check_is_owner st node; 
   match node with 
   | None -> st
-  | Some n -> {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
+  | Some n 
+    -> {st with game_state = set_turn st.game_state (Fortify (ToSelectF n))}
 
 let reinforce_place st node =
   check_is_owner st node;
@@ -161,7 +165,8 @@ let scroll_by st xscroll yscroll =
   let board_width = st |> board |> board_ascii_width in
   let board_height = st |> board |> board_ascii_height in
   {st with scroll = (constrain (x st.scroll + xscroll) 0 (board_width - width),
-                     constrain (y st.scroll + yscroll) 0 (board_height - height + 3))}
+                     constrain 
+                       (y st.scroll + yscroll) 0 (board_height - height + 3))}
 
 let gs st gs =
   {st with game_state = gs}

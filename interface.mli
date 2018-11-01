@@ -1,3 +1,5 @@
+(** Representation of a game interface. *)
+
 open Board
 open Board_state
 
@@ -13,18 +15,20 @@ val board_state : t -> Board_state.t
 
 val board : t -> Board.t
 
-(** [leaderboard_on st] is whether or not the leaderboard is activated in [st]. *)
+(** [leaderboard_on st] is whether or not the leaderboard is activated in 
+    [st]. *)
 val leaderboard_on : t -> bool
 
-(** [leaderboard_cat st] is the category that the leaderboard is sorted by in [st]. *)
+(** [leaderboard_cat st] is the category that the leaderboard is sorted by in 
+    [st]. *)
 val leaderboard_cat : t -> stats_category
 
 (** [toggle_leaderboard st] is the interface with the leaderboard activation
     opposite of the one in [st]. *)
 val toggle_leaderboard : t -> t
 
-(** [set_leaderboard_cat st cat] is the interface [st] with the sorted by category
-    set to [cat]. *)
+(** [set_leaderboard_cat st cat] is the interface [st] with the sorted by 
+    category set to [cat]. *)
 val set_leaderboard_cat : t -> stats_category -> t
 
 (** [help_on st] is whether the help menu is activated in [st]. *)
