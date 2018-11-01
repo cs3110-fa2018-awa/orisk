@@ -131,24 +131,135 @@ let game_nums st num = match st |> game_state |> turn with
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
   | _ -> failwith "shouldnt happen"
 
-(** [game_loop_new st msg] continuously prompts the player for input
-    and updates the game state according to the user input and the current 
-    state [st]. Reprompts if invalid inputs are given and displays error
-    message [msg].
-
-    Helper for [risk f]. *)
-let rec game_loop_new ?(search : string * bool = "",false) 
-    (st : Interface.t) (msg : string option) : unit =
-
-  let perform_search str : unit =
+(** [perform_search st str] is the (string * bool) tuple containing the
+    search string and the success flag resulting from performing a search
+    for [str] in [st]. *)
+let perform_search st str : (string * bool) =
     let found_node = node_search (st |> Interface.board) str in
-    game_loop_new ~search:(str,found_node <> None)
-      (set_cursor_node st found_node) msg in
+    str,found_node <> None
 
-  draw_board st;
-  win_yet (game_state st);
-  (* print message *)
-  begin match msg, search with
+(** [parse_standard_input st msg search] is the tuple (st', msg', search')
+    resulting from parsing a single character of input. Called internally
+    from [game_loop_new]. *)
+let parse_standard_input st msg search =
+  if (help_on st)
+  then begin match read_input () with
+    | "-" -> (toggle_help st), msg, None
+    | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+    | _ -> st, msg, None
+  end
+  else if (Interface.leaderboard_on st)
+  then begin match read_input () with
+    | "=" -> (toggle_leaderboard st), msg, None
+    | "p" -> (set_leaderboard_cat st CatPlayer), msg, None
+    | "a" -> (set_leaderboard_cat st CatArmy), msg, None
+    | "n" -> (set_leaderboard_cat st CatNode), msg, None
+    | "c" -> (set_leaderboard_cat st CatCont), msg, None
+    | "-" -> (toggle_help st), msg, None
+    | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+    | _ -> st, msg, None
+  end
+  else begin match read_input () with
+    | "\027[A" -> (move_arrow st Up), msg, None
+    | "\027[D" -> (move_arrow st Left), msg, None
+    | "\027[B" -> (move_arrow st Down), msg, None
+    | "\027[C" -> (move_arrow st Right), msg, None
+    (* : and ; because macs are inferior *)
+    | "\027[1;2A" | ":" -> (scroll_by st 0 (-1)), msg, None
+    | "\027[1;2D" -> (scroll_by st (-1) 0), msg, None
+    | "\027[1;2B" | ";" -> (scroll_by st 0 1), msg, None
+    | "\027[1;2C" -> (scroll_by st 1 0), msg, None
+    | " " | "\n" -> let st',msg' = game_stage st in st', msg', None
+    | "?" -> (change_game_st st (game_state st |> end_turn_step)), msg, None
+    | "=" -> (toggle_leaderboard st), msg, None
+    | "-" -> (toggle_help st), msg, None
+    | "\t" -> (set_cursor_node st (next_valid_node st)), msg, None
+    | "\\" -> (change_game_st st (game_state st |> back_turn)), msg, None
+    | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+    | c when Str.string_match char_regexp c 0
+      -> st, msg, Some (perform_search st ((fst search) ^ c))
+    | "\127" -> if String.length (fst search) <= 1
+      then st, msg, None
+      else st, msg, Some
+             (perform_search st (String.sub (fst search) 0
+                                   (String.length (fst search) - 1)))
+    | "`" -> if (game_state st |> turn) = Pick
+      then (game_state st |> assign_random_nodes
+            |> change_game_st st), msg, None
+      else st, msg, None
+    | _ -> st, msg, None
+  end
+
+(** [parse_standard_input st msg search] is the tuple (st', msg', search')
+    resulting from parsing numerical input. Called internally from
+    [game_loop_new]. *)
+let parse_num_input st msg search =
+  let (min, max, default) = st |> game_state |> min_max_default in
+  print_string ("min " ^ (string_of_int min) ^
+                ", max " ^ (string_of_int max) ^
+                ", default: " ^ (string_of_int default) ^ " > "); 
+  let handle num =
+    let st',msg' = game_nums st num in
+    st', msg', None in
+  match read_num "" "" with
+  | Some str when str = "" -> handle default
+  | Some str -> handle (int_of_string str)
+  | None -> (change_game_st st (game_state st |> back_turn)), msg, None
+
+(** [parse_input st msg search] is the tuple (st' msg' search')
+    resulting from parsing input, depending on the current state [st].
+    Called internally from [game_loop_new]. This function handles
+    exceptions and produces new messages accordingly. *)
+let parse_input st msg search :
+  (Interface.t * string option * (string * bool) option) =
+  try 
+    begin
+      match game_state st |> turn with 
+      | Pick 
+      | Reinforce (SelectR,_) 
+      | Attack (AttackSelectA | DefendSelectA _) 
+      | Fortify (FromSelectF | ToSelectF _)
+        (* these states have standard input *)
+        -> parse_standard_input st msg search
+      | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _)
+        (* these states have numerical input *)
+        -> parse_num_input st msg search
+    end
+  (* handle exceptions *)
+  with
+  | NoPlayers
+    -> st, (Some "No players!"), None
+  | NonadjacentNode (node_id1,node_id2)
+    -> st, (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!")), None
+  | NonconnectedNode (node_id1,node_id2)
+    -> st, (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!")), None
+  | SameNode node_id
+    -> st, (Some ("You can't perform this action on the same territory!")), None
+  | InvalidState (turn_state)
+    -> st, (Some "Wrong type of turn."), None
+  | InsufficientArmies (node_id,army)
+    -> st, (Some ("You only have " ^ (string_of_int army) ^
+                  " armies to attack with! You can't attack from " ^
+                  node_id ^ "!")), None
+  | FriendlyFire player
+    -> st, (Some "You can't attack yourself!"), None
+  | UnknownNode n
+    -> st, (Some "Territory does not exist."), None
+  | UnknownCont c
+    -> st, (Some "Continent does not exist."), None
+  | UnknownPlayer p
+    -> st, (Some "Player does not exist."), None
+  | NotOwner n
+    -> st, (Some "You don't control this territory"), None
+  | Failure s when s = "int_of_string" 
+    -> st, (Some "Invalid integer"), None
+  | _ -> st, msg, None
+
+(** [print_message st msg search] prints the message for the current game
+    state [st]. If [search] is successful, then prints the search message;
+    otherwise, prints [msg]. *)
+let print_message st msg (search : string * bool) =
+  match msg, search with
     | Some m, _ -> print_endline m
     | None, (s,success) when String.length s > 0 -> 
       if success 
@@ -159,7 +270,20 @@ let rec game_loop_new ?(search : string * bool = "",false)
         print_endline ""
       end
     | None, _ -> print_endline "..."
-  end;
+
+(** [game_loop_new st msg] continuously prompts the player for input
+    and updates the game state according to the user input and the current 
+    state [st]. Reprompts if invalid inputs are given and displays error
+    message [msg].
+
+    Helper for [risk f]. *)
+let rec game_loop_new ?(search : string * bool = "",false) 
+    (st : Interface.t) (msg : string option) : unit =
+
+  draw_board st;
+  win_yet (game_state st);
+  (* print message *)
+  print_message st msg search;
   (* drawing leaderboard *)
   if (Interface.leaderboard_on st) then draw_stats (st) else ();
   (* drawing help menu *)
@@ -171,110 +295,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
      end;)
   else ();
   (* parsing inputs *)
-  try 
-    begin
-      match game_state st |> turn with 
-      | Pick 
-      | Reinforce (SelectR,_) 
-      | Attack (AttackSelectA | DefendSelectA _) 
-      | Fortify (FromSelectF | ToSelectF _)
-        -> 
-        if (help_on st)
-        then begin match read_input () with
-          | "-" -> game_loop_new (toggle_help st) msg
-          | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-          | _ -> game_loop_new st msg
-        end
-        else if (Interface.leaderboard_on st)
-        then begin match read_input () with
-          | "=" -> game_loop_new (toggle_leaderboard st) msg
-          | "p" -> game_loop_new (set_leaderboard_cat st CatPlayer) msg
-          | "a" -> game_loop_new (set_leaderboard_cat st CatArmy) msg
-          | "n" -> game_loop_new (set_leaderboard_cat st CatNode) msg
-          | "c" -> game_loop_new (set_leaderboard_cat st CatCont) msg
-          | "-" -> game_loop_new (toggle_help st) msg
-          | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-          | _ -> game_loop_new st msg
-        end
-        else begin match read_input () with
-          | "\027[A" -> game_loop_new (move_arrow st Up) msg
-          | "\027[D" -> game_loop_new (move_arrow st Left) msg
-          | "\027[B" -> game_loop_new (move_arrow st Down) msg
-          | "\027[C" -> game_loop_new (move_arrow st Right) msg
-          (* : and ; because macs are inferior *)
-          | "\027[1;2A" | ":" -> game_loop_new (scroll_by st 0 (-1)) msg
-          | "\027[1;2D" -> game_loop_new (scroll_by st (-1) 0) msg
-          | "\027[1;2B" | ";" -> game_loop_new (scroll_by st 0 1) msg
-          | "\027[1;2C" -> game_loop_new (scroll_by st 1 0) msg
-          | " " | "\n" -> let st',msg' = game_stage st in game_loop_new st' msg'
-          | "?" -> game_loop_new 
-                     (change_game_st st (game_state st |> end_turn_step)) msg
-          | "=" -> game_loop_new (toggle_leaderboard st) msg
-          | "-" -> game_loop_new (toggle_help st) msg
-          | "\t" -> game_loop_new (set_cursor_node st (next_valid_node st)) msg
-          | "\\" -> game_loop_new 
-                      (change_game_st st (game_state st |> back_turn)) msg
-          | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-          | c when Str.string_match char_regexp c 0
-            -> perform_search ((fst search) ^ c)
-          | "\127" -> if String.length (fst search) <= 1
-            then game_loop_new st msg
-            else perform_search (String.sub (fst search) 0
-                                   (String.length (fst search) - 1))
-          | "`" -> if (game_state st |> turn) = Pick
-            then game_loop_new (game_state st |> assign_random_nodes
-                                |> change_game_st st) msg
-            else game_loop_new st msg
-          | _ -> game_loop_new st msg
-        end 
-      | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _) ->
-        begin
-          let (min, max, default) = st |> game_state |> min_max_default in
-          print_string ("min " ^ (string_of_int min) ^
-                        ", max " ^ (string_of_int max) ^
-                        ", default: " ^ (string_of_int default) ^ " > "); 
-          let handle num =
-            let st',msg' = game_nums st num in
-            game_loop_new st' msg' in
-          match read_num "" "" with
-          | Some str when str = "" -> handle default
-          | Some str -> handle (int_of_string str)
-          | None -> game_loop_new 
-                      (change_game_st st (game_state st |> back_turn)) msg
-        end
-    end
-  with
-  | NoPlayers
-    -> game_loop_new st (Some "No players!")
-  | NonadjacentNode (node_id1,node_id2)
-    -> game_loop_new st 
-         (Some (node_id1 ^ " is not adjacent to " ^ node_id2 ^ "!"))
-  | NonconnectedNode (node_id1,node_id2)
-    -> game_loop_new st 
-         (Some (node_id1 ^ " is not connected to " ^ node_id2 ^ "!"))
-  | SameNode node_id
-    -> game_loop_new st 
-         (Some ("You can't perform this action on the same territory!"))
-  | InvalidState (turn_state)
-    -> game_loop_new st (Some "Wrong type of turn.")
-  | InsufficientArmies (node_id,army)
-    -> game_loop_new st 
-         (Some ("You only have " ^ (string_of_int army) ^
-                " armies to attack with! You can't attack from " ^
-                node_id ^ "!"))
-  | FriendlyFire player
-    -> game_loop_new st (Some "You can't attack yourself!")
-  | UnknownNode n
-    -> game_loop_new st (Some "Territory does not exist.")
-  | UnknownCont c
-    -> game_loop_new st (Some "Continent does not exist.")
-  | UnknownPlayer p
-    -> game_loop_new st (Some "Player does not exist.")
-  | NotOwner n
-    -> game_loop_new st (Some "You don't control this territory")
-  | Failure s when s = "int_of_string" 
-    -> game_loop_new st (Some "Invalid integer")
-  | _ -> game_loop_new st msg
+  let st',msg',search' = parse_input st msg search
+  in match search' with
+  | Some s -> game_loop_new ~search:s st' msg'
+  | None -> game_loop_new st' msg'
 
 (** [insert_players pl msg t c] continuously prompts the user for input 
     involving the creation of players, saved in [pl]. Reprompts if invalid 
