@@ -31,43 +31,57 @@ let width () = size () |> fst
 (** [height ()] is the height of the terminal screen in character cells. *)
 let height () = size () |> snd
 
+(** [node_style st id] is the style that node [id] should be drawn with
+    in state [st]. *)
+let node_style st id =
+  let brd_st = game_state st |> Game_state.board_st
+  in let is_cursor = cursor_node st = id
+  in let is_selected = 
+       from_fortify_node st = Some id || attacking_node st = Some id
+  in match (Board_state.node_owner brd_st id),is_cursor,is_selected with
+  | None,true,_ -> [Foreground Black; Background White]
+  | None,false,_ -> [Foreground White;Background Black]
+  | Some player,false,false 
+    -> [Foreground (player_color player);Background Black]
+  | Some player,false,true 
+    -> [Foreground (player_color player);Background White]
+  | Some player,true,_ 
+    -> [Foreground White;Background (player_color player)]
+
+(** [handle_scroll_edges str x y scrollx scrolly] is the tuple of cropped
+    string and starting index that [str] should be drawn with given
+    position [x] and [y] and scroll offsets [scrollx] and [scrolly]. *)
+let handle_scroll_edges str x y scrollx scrolly : string * int =
+  if x >= scrollx && x < width () + scrollx - 1
+  then str,0
+  else if x = width () + scrollx - 1
+  then String.sub str 0 1,0
+  else if x = scrollx - 1
+  then String.sub str 1 1,1
+  else "",0
+
 (** [draw_nodes gamestate] populates the screen with all node army values at
     their corresponding coordinates in [gamestate]. *)
 let draw_nodes (st : Interface.t) : unit =
   let scrollx, scrolly = scroll st in
   let brd_st = game_state st |> Game_state.board_st in
   let brd = brd_st |> Board_state.board in
+  (* draw all nodes *)
   Board.fold_nodes brd 
     (fun id () ->
-       (* only redraw if node is owned by a player *)
        let x = Board.node_coords brd id |> Board.x
-       in let y = Board.node_coords brd id |> Board.y 
-       in let is_cursor = cursor_node st = id
-       in let is_selected = 
-            from_fortify_node st = Some id || attacking_node st = Some id
-       in let style = 
-            match (Board_state.node_owner brd_st id),is_cursor,is_selected with
-            | None,true,_ -> [Foreground Black; Background White]
-            | None,false,_ -> [Foreground White;Background Black]
-            | Some player,false,false 
-              -> [Foreground (player_color player);Background Black]
-            | Some player,false,true 
-              -> [Foreground (player_color player);Background White]
-            | Some player,true,_ 
-              -> [Foreground White;Background (player_color player)]
+       in let y = Board.node_coords brd id |> Board.y
+       (* determine style *)
+       in let style = node_style st id
        in let str = Board_state.node_army brd_st id |> format_2digit
-       in let crop,x_off =
-            begin
-              if x >= scrollx && x < width () + scrollx - 1
-              then str,0
-              else if x = width () + scrollx - 1
-              then String.sub str 0 1,0
-              else if x = scrollx - 1
-              then String.sub str 1 1,1
-              else "",0
-            end
-       in if y - 1 >= scrolly && y - 1 < height () + scrolly - 3 
-       then draw_str crop (x - scrollx + 1 + x_off) (y - scrolly) style else ()
+       (* calculate values for handling corner cases from edges and scrolling *)
+       in let crop,x_off = handle_scroll_edges str x y scrollx scrolly
+       in begin
+         (* handle different cases for edges and scrolling *)
+         if y - 1 >= scrolly && y - 1 < height () + scrolly - 3
+         then draw_str crop (x - scrollx + 1 + x_off) (y - scrolly) style
+         else ()
+       end
     ) ()
 
 (** [draw_turn gamestate] prints the current turn information based
@@ -154,6 +168,23 @@ let centered_y_coord board_height leaderboard_height =
   min ((terminal_height - 3) / 2 - (leaderboard_height / 2) + 1)
     (board_height / 2 - (leaderboard_height / 2) + 1)
 
+let stats_draw_one_line (ps : Board_state.player_stats)
+    gs brd header set_cursor_y_incr col_len : unit =
+  match ps with
+  | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
+    let name = p |> Player.player_name in
+    let total_col_space = header_len + spacing in
+    ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
+                               (String.length header)) (set_cursor_y_incr ());
+    print_string [] "| ";
+    print_string [Foreground (player_color p)] (player_name p);
+    print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
+                   column_spacing (string_of_int a) (total_col_space) ^ 
+                   (string_of_int n) ^
+                   column_spacing (string_of_int n) (total_col_space) ^ 
+                   (string_of_int c) ^
+                   column_spacing (string_of_int c) (total_col_space) ^ " |")
+
 (** [draw_stats st] draws a leaderboard of players and their respective 
     army, territory, and continent statistics on top of the board in [st]. *)
 let draw_stats (st : Interface.t) =
@@ -171,25 +202,12 @@ let draw_stats (st : Interface.t) =
     let counter = 
       ref (centered_y_coord (board_ascii_height brd) leaderboard_height)
     in fun () -> incr counter; !counter in
-  let draw_one_line (ps : Board_state.player_stats) : unit =
-    match ps with
-    | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
-      let name = p |> Player.player_name in
-      let total_col_space = header_len + spacing in
-      ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
-                                 (String.length header)) (set_cursor_y_incr ());
-      print_string [] "| ";
-      print_string [Foreground (player_color p)] (player_name p);
-      print_endline (column_spacing name col_len ^ (string_of_int a) ^ 
-                     column_spacing (string_of_int a) (total_col_space) ^ 
-                     (string_of_int n) ^
-                     column_spacing (string_of_int n) (total_col_space) ^ 
-                     (string_of_int c) ^
-                     column_spacing (string_of_int c) (total_col_space) ^ " |") 
-  in let rec draw_all (ps : Board_state.player_stats list) : unit =
+  let rec draw_all (ps : Board_state.player_stats list) : unit =
        match ps with
        | [] -> ()
-       | hd :: tl -> draw_one_line hd; draw_all tl in
+       | hd :: tl ->
+         stats_draw_one_line hd gs brd header set_cursor_y_incr col_len;
+         draw_all tl in
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
        (String.length header)) (set_cursor_y_incr ()) [Bold];
