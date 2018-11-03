@@ -228,3 +228,7 @@ val occupy : t -> node_id -> node_id -> army -> t
     of a number of troops - i.e. reinforce place, attack occupy, and fortify
     count. For all other turn states, raises [InvalidState st]. *)
 val min_max_default : t -> army * army * army
+
+(** [turn_valid_nodes st] is the list of nodes that are able to be actioned
+    upon during the current game state in interface [st]. *)
+val turn_valid_nodes : t -> node_id list

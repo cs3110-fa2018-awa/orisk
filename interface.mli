@@ -108,7 +108,3 @@ val pick : t -> t
 (** [change_game_st st gamestate] is the interface with 
     the game state [gamestate].*)
 val change_game_st : t -> Game_state.t -> t
-
-(** [turn_valid_nodes st] is the list of nodes that are able to be actioned
-    upon during the current game state in interface [st]. *)
-val turn_valid_nodes : t -> node_id list

@@ -47,7 +47,7 @@ let win_yet (st:Game_state.t) : unit =
     according to the current turn state of [st]. *)
 let next_valid_node st =
   let node = cursor_node st
-  in let lst = turn_valid_nodes st
+  in let lst = turn_valid_nodes (game_state st)
   in let rec helper = function
       | hd :: next :: tl when hd = node -> next
       | hd :: [] when hd = node -> List.hd lst

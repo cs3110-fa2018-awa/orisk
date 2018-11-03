@@ -458,5 +458,30 @@ let min_max_default st : (army * army * army) = match st.turn with
   | _ -> raise (InvalidState st.turn)
 (*BISECT-IGNORE-END*)
 
+(** [turn_valid_nodes st] is the list of nodes that are able to be actioned
+    upon during the current game state in interface [st]. *)
+let turn_valid_nodes gs =
+  let bs = gs.board_state
+  in let b = board bs
+  in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
+  in let pred = match turn gs with
+      | Pick -> fun node -> node_owner bs node = None
+      | Reinforce (SelectR,_) -> is_owner
+      | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
+      | Attack AttackSelectA
+        -> fun node -> node_owner bs node = Some (current_player gs)
+                       && node_army bs node > 1
+      | Attack (DefendSelectA n)
+        -> fun node -> node_owner bs node <> Some (current_player gs)
+                       && List.mem node (node_borders b n)
+      | Attack (OccupyA _) -> failwith "shouldn't happen"
+      | Fortify FromSelectF -> fun node -> is_owner node
+                                           && node_army bs node > 1
+      | Fortify (ToSelectF n)
+        -> let reachable = dfs bs n []
+        in fun node -> node <> n && List.mem node reachable
+      | Fortify (CountF _) -> failwith "shouldn't happen"
+  in nodes_filter b pred
+
 (* random seed *)
 let () = Random.self_init ()

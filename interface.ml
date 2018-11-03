@@ -238,29 +238,3 @@ let pick st = {st with game_state = pick_nodes st.game_state st.cursor_node}
 (** [change_game_st st gamestate] is the interface with 
     the game state [gamestate].*)
 let change_game_st st game_st = {st with game_state = game_st}
-
-(** [turn_valid_nodes st] is the list of nodes that are able to be actioned
-    upon during the current game state in interface [st]. *)
-let turn_valid_nodes st =
-  let gs = game_state st
-  in let bs = board_state st
-  in let b = board st
-  in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
-  in let pred = match turn gs with
-      | Pick -> fun node -> node_owner bs node = None
-      | Reinforce (SelectR,_) -> is_owner
-      | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
-      | Attack AttackSelectA
-        -> fun node -> node_owner bs node = Some (current_player gs)
-                       && node_army bs node > 1
-      | Attack (DefendSelectA n)
-        -> fun node -> node_owner bs node <> Some (current_player gs)
-                       && List.mem node (node_borders b n)
-      | Attack (OccupyA _) -> failwith "shouldn't happen"
-      | Fortify FromSelectF -> fun node -> is_owner node
-                                           && node_army bs node > 1
-      | Fortify (ToSelectF n)
-        -> let reachable = dfs bs n []
-        in fun node -> node <> n && List.mem node reachable
-      | Fortify (CountF _) -> failwith "shouldn't happen"
-  in nodes_filter b pred
