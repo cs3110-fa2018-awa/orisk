@@ -40,7 +40,7 @@ let valid_moves gs : move list =
   | Reinforce (SelectR, _) -> List.map (fun node -> ReinforceM (node, 1)) (turn_valid_nodes gs)
   | Attack AttackSelectA
     -> let moves_for_attacker attacker : move list =
-         let _, _, army = min_max_default gs
+         let army = (node_army bs attacker) - 1
          in List.map (fun defender -> AttackM (attacker, defender, army))
            begin
              node_borders brd attacker |> List.filter
@@ -49,12 +49,12 @@ let valid_moves gs : move list =
     in Finish :: begin
         List.map (fun node -> moves_for_attacker node) (turn_valid_nodes gs)
         |> List.flatten end
-  | Attack (OccupyA (_, _))
-    -> let min, max, _ = min_max_default gs
+  | Attack (OccupyA (attacker, _))
+    -> let min, max = 0, (node_army bs attacker) - 1
     in List.map (fun n -> OccupyM n) (range min max)
   | Fortify FromSelectF
     -> let moves_for_origin origin : move list =
-         let min, max, _ = min_max_default gs
+         let min, max = 1, (node_army bs origin) - 1
          in List.map (fun target ->
              begin List.map (fun n ->
                  Fortify (origin, target, n)) (range min max)
