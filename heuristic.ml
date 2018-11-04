@@ -9,9 +9,9 @@ type score = float
 
 let player_frontiers bs player =
   let predicate node = not
-    (List.for_all
-       (fun border -> node_owner bs border = Some player)
-       (node_borders (board bs) node))
+      (List.for_all
+         (fun border -> node_owner bs border = Some player)
+         (node_borders (board bs) node))
   in List.filter predicate (player_nodes bs player)
 
 let player_frontier_opponents bs player node =
@@ -45,16 +45,16 @@ let player_heuristic bs player personality =
      +. frontier_armies_heuristic personality frontier_armies
      +. frontier_differential_heuristic personality frontier_differential
 
-let rec heuristic gs personality =
+let rec heuristic gs personality player =
   let gs' = match turn gs with
     | Attack _ -> gs (*apply_move (end_turn_step gs)
                        (best_move_from_list gs (valid_fortifications gs) personality)*)
     | _ -> gs
-  in player_heuristic (board_st gs') (current_player gs') personality
+  in player_heuristic (board_st gs') player personality
 and best_move_from_list gs moves personality =
-  List.map (fun move -> move, heuristic (apply_move gs move) personality) moves
-   |> List.sort_uniq (fun (_, s1) (_, s2) -> Pervasives.compare s1 s2)
-   |> List.rev |> List.hd |> fst
+  List.map (fun move -> move, heuristic (apply_move gs move) personality (current_player gs)) moves
+  |> List.sort_uniq (fun (_, s1) (_, s2) -> Pervasives.compare s1 s2)
+  |> List.rev |> List.hd |> fst
 
 let best_move gs personality =
-  best_move_from_list gs (valid_moves gs) personality
+  best_move_from_list gs (valid_moves gs) personality 
