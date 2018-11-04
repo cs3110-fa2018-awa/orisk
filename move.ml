@@ -32,6 +32,18 @@ let range min max =
     | n -> internal (n :: acc) (n - 1)
   in internal [] max
 
+let valid_fortifications gs =
+  let bs = board_st gs
+  in let moves_for_origin origin : move list =
+    let min, max = 1, (node_army bs origin) - 1
+    in List.map (fun target ->
+        begin List.map (fun n ->
+            Fortify (origin, target, n)) (range min max)
+        end) (dfs bs origin []) |> List.flatten
+  in Finish :: begin
+      List.map (fun node -> moves_for_origin node) (turn_valid_nodes gs)
+      |> List.flatten end
+
 let valid_moves gs : move list =
   let bs = board_st gs
   in let brd = board bs
@@ -52,14 +64,5 @@ let valid_moves gs : move list =
   | Attack (OccupyA (attacker, _))
     -> let min, max = 0, (node_army bs attacker) - 1
     in List.map (fun n -> OccupyM n) (range min max)
-  | Fortify FromSelectF
-    -> let moves_for_origin origin : move list =
-         let min, max = 1, (node_army bs origin) - 1
-         in List.map (fun target ->
-             begin List.map (fun n ->
-                 Fortify (origin, target, n)) (range min max)
-             end) (dfs bs origin []) |> List.flatten
-    in Finish :: begin
-        List.map (fun node -> moves_for_origin node) (turn_valid_nodes gs)
-        |> List.flatten end
+  | Fortify FromSelectF -> valid_fortifications gs
   | _ -> failwith "todo"
