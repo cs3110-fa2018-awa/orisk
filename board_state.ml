@@ -184,6 +184,13 @@ let extract except (a : 'a option) =
   | Some x -> x
   | None -> raise except (*BISECT-IGNORE*) (*helper function not in mli*)
 
+(** [player_cont_bonus state player] is the the number of bonus reinforcements
+    that [player] receives due to the continents that they control. *)
+let player_cont_bonus st player =
+  List.fold_left
+    (fun acc cont_id -> acc + (Board.cont_bonus st.board cont_id))
+    0 (player_conts st player)
+
 (** [player_reinforcements state player] is the total number of
     reinforcements that [player] recieves given the current board
     configuration. This includes reinforcements from the number
@@ -193,9 +200,7 @@ let player_reinforcements st player =
   (* territory reinforcements *)
   (max (List.length (player_nodes st player) / 3) 3)
   (* continent bonus *)
-  + (List.fold_left (fun acc cont_id ->
-      acc + (Board.cont_bonus st.board cont_id))
-      0 (player_conts st player))
+  + player_cont_bonus st player
 
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)

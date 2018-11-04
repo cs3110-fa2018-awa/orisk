@@ -68,6 +68,10 @@ val player_stats_make : t -> Player.t -> player_stats
     sorted in descending order based on [category] in [state]. *)
 val sorted_player_stats : stats_category -> t -> player_stats list
 
+(** [player_cont_bonus state player] is the the number of bonus reinforcements
+    that [player] receives due to the continents that they control. *)
+val player_cont_bonus : t -> Player.t -> army
+
 (** [player_reinforcements state player] is the total number of
     reinforcements that [player] recieves given the current board
     configuration. *)

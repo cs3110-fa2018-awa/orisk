@@ -1,4 +1,4 @@
-MODULES=board_state game_state board player game display interface move heuristic authors
+MODULES=board_state game_state board player game display interface move heuristic personality authors
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)

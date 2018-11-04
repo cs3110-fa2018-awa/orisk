@@ -91,6 +91,8 @@ let draw_turn (st : Interface.t) : unit =
   in print_string [Foreground (player_color player)] (player_name player);
   print_string [] " -- ";
   print_string [] (turn_to_str (game_state st));
+  print_string [] " -- ";
+  print_string [] (Heuristic.best_move (game_state st) (Personality.default) |> Move.string_of_move);
   print_string [] "\n"
 
 let draw_line st num line : int =
