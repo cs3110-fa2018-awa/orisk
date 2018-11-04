@@ -43,7 +43,7 @@ type fortify_step =
     in which the player fortifies troops from one node that they
     control to another that they control. *)
 type turn_state =
-  | Pick
+  | Pick of army
   | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
@@ -228,3 +228,5 @@ val occupy : t -> node_id -> node_id -> army -> t
     of a number of troops - i.e. reinforce place, attack occupy, and fortify
     count. For all other turn states, raises [InvalidState st]. *)
 val min_max_default : t -> army * army * army
+
+val is_pick : t -> bool 

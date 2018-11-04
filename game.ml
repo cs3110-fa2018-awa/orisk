@@ -100,7 +100,7 @@ let rec read_num str prev : string option =
 (** [game_stage st] is [(st',x)] where [st'] is the new state from evaluating
     the turn state of [st] and [x] is [Some msg] or [None]. *)
 let game_stage st = match st |> game_state |> turn with 
-  | Pick -> pick st,None
+  | Pick _ -> pick st,None
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
   | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
@@ -135,8 +135,8 @@ let game_nums st num = match st |> game_state |> turn with
     search string and the success flag resulting from performing a search
     for [str] in [st]. *)
 let perform_search st str : (string * bool) =
-    let found_node = node_search (st |> Interface.board) str in
-    str,found_node <> None
+  let found_node = node_search (st |> Interface.board) str in
+  str,found_node <> None
 
 (** [parse_standard_input st msg search] is the tuple (st', msg', search')
     resulting from parsing a single character of input. Called internally
@@ -183,7 +183,7 @@ let parse_standard_input st msg search =
       else st, msg, Some
              (perform_search st (String.sub (fst search) 0
                                    (String.length (fst search) - 1)))
-    | "`" -> if (game_state st |> turn) = Pick
+    | "`" -> if st |> game_state |> is_pick
       then (game_state st |> assign_random_nodes
             |> change_game_st st), msg, None
       else st, msg, None
@@ -215,7 +215,7 @@ let parse_input st msg search :
   try 
     begin
       match game_state st |> turn with 
-      | Pick 
+      | Pick _
       | Reinforce (SelectR,_) 
       | Attack (AttackSelectA | DefendSelectA _) 
       | Fortify (FromSelectF | ToSelectF _)
@@ -260,16 +260,16 @@ let parse_input st msg search :
     otherwise, prints [msg]. *)
 let print_message st msg (search : string * bool) =
   match msg, search with
-    | Some m, _ -> print_endline m
-    | None, (s,success) when String.length s > 0 -> 
-      if success 
-      then print_endline ("Search: " ^ s)
-      else begin
-        ANSITerminal.(print_string [] "Failing search: "; 
-                      print_string [red] s);
-        print_endline ""
-      end
-    | None, _ -> print_endline "..."
+  | Some m, _ -> print_endline m
+  | None, (s,success) when String.length s > 0 -> 
+    if success 
+    then print_endline ("Search: " ^ s)
+    else begin
+      ANSITerminal.(print_string [] "Failing search: "; 
+                    print_string [red] s);
+      print_endline ""
+    end
+  | None, _ -> print_endline "..."
 
 (** [game_loop_new st msg] continuously prompts the player for input
     and updates the game state according to the user input and the current 
@@ -290,7 +290,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
   if (Interface.help_on st) then
     (begin match (leaderboard_on st), (turn (game_state st)) with
        | true, _ -> pick_help st "leaderboard"
-       | false, Pick -> pick_help st "pick"
+       | false, Pick _ -> pick_help st "pick"
        | false, _ -> pick_help st "game"
      end;)
   else ();
@@ -357,7 +357,7 @@ let risk f =
 
 (** Ascii art splash screen. *)
 let title =
-   "\r\n         _            _         _            _        "
+  "\r\n         _            _         _            _        "
   ^"\r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      "
   ^"\r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   "
   ^"\r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ "

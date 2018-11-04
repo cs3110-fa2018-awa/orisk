@@ -40,7 +40,7 @@ type fortify_step =
     in which the player fortifies troops from one node that they
     control to another that they control. *)
 type turn_state =
-  | Pick
+  | Pick of army
   | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
@@ -109,7 +109,9 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Pick;
+    turn = let total_nodes = board |> nodes |> List.length in
+      let total_players = players |> List.length in
+      Pick ((total_nodes/total_players)+total_nodes);
   }
 
 (** [board_st st] is the board state of [st]. *)
@@ -127,7 +129,7 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
-  | Pick -> "Picking territories"
+  | Pick _ -> "Picking territories"
   | Reinforce (_,remaining) -> "Reinforce " ^ (string_of_int remaining)
   | Attack AttackSelectA -> "Select attacker"
   | Attack DefendSelectA node -> "Attacking from " ^ node ^ ", select defender"
@@ -152,7 +154,7 @@ let change_board_st st board_st = {st with board_state = board_st}
     it more difficult to determine the general term state without pattern
     matching. *)
 let is_pick st = match st.turn with
-  | Pick -> true
+  | Pick _ -> true
   | _ -> false
 
 (** [is_reinforce st] is true iff the turn state of [st] is Reinforce.
@@ -235,9 +237,9 @@ let assign_random_nodes (st : t) : t =
       (st,st.current_player) (board st.board_state |> nodes
                               |> List.filter unselected |> shuffle_lst) |> fst
   in let first_player = List.hd st.players in 
-  {st' with turn = Reinforce 
-                (SelectR,
-                 Board_state.player_reinforcements st.board_state first_player);
+  {st' with turn = (let total_nodes = st.board_state |> board |> nodes |> List.length in
+                    let total_players = st.players |> List.length in
+                    Pick (total_nodes/total_players));
             current_player = first_player}
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
@@ -249,18 +251,23 @@ let assign_random_nodes (st : t) : t =
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)
 let pick_nodes st node =
-  if not (is_pick st) then raise (InvalidState st.turn) else (); 
-  if node_owner st.board_state node <> None then raise (NotOwner node) else ();
-  let board_state = place_army 
-      (set_owner st.board_state node (Some st.current_player)) node 1 in
-  if List.mem None (owners board_state) then 
-    {st with board_state = board_state; 
-             current_player = next_player st.current_player st.players}
-  else let first_player = List.hd st.players in 
-    {st with board_state = board_state;
-             turn = Reinforce 
-                 (SelectR,player_reinforcements st.board_state first_player);
-             current_player = first_player}
+  match st.turn with
+  | Pick army ->   
+    let owner = node_owner st.board_state node in
+    if owner <> Some (current_player st) && owner <> None 
+    then raise (NotOwner node) else ();
+    let board_state = place_army 
+        (set_owner st.board_state node (Some st.current_player)) node 1 in
+    if List.mem None (owners board_state) || army > 1
+    then {st with board_state = board_state; 
+                  current_player = next_player st.current_player st.players;
+                  turn = Pick (army - 1)}
+    else let first_player = List.hd st.players in 
+      {st with board_state = board_state;
+               turn = Reinforce 
+                   (SelectR,player_reinforcements st.board_state first_player);
+               current_player = first_player}
+  | _ -> raise (InvalidState st.turn)
 
 (** [setup_reinforce st] is the new state resulting from advancing [st] to the
     reinforce turn. [st.current_player] is advanced to the next player in the
@@ -278,7 +285,7 @@ let setup_reinforce st =
     reinforce. *)
 let end_turn_step st =
   match st.turn with
-  | Pick -> st
+  | Pick _ -> st
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
   | Fortify _ -> setup_reinforce st
@@ -300,7 +307,7 @@ let back_turn st =
     -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
   | Attack _ -> {st with turn = Attack AttackSelectA}
   | Fortify _ -> {st with turn = Fortify FromSelectF}
-  | Pick -> st
+  | Pick _ -> st
 (*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
