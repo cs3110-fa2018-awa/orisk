@@ -301,20 +301,10 @@ let trade_stars st (stars:int) =
        (SelectR, (player_reinforcements st.board_state st.current_player)
                  + stars_to_armies stars)}
 
-(** [setup_reinforce st] is the new state resulting from advancing [st] to the
-    reinforce turn. [st.current_player] is advanced to the next player in the
-    list and [st.turn] becomes [Reinforce (SelectR, n)], where [n] is the number
-    of reinforcements that the next player should receive. *)
-let setup_reinforce st =
-  let next = next_player st.current_player st.players
-  in {st with
-      turn = Reinforce (SelectR,player_reinforcements st.board_state next)}
-
+(** TODO *)
 let setup_trade st =
   let next = next_player st.current_player st.players
-  in {st with
-      current_player = next;
-      turn = Trade}
+  in {st with current_player = next; turn = Trade}
 
 (** [end_turn_step st] is the game state [st] resulting from skipping the
     current turn step. If in reinforce, then moves to attack. If in attack,
@@ -323,7 +313,7 @@ let setup_trade st =
 let end_turn_step st =
   match st.turn with
   | Pick _ -> st
-  | Trade -> setup_reinforce st
+  | Trade -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
   | Fortify _ -> setup_trade st
@@ -396,7 +386,7 @@ let fortify st from_node to_node armies : t =
   then raise (NonconnectedNode (from_node,to_node)) else ();
   if (node_army st.board_state from_node) <= armies || armies < 0
   then raise (InsufficientArmies (from_node,armies)) else ();
-  setup_reinforce 
+  setup_trade (* TODO*)
     {st with board_state =  place_army 
                  (place_army st.board_state to_node armies) from_node (-armies)}
 (*BISECT-IGNORE-END*)

@@ -101,7 +101,7 @@ let rec read_num str prev : string option =
     the turn state of [st] and [x] is [Some msg] or [None]. *)
 let game_stage st = match st |> game_state |> turn with 
   | Pick _ -> pick st,None
-  | Trade -> trade_stars (game_state st) (read_int()) |> change_game_st st, None
+  | Trade -> failwith "sanity check"
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
   | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
