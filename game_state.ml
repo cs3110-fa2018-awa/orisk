@@ -308,8 +308,13 @@ let trade_stars st (stars:int) =
 let setup_reinforce st =
   let next = next_player st.current_player st.players
   in {st with
-      current_player = next;
       turn = Reinforce (SelectR,player_reinforcements st.board_state next)}
+
+let setup_trade st =
+  let next = next_player st.current_player st.players
+  in {st with
+      current_player = next;
+      turn = Trade}
 
 (** [end_turn_step st] is the game state [st] resulting from skipping the
     current turn step. If in reinforce, then moves to attack. If in attack,
@@ -318,10 +323,10 @@ let setup_reinforce st =
 let end_turn_step st =
   match st.turn with
   | Pick _ -> st
-  | Trade -> st
+  | Trade -> setup_reinforce st
   | Reinforce _ -> {st with turn = Attack AttackSelectA}
   | Attack _ -> {st with turn = Fortify FromSelectF}
-  | Fortify _ -> setup_reinforce st
+  | Fortify _ -> setup_trade st
 
 (** [back_turn st] is [st] with the turn state reverted one step, but
     not leaving the current general turn state. This function behaves
@@ -396,6 +401,17 @@ let fortify st from_node to_node armies : t =
                  (place_army st.board_state to_node armies) from_node (-armies)}
 (*BISECT-IGNORE-END*)
 
+(** TODO: only add stars if it's not the first time they did it, also if 
+    the turn is not pick 
+
+    takes in boardstate from set owner, then modifies that
+*)
+let place_stars_conditional firsttime st =
+  if firsttime then 
+    {st with board_state = place_stars 
+                 st.board_state st.current_player (star_generator ())}
+  else st
+
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
     a battle in which the winner is determined according to rolling random die
@@ -450,9 +466,10 @@ let attack st a d invading_armies =
                        (Board_state.set_owner st.board_state d attacker) d 
                        (invading_armies - attack_deaths)) a 
                     (total_attackers - invading_armies + 1);
-                turn = Attack (OccupyA (a,d))}, 
+                turn = Attack (OccupyA (a,d))} |> place_stars_conditional true (*TODO*)
+       , 
        attack_dice, defend_dice
-  (* attacker lost *)
+       (* attacker lost *)
   else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
@@ -496,7 +513,8 @@ let min_max_default st : (army * army * army) = match st.turn with
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
-  | Trade -> (0, 5, 1) (** TODO *)
+  | Trade -> let max = min 5 (player_stars st.board_state st.current_player)
+    in (0, max, 0)
   | _ -> raise (InvalidState st.turn)
 (*BISECT-IGNORE-END*)
 

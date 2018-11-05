@@ -82,6 +82,9 @@ val set_stars : t -> Player.t -> int -> t
 (** TODO *)
 val place_stars : t -> Player.t -> int -> t
 
+(** TODO *)
+val star_generator : unit -> int
+
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)
 val set_army : t -> node_id -> army -> t

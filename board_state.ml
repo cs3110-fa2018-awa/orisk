@@ -211,6 +211,13 @@ let set_stars st player stars =
 let place_stars st player stars =
   set_stars st player ((player_stars st player) + stars)
 
+(** [star_generator ()] is either 1 or 2 stars. *)
+let star_generator = 
+  fun () ->
+    Random.self_init ();
+    let p = 0.08 in
+    if (Random.float 1.0) > p then 1 else 2
+
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)
 let set_army st node army =
@@ -263,13 +270,6 @@ let is_owner st player node cont =
     (fun n -> (n = node) || ((node_owner st n) = player))
     (cont_nodes (board st) cont)
 
-(** [star_generator ()] is either 1 or 2 stars. *)
-let star_generator = 
-  fun () ->
-    Random.self_init ();
-    let p = 0.08 in
-    if (Random.float 1.0) > p then 1 else 2
-
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].
 
@@ -300,7 +300,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
              (fun acc cont -> if is_owner st player node cont
                then String_set.add cont acc else acc)
              conts' node_conts;
-         stars = stars' + star_generator ()
+         stars = stars'
        }
 
   (* update state of previous owner *)
