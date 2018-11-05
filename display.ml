@@ -92,7 +92,7 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] " -- ";
   print_string [] (turn_to_str (game_state st));
   print_string [] " -- ";
-  print_string [] (Heuristic.best_move (game_state st) (Personality.default) |> Move.string_of_move);
+  print_string [] (Al.best_move (game_state st) 2 |> Move.string_of_move);
   print_string [] "\n"
 
 let draw_line st num line : int =
@@ -205,11 +205,11 @@ let draw_stats (st : Interface.t) =
       ref (centered_y_coord (board_ascii_height brd) leaderboard_height)
     in fun () -> incr counter; !counter in
   let rec draw_all (ps : Board_state.player_stats list) : unit =
-       match ps with
-       | [] -> ()
-       | hd :: tl ->
-         stats_draw_one_line hd gs brd header set_cursor_y_incr col_len;
-         draw_all tl in
+    match ps with
+    | [] -> ()
+    | hd :: tl ->
+      stats_draw_one_line hd gs brd header set_cursor_y_incr col_len;
+      draw_all tl in
   draw_str (divider ^ "\n")
     (centered_x_coord (board_ascii_width brd)
        (String.length header)) (set_cursor_y_incr ()) [Bold];

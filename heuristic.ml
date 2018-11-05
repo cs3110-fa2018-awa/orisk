@@ -28,7 +28,7 @@ let player_heuristic bs player personality =
   let nodes = player_nodes bs player |> List.length
   in let armies = player_army bs player
   in let bonus = player_cont_bonus bs player
-  in let regions = 1 (* TODO *)
+  in let regions = 0 (* TODO *)
   in let frontier_nodes = player_frontiers bs player
   in let frontiers = List.length frontier_nodes
   in let frontier_armies = List.fold_left
@@ -46,11 +46,7 @@ let player_heuristic bs player personality =
      +. frontier_differential_heuristic personality frontier_differential
 
 let rec heuristic gs personality player =
-  let gs' = match turn gs with
-    | Attack _ -> gs (*apply_move (end_turn_step gs)
-                       (best_move_from_list gs (valid_fortifications gs) personality)*)
-    | _ -> gs
-  in player_heuristic (board_st gs') player personality
+  player_heuristic (board_st gs) player personality
 and best_move_from_list gs moves personality =
   List.map (fun move -> move, heuristic (apply_move gs move) personality (current_player gs)) moves
   |> List.sort_uniq (fun (_, s1) (_, s2) -> Pervasives.compare s1 s2)

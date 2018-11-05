@@ -19,12 +19,12 @@ let string_of_move = function
     "Attack " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
   | OccupyM army -> "Occupy with " ^ (string_of_int army)
   | FortifyM (node1, node2, army) ->
-    "Fortify " ^ node2 ^ " with " ^ node1 ^ " with " ^ (string_of_int army)
+    "Fortify " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
   | FinishM -> "Finish"
 
 let apply_move gs move = match (turn gs), move with
   | Pick, PickM node
-      -> pick_nodes gs node
+    -> pick_nodes gs node
   | Reinforce (SelectR, _), ReinforceM (node, army)
     -> reinforce gs node army
   | Attack AttackSelectA, AttackM (attacker, defender, army)
