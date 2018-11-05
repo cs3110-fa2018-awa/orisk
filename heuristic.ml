@@ -7,13 +7,6 @@ open Personality
 
 type score = float
 
-let player_frontiers bs player =
-  let predicate node = not
-      (List.for_all
-         (fun border -> node_owner bs border = Some player)
-         (node_borders (board bs) node))
-  in List.filter predicate (player_nodes bs player)
-
 let player_frontier_opponents bs player node =
   let is_opponent node = node_owner bs node <> Some player
   in List.filter is_opponent (node_borders (board bs) node)

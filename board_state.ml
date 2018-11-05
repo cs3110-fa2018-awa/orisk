@@ -317,3 +317,10 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
     players = update_map player new_player_st players
               |> update_map prev_owner prev_player_st;
   }
+
+let player_frontiers bs player =
+  let predicate node = not
+      (List.for_all
+         (fun border -> node_owner bs border = Some player)
+         (node_borders (board bs) node))
+  in List.filter predicate (player_nodes bs player)

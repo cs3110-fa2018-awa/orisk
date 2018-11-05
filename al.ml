@@ -68,8 +68,10 @@ let move_probabilities gs move =
   match (turn gs), move with
   | Pick, PickM node
     -> [{game_state = pick_nodes gs node; probability = 1.; moves = []}]
-  | Reinforce (SelectR, _), ReinforceM (node, army)
-    -> [{game_state = reinforce gs node army; probability = 1.; moves = []}]
+  | Reinforce (SelectR, _), ReinforceM list
+    -> [{game_state = List.fold_left
+             (fun acc (node, army) -> reinforce acc node army) gs list;
+         probability = 1.; moves = []}]
   | Attack AttackSelectA, AttackM (attacker, defender, army)
     -> attack_tree gs attacker defender army
   | Attack (OccupyA (attacker, defender)), OccupyM army
@@ -83,11 +85,25 @@ let move_probabilities gs move =
   | _, FinishM -> [{game_state = gs; probability = 1.; moves = []}]
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
 
+let heuristic_compare e1 e2 =
+  Pervasives.compare e1.heuristic e2.heuristic
+
+let first_n list n =
+  let rec internal acc = function
+    | _,0 | [],_ -> acc
+    | hd :: tl, n' -> internal (hd :: acc) (tl, n')
+  in internal [] (list, n) |> List.rev
+
 let rec move_edge gs personality depth move = 
   (*print_endline ("move edge "^(string_of_int depth));*)
-  let fill_moves move_tree = 
-    {move_tree with moves = List.map (move_edge move_tree.game_state personality 
-                                        (depth-1)) (valid_moves move_tree.game_state)} in 
+  let fill_moves move_tree =
+    let all_moves = valid_moves move_tree.game_state
+    in let pairs = List.map (fun move -> (move, heuristic move_tree.game_state personality (current_player gs))) all_moves
+    in let sorted_moves = List.sort (fun (_, h1) (_, h2) -> Pervasives.compare h2 h1) pairs
+                          |> List.map fst
+    in let best_moves = first_n sorted_moves (2 * depth)
+    in {move_tree with moves = List.map (move_edge move_tree.game_state personality 
+                                        (depth-1)) best_moves} in 
   let move_trees = match depth,(turn gs) with
     | 0,_ | _,Fortify _ -> move_probabilities gs move
     | _ -> List.map fill_moves (move_probabilities gs move)
@@ -102,6 +118,4 @@ let best_move gs depth =
   let tree = move_tree gs 1. Personality.default depth in
   print_endline ("current gs heuristic "^(string_of_float (Heuristic.heuristic gs Personality.default (current_player gs))));
   List.map (fun edge -> print_endline ((string_of_move edge.move)^" "^(string_of_float edge.heuristic))) tree.moves;
-  (List.sort_uniq 
-     (fun t1 t2 -> Pervasives.compare t1.heuristic t2.heuristic) 
-     tree.moves |> List.rev |> List.hd).move 
+  (List.sort_uniq heuristic_compare tree.moves |> List.rev |> List.hd).move
