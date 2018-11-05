@@ -101,6 +101,7 @@ let rec read_num str prev : string option =
     the turn state of [st] and [x] is [Some msg] or [None]. *)
 let game_stage st = match st |> game_state |> turn with 
   | Pick _ -> pick st,None
+  | Trade -> failwith "TODO"
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
   | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
@@ -221,7 +222,7 @@ let parse_input st msg search :
       | Fortify (FromSelectF | ToSelectF _)
         (* these states have standard input *)
         -> parse_standard_input st msg search
-      | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _)
+      | Trade | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _)
         (* these states have numerical input *)
         -> parse_num_input st msg search
     end
@@ -241,6 +242,8 @@ let parse_input st msg search :
     -> st, (Some ("You only have " ^ (string_of_int army) ^
                   " armies to attack with! You can't attack from " ^
                   node_id ^ "!")), None
+  | InsufficientStars s
+    -> st, (Some ("You don't have " ^ string_of_int s ^ " stars!")), None
   | FriendlyFire player
     -> st, (Some "You can't attack yourself!"), None
   | UnknownNode n

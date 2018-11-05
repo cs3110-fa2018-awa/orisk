@@ -44,6 +44,7 @@ type fortify_step =
     control to another that they control. *)
 type turn_state =
   | Pick of army
+  | Trade
   | Reinforce of (reinforce_step * army)
   | Attack of attack_step
   | Fortify of fortify_step
@@ -83,6 +84,9 @@ exception InvalidState of turn_state
     attempts to move in less armies to the defending node than they 
     attack with, in the event that they win the battle. *)
 exception InsufficientArmies of (node_id * army)
+
+(** TODO *)
+exception InsufficientStars of int
 
 (** [FriendlyFire (Some p)] is raised when player [p] attempts to attack 
     a node they own. *)

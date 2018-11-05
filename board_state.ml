@@ -22,7 +22,7 @@ type cont_state = {owner : Player.t option}
 
 (** [player_state] is the state of a player, used internally.
     Set of nodes and continents owned by the player. *)
-type player_state = {nodes : String_set.t; conts : String_set.t}
+type player_state = {nodes : String_set.t; conts : String_set.t; stars : int}
 
 (** [player_stats] is the board statistics of a player.
     It contains the total number of armies, territories, and continents
@@ -69,7 +69,7 @@ let init board players =
         String_map.empty;
     players = List.fold_left
         (fun acc player -> Player_map.add player
-            {nodes = String_set.empty; conts = String_set.empty} acc)
+            {nodes = String_set.empty; conts = String_set.empty; stars = 0} acc)
         Player_map.empty players;
   }
 
@@ -129,6 +129,9 @@ let player_conts st player =
 let player_army st (player:Player_map.key) : army =
   List.fold_left (fun acc node -> acc + (node_army st node))
     0 (player_nodes st player)
+
+let player_stars st player : int =
+  (player_state st player).stars
 
 (** [stats_player ps] is the player in [ps]. *)
 let stats_player ps = ps.player
@@ -197,6 +200,16 @@ let player_reinforcements st player =
       acc + (Board.cont_bonus st.board cont_id))
       0 (player_conts st player))
 
+let set_stars st player stars =
+  let ({players}:t) = st in 
+  let new_player_st = fun (state:player_state option) -> 
+    Some {(extract (UnknownPlayer player) state) with stars = stars} in 
+  {st with players = Player_map.update player new_player_st players}
+
+(** TODO *)
+let place_stars st player stars =
+  set_stars st player ((player_stars st player) + stars)
+
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)
 let set_army st node army =
@@ -249,6 +262,13 @@ let is_owner st player node cont =
     (fun n -> (n = node) || ((node_owner st n) = player))
     (cont_nodes (board st) cont)
 
+(** [star_generator ()] is either 1 or 2 stars. *)
+let star_generator = 
+  fun () ->
+    Random.self_init ();
+    let p = 0.08 in
+    if (Random.float 1.0) > p then 1 else 2
+
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state].
 
@@ -270,7 +290,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
 
   (* update state of new owner *)
   in let new_player_st
-      ({nodes=nodes'; conts=conts'} : player_state) : player_state =
+      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
        {
          (* add node to list of controlled nodes *)
          nodes = String_set.add node nodes';
@@ -278,19 +298,21 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
          conts = List.fold_left
              (fun acc cont -> if is_owner st player node cont
                then String_set.add cont acc else acc)
-             conts' node_conts
+             conts' node_conts;
+         stars = stars' + star_generator ()
        }
 
   (* update state of previous owner *)
   in let prev_player_st
-      ({nodes=nodes'; conts=conts'} : player_state) : player_state =
+      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
        {
          (* remove node from list of controlled nodes *)
          nodes = String_set.remove node nodes';
          (* remove continents that the player no longer controls *)
          conts = List.fold_left
              (fun acc cont -> String_set.remove cont acc)
-             conts' node_conts
+             conts' node_conts;
+         stars=stars'
        }
 
   (* make player owner of newly controlled continents and

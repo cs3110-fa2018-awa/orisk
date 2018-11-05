@@ -56,6 +56,9 @@ val player_conts : t -> Player.t -> cont_id list
     by [player] in [state]. *)
 val player_army : t -> Player.t -> army
 
+(** TODO *)
+val player_stars : t -> Player.t -> int
+
 (** [get_players state] is the list of all existing players in [state]. *)
 val get_players: t -> Player.t list
 
@@ -72,6 +75,12 @@ val sorted_player_stats : stats_category -> t -> player_stats list
     reinforcements that [player] recieves given the current board
     configuration. *)
 val player_reinforcements : t -> Player.t -> army
+
+(** TODO *)
+val set_stars : t -> Player.t -> int -> t
+
+(** TODO *)
+val place_stars : t -> Player.t -> int -> t
 
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)
