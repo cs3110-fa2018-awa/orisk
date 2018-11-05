@@ -200,6 +200,7 @@ let player_reinforcements st player =
       acc + (Board.cont_bonus st.board cont_id))
       0 (player_conts st player))
 
+(** TODO *)
 let set_stars st player stars =
   let ({players}:t) = st in 
   let new_player_st = fun (state:player_state option) -> 

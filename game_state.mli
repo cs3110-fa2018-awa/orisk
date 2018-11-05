@@ -194,7 +194,7 @@ val fortify : t -> node_id -> node_id -> army -> t
     current player and has an army added.
 
     If all nodes have been picked, then advances to the first turn, with game
-    state [Reinforce SelectR].
+    state [Trade].
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)
 val pick_nodes : t -> node_id -> t
@@ -234,3 +234,6 @@ val occupy : t -> node_id -> node_id -> army -> t
 val min_max_default : t -> army * army * army
 
 val is_pick : t -> bool 
+
+(** TODO *)
+val trade_stars : t -> int -> t

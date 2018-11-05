@@ -213,7 +213,7 @@ let reinforce st n armies =
   if not (is_reinforce st) then raise (InvalidState st.turn) else (); 
   if remaining_reinforcements st <= 0 then failwith "need more armies" else ();  
   if armies > remaining_reinforcements st || armies < 0
-  then raise (InsufficientArmies (n,armies)) else (); (*better exception*)
+  then raise (InsufficientArmies (n,armies)) else (); (*TODO: better exception*)
   {st with board_state = place_army st.board_state n armies; 
            turn = if remaining_reinforcements st = armies
              then Attack AttackSelectA 
@@ -257,7 +257,7 @@ let assign_random_nodes (st : t) : t =
     current player and has an army added.
 
     If all nodes have been picked, then advances to the first turn, with game
-    state [Reinforce SelectR].
+    state [Trade].
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)
 let pick_nodes st node =
@@ -274,8 +274,7 @@ let pick_nodes st node =
                   turn = Pick (army - 1)}
     else let first_player = List.hd st.players in 
       {st with board_state = board_state;
-               turn = Reinforce 
-                   (SelectR,player_reinforcements st.board_state first_player);
+               turn = Trade;
                current_player = first_player}
   | _ -> raise (InvalidState st.turn)
 
@@ -486,8 +485,8 @@ let occupy st a d occupying_armies =
     number of troops that can be filled for [st].
 
     This function is only defined for turn states that involve the selection
-    of a number of troops - i.e. Reinforce PlacR, attack OccupyA, and Fortify
-    CountF. For all other turn states, raises [InvalidState state]. *)
+    of a number of troops - i.e. Reinforce PlacR, attack OccupyA, Fortify
+    CountF, and Trade. For all other turn states, raises [InvalidState state]. *)
 let min_max_default st : (army * army * army) = match st.turn with
   | Reinforce ((PlaceR node), remaining)
     -> (0, remaining, 1)
@@ -497,6 +496,7 @@ let min_max_default st : (army * army * army) = match st.turn with
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
+  | Trade -> (0, 5, 1) (** TODO *)
   | _ -> raise (InvalidState st.turn)
 (*BISECT-IGNORE-END*)
 
