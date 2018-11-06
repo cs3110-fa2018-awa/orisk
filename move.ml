@@ -14,9 +14,9 @@ type move =
 let string_of_move = function
   | PickM node -> "Pick " ^ node
   | ReinforceM list ->
-    "Reinforce" ^
+    "Reinforce " ^
     (List.fold_left (fun acc (node, army) ->
-         acc ^ "\n   " ^ node ^ " with " ^ (string_of_int army)) "" list)
+         acc ^ node ^ " with " ^ (string_of_int army)) "" list)
   | AttackM (node1, node2, army) ->
     "Attack " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
   | OccupyM army -> "Occupy with " ^ (string_of_int army)
@@ -49,23 +49,7 @@ let range min max =
 (** ['a String_map] is a map with keys of [node_id] or [cont_id]. *)
 module String_map = Map.Make (String)
 
-let valid_reinforcements gs remaining = (*
-  let frontiers = player_frontiers (board_st gs) (current_player gs)
-  in let rec internal (maps : (army String_map.t) list) = function
-      | 0 -> maps
-      | n -> internal (List.map (fun map -> 
-            begin
-              List.map (fun frontier ->
-                  begin
-                    let current = match String_map.find_opt frontier map with
-                      | Some x -> x
-                      | None -> 0
-                    in String_map.add frontier current map
-                  end)
-                frontiers
-            end) maps |> List.flatten) (n - 1)
-  in List.map (fun map -> ReinforceM (String_map.bindings map))
-    (internal [] remaining) *)
+let valid_reinforcements gs remaining =
   let frontiers = player_frontiers (board_st gs) (current_player gs)
   in List.map (fun frontier -> ReinforceM [(frontier, remaining)]) frontiers
 

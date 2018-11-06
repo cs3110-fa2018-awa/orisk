@@ -55,5 +55,5 @@ let heuristic gs personality player =
   in let heuristic = player_heuristic (board_st gs) personality player
   in heuristic
      +. opponent_num_heuristic personality opponent_num
-     +. max_opponent_heuristic personality max_opponent
+     (*+. max_opponent_heuristic personality max_opponent*)
      +. avg_opponent_heuristic personality avg_opponent
