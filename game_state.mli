@@ -46,7 +46,7 @@ type turn_state =
   | Pick of army
   | Trade
   | Reinforce of (reinforce_step * army)
-  | Attack of attack_step
+  | Attack of (attack_step * bool)
   | Fortify of fortify_step
 
 (** The type of a list of players. *)
@@ -85,7 +85,8 @@ exception InvalidState of turn_state
     attack with, in the event that they win the battle. *)
 exception InsufficientArmies of (node_id * army)
 
-(** TODO *)
+(** [InsufficientStars n] is raised when a player attempts to 
+    trade in [n] stars when they don't own [n] stars. *)
 exception InsufficientStars of int
 
 (** [FriendlyFire (Some p)] is raised when player [p] attempts to attack 
@@ -202,6 +203,10 @@ val pick_nodes : t -> node_id -> t
 (** [set_turn st turn] is [st] with its turn state changed to [turn]. *)
 val set_turn : t -> turn_state -> t
 
+(** [battle_won st] is whether the current player in attack state [st] has
+    already won a battle in that turn. *)
+val battle_won : t -> bool
+
 (** [back_turn st] is [st] with the turn state reverted one step, but
     not leaving the current general turn state. This function behaves
     according to the following rules:
@@ -226,14 +231,19 @@ val back_turn : t -> t
 val occupy : t -> node_id -> node_id -> army -> t
 
 (** [min_max_default st] is a tuple of the minimum, maximum, and default
-    number of troops that can be filled for [st].
+    number of troops that can be filled or the number of stars that
+    can be traded for [st].
 
     This function is only defined for turn states that involve the selection
-    of a number of troops - i.e. reinforce place, attack occupy, and fortify
-    count. For all other turn states, raises [InvalidState st]. *)
+    of a number of troops or a number of stars - i.e. Reinforce PlacR, attack
+    OccupyA, Fortify CountF, and Trade. For all other turn states, raises
+    [InvalidState state]. *)
 val min_max_default : t -> army * army * army
 
+(** [is_pick st] is true iff the turn state of [st] is [Pick]. *)
 val is_pick : t -> bool 
 
-(** TODO *)
+(** [trade_stars st stars] is the result of the current player in [st] trading 
+    in [stars] during the [Trade] phase of the game; the player will lose
+    [stars] and will gain a number of armies to reinforce with. *)
 val trade_stars : t -> int -> t

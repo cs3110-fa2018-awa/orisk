@@ -25,18 +25,19 @@ type cont_state = {owner : Player.t option}
 type player_state = {nodes : String_set.t; conts : String_set.t; stars : int}
 
 (** [player_stats] is the board statistics of a player.
-    It contains the total number of armies, territories, and continents
-    that a player owns. *)
+    It contains the total number of armies, territories, continents,
+    and stars that a player owns. *)
 type player_stats = {
   player : Player.t; 
   army_tot : army; 
   node_tot : int; 
-  cont_tot : int
+  cont_tot : int;
+  star_tot : int
 }
 
 (** [stats_category] is the category that the board leaderboard can be 
     sorted by. *)
-type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont | CatStar
 
 (** [Board_state.t] is the state of a board. The underlying (and
     unchanging) board, the map of nodes to node states, the map
@@ -130,6 +131,8 @@ let player_army st (player:Player_map.key) : army =
   List.fold_left (fun acc node -> acc + (node_army st node))
     0 (player_nodes st player)
 
+(** [player_stars state player] is the number of stars owned
+    by [player] in [state]. *)
 let player_stars st player : int =
   (player_state st player).stars
 
@@ -157,7 +160,8 @@ let player_stats_make st p : player_stats =
   let n = player_nodes st p |> List.length in
   let c = player_conts st p |> List.length in
   let a = player_army st p in
-  {player = p; army_tot = a; node_tot = n; cont_tot = c}
+  let s = player_stars st p in
+  {player = p; army_tot = a; node_tot = n; cont_tot = c; star_tot = s}
 
 (*BISECT-IGNORE-BEGIN*) (*play test*)
 (** [compare_player_stats category ps1 ps2] is a comparison function
@@ -170,6 +174,7 @@ let compare_player_stats (c : stats_category) ps1 ps2 : int = match c with
   | CatArmy -> - Pervasives.compare ps1.army_tot ps2.army_tot
   | CatNode -> - Pervasives.compare ps1.node_tot ps2.node_tot
   | CatCont -> - Pervasives.compare ps1.cont_tot ps2.cont_tot
+  | CatStar -> - Pervasives.compare ps1.star_tot ps2.star_tot
 
 (** [sorted_player_stats state category] is the list of all player statistics,
     sorted based on [category] in [state]. *)
@@ -200,24 +205,6 @@ let player_reinforcements st player =
       acc + (Board.cont_bonus st.board cont_id))
       0 (player_conts st player))
 
-(** TODO *)
-let set_stars st player stars =
-  let ({players}:t) = st in 
-  let new_player_st = fun (state:player_state option) -> 
-    Some {(extract (UnknownPlayer player) state) with stars = stars} in 
-  {st with players = Player_map.update player new_player_st players}
-
-(** TODO *)
-let place_stars st player stars =
-  set_stars st player ((player_stars st player) + stars)
-
-(** [star_generator ()] is either 1 or 2 stars. *)
-let star_generator = 
-  fun () ->
-    Random.self_init ();
-    let p = 0.08 in
-    if (Random.float 1.0) > p then 1 else 2
-
 (** [set_army state node army] is the new state resulting from setting
     [node] to have [army] armies in [state]. *)
 let set_army st node army =
@@ -231,6 +218,28 @@ let set_army st node army =
     that merely calls [set_army] internally. *)
 let place_army st node army =
   set_army st node ((node_army st node) + army)
+
+(** [set_stars state player stars] is the new state resulting from setting
+    [player] to have [stars] in [state]. *)
+let set_stars st player stars =
+  let ({players}:t) = st in 
+  let new_player_st = fun (state:player_state option) -> 
+    Some {(extract (UnknownPlayer player) state) with stars = stars} in 
+  {st with players = Player_map.update player new_player_st players}
+
+(** [place_stars state player stars] is the new state resulting from
+    adding [stars] stars to [player] in [state]. This is a helper
+    function that calls [set_stars] internally. *)
+let place_stars st player stars =
+  set_stars st player ((player_stars st player) + stars)
+
+(** [star_generator ()] is either 1 star or sometimes, with a
+    low probability, 2 stars. *)
+let star_generator = 
+  fun () ->
+    Random.self_init ();
+    let p = 0.08 in
+    if (Random.float 1.0) > p then 1 else 2
 
 (** [player_color_from_node st node] is the option of the color of [node]
     in [st]. This is [Some color] if the owner of the node is [Some player]

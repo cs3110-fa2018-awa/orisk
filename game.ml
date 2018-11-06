@@ -104,17 +104,17 @@ let game_stage st = match st |> game_state |> turn with
   | Trade -> failwith "sanity check"
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
-  | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
-  | Attack (DefendSelectA node)
+  | Attack (AttackSelectA, _) -> Some (cursor_node st) |> change_attack_node st,None
+  | Attack (DefendSelectA node, _)
     -> let gst',attack,defend = attack (game_state st) node (cursor_node st) 
            (min ((node_army (board_state st) node) - 1) 3)
     in begin match turn gst' with
-      | Attack (OccupyA _) -> change_game_st st gst'
+      | Attack (OccupyA _, _) -> change_game_st st gst'
       | _ -> change_game_st (set_cursor_node st (attacking_node st)) gst'
     end
      , (Some ("A: " ^ (string_of_dice attack) 
               ^ " vs D: " ^ (string_of_dice defend))) 
-  | Attack (OccupyA (n1,n2)) -> failwith "shouldn't happen"
+  | Attack (OccupyA (n1,n2), _) -> failwith "shouldn't happen"
   | Fortify FromSelectF 
     -> Some (cursor_node st) |> change_from_fortify_node st,None
   | Fortify (ToSelectF node) 
@@ -128,7 +128,7 @@ let game_nums st num = match st |> game_state |> turn with
     -> trade_stars (game_state st) num |> change_game_st st, None
   | Reinforce ((PlaceR node),_) 
     -> change_game_st st (reinforce (game_state st) (cursor_node st) num),None
-  | Attack (OccupyA (n1,n2)) 
+  | Attack (OccupyA (n1,n2), _) 
     -> change_game_st st (occupy (game_state st) n1 n2 num),None
   | Fortify (CountF (n1,n2)) 
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
@@ -158,6 +158,7 @@ let parse_standard_input st msg search =
     | "a" -> (set_leaderboard_cat st CatArmy), msg, None
     | "n" -> (set_leaderboard_cat st CatNode), msg, None
     | "c" -> (set_leaderboard_cat st CatCont), msg, None
+    | "s" -> (set_leaderboard_cat st CatStar), msg, None
     | "-" -> (toggle_help st), msg, None
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | _ -> st, msg, None
@@ -220,11 +221,11 @@ let parse_input st msg search :
       match game_state st |> turn with 
       | Pick _
       | Reinforce (SelectR,_) 
-      | Attack (AttackSelectA | DefendSelectA _) 
+      | Attack (AttackSelectA, _ | DefendSelectA _, _) 
       | Fortify (FromSelectF | ToSelectF _)
         (* these states have standard input *)
         -> parse_standard_input st msg search
-      | Trade | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _)
+      | Trade | Reinforce (PlaceR _,_) | Attack (OccupyA _, _) | Fortify (CountF _)
         (* these states have numerical input *)
         -> parse_num_input st msg search
     end

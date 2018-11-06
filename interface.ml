@@ -35,7 +35,7 @@ let board st = board_state st |> Board_state.board
     occupying from, or [None] if the current player is not selecting a defender
     or occupying. *)
 let attacking_node st = match (turn st.game_state) with
-  | Attack ((DefendSelectA node) | OccupyA (node,_)) -> Some node 
+  | Attack ((DefendSelectA node),_ | OccupyA (node,_),_) -> Some node 
   | _ -> None
 
 (** [leaderboard_on st] is whether or not the leaderboard
@@ -85,7 +85,9 @@ let change_attack_node st (node:node_id option) =
   match node with 
   | None -> st
   | Some n 
-    -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
+    -> {st with
+        game_state = 
+          set_turn st.game_state (Attack (DefendSelectA n, battle_won st.game_state))}
 
 (** [from_fortify_node st] is the node that the current player is fortifying
     from in interface [st]. *)
@@ -251,13 +253,13 @@ let turn_valid_nodes st =
       | Trade -> is_owner
       | Reinforce (SelectR,_) -> is_owner
       | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
-      | Attack AttackSelectA
+      | Attack (AttackSelectA, _)
         -> fun node -> node_owner bs node = Some (current_player gs)
                        && node_army bs node > 1
-      | Attack (DefendSelectA n)
+      | Attack (DefendSelectA n, _)
         -> fun node -> node_owner bs node <> Some (current_player gs)
                        && List.mem node (node_borders b n)
-      | Attack (OccupyA _) -> failwith "shouldn't happen"
+      | Attack (OccupyA _, _) -> failwith "shouldn't happen"
       | Fortify FromSelectF -> fun node -> is_owner node
                                            && node_army bs node > 1
       | Fortify (ToSelectF n)

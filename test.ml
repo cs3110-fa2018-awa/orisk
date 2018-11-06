@@ -221,9 +221,9 @@ let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
 let turn_reinforce = 
   lazy (set_turn (~$ init_game_state) (Reinforce (SelectR,0)))
 let turn_attack_defend = 
-  lazy (set_turn (~$ init_game_state) (Attack (DefendSelectA "Rose")))
+  lazy (set_turn (~$ init_game_state) (Attack ((DefendSelectA "Rose"), false)))
 let turn_attack_occupy = 
-  lazy (set_turn (~$ init_game_state) (Attack (OccupyA ("Rose","LR7"))))
+  lazy (set_turn (~$ init_game_state) (Attack ((OccupyA ("Rose","LR7")), true)))
 let turn_fortify_fromselect = 
   lazy (set_turn (~$ init_game_state) (Fortify FromSelectF))
 let turn_fortify_toselect = 
