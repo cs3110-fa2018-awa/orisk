@@ -177,7 +177,9 @@ let parse_standard_input st msg search =
     | "\\" -> (change_game_st st (game_state st |> back_turn)), msg, None
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
-      -> st, msg, Some (perform_search st ((fst search) ^ c))
+      -> let search = perform_search st ((fst search) ^ c) in 
+      let found_node = node_search (st |> Interface.board) (fst search) in
+      (set_cursor_node st found_node), msg, Some search 
     | "\127" -> if String.length (fst search) <= 1
       then st, msg, None
       else st, msg, Some
