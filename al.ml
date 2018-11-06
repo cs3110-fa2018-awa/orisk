@@ -94,14 +94,13 @@ let first_n list n =
     | hd :: tl, n' -> internal (hd :: acc) (tl, n' - 1)
   in internal [] (list, n) |> List.rev
 
-let rec move_edge gs personality depth move = 
-  (*print_endline ("move edge "^(string_of_int depth));*)
+let rec move_edge gs personality depth move =
   let fill_moves move_tree =
     let all_moves = valid_moves move_tree.game_state
     in let pairs = List.map (fun move -> (move, heuristic move_tree.game_state personality (current_player gs))) all_moves
     in let sorted_moves = List.sort (fun (_, h1) (_, h2) -> Pervasives.compare h2 h1) pairs
                           |> List.map fst
-    in let best_moves = first_n sorted_moves (2 * depth)
+    in let best_moves = first_n sorted_moves depth
     in {move_tree with moves = List.map (move_edge move_tree.game_state personality 
                                         (depth-1)) best_moves} in 
   let move_trees = match depth,(turn gs) with
