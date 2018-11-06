@@ -185,7 +185,7 @@ let init gs =
     scroll = (0, 0);
     move_map = build_move_map gs;
     leaderboard = (false, CatPlayer);
-    help = (true, "pick")
+    help = (false, "pick")
   }
 
 (** [cursor st] is the coordinates of the cursor in interface [st]. *)

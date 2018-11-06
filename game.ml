@@ -294,25 +294,34 @@ let rec game_loop_new ?(search : string * bool = "",false)
        | false, _ -> pick_help st "game"
      end;)
   else ();
-  (* parsing inputs *)
-  let st',msg',search' = parse_input st msg search
-  in match search' with
-  | Some s -> game_loop_new ~search:s st' msg'
-  | None -> game_loop_new st' msg'
+  if st |> game_state |> current_player |> Player.player_artificial then
+    begin
+      Unix.sleep 1; let gs = game_state st in
+      game_loop_new (Al.best_move gs 4 |> Move.apply_move gs |> change_game_st st) None
+    end
+  else begin
+    (* parsing inputs *)
+    let st',msg',search' = parse_input st msg search
+    in match search' with
+    | Some s -> game_loop_new ~search:s st' msg'
+    | None -> game_loop_new st' msg'
+  end
 
 (** [insert_players pl msg t c] continuously prompts the user for input 
     involving the creation of players, saved in [pl]. Reprompts if invalid 
     inputs are given and displays error message [msg].Caps at however many 
     colors are provided in [c]. [t] is a flag indicating whether the add player 
     message is activated. *)
-let rec insert_players 
-    (pl:Player.t list) 
-    (c:color list) 
-    (t:bool) 
-    (msg:string) : Player.t list = 
+let rec insert_players
+    (pl:Player.t list)
+    (c:color list)
+    (t:bool)
+    (watson:bool)
+    (msg:string) : Player.t list =
   ANSITerminal.set_cursor 0 (height ());
   ANSITerminal.erase Screen;
   print_endline "(a)dd a player";
+  print_endline "add (w)atson player";
   print_endline "(d)elete the last player added";
   print_endline "(s)tart the game with current players\n";
   print_players (List.rev pl);
@@ -323,26 +332,28 @@ let rec insert_players
                  | name, color::rest, _ 
                    -> if (String.trim name <> "") then
                      begin
-                       insert_players ((Player.create name color) :: pl) 
-                         rest false ("...")
+                       insert_players ((Player.create name color watson) :: pl) 
+                         rest false false ("...")
                      end
-                   else insert_players pl c t ("Can't have an empty name")
-                 | _, _, _ -> insert_players pl c t msg
+                   else insert_players pl c t watson ("Can't have an empty name")
+                 | _, _, _ -> insert_players pl c t watson msg
                end)
   else (print_endline (msg ^ "\n");
         begin
           match read_input (), c, pl with
-          | "a", [], _ -> insert_players pl c t ("Can't add any more players!")
+          | ("a" | "w"), [], _ -> insert_players pl c t false ("Can't add any more players!")
           | "a", color::rest, _ 
-            -> insert_players pl c true "Who is this player?"
-          | "d", c, [] -> insert_players pl c t ("No players to delete!")
+            -> insert_players pl c true false "Who is this player?"
+          | "w", color::rest, _
+            -> insert_players pl c true true "Who is this watson?"
+          | "d", c, [] -> insert_players pl c t false ("No players to delete!")
           | "d", c, player::rest 
-            -> insert_players rest ((player_color player)::c) t "..."
-          | "s", _, [] -> insert_players pl c t ("Need at least one player!")
+            -> insert_players rest ((player_color player)::c) t false "..."
+          | "s", _, [] -> insert_players pl c t false ("Need at least one player!")
           | "s", _, _ -> pl 
           | "\004", _, _ | "\027", _, _ 
             -> print_endline("\nThanks for playing!\n"); exit 0
-          | _, _, _ -> insert_players pl c t msg
+          | _, _, _ -> insert_players pl c t false msg
         end)
 
 (** [risk f] starts the game in [f]. 
@@ -351,7 +362,7 @@ let rec insert_players
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in
   let players = List.rev 
-      (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false "...") in
+      (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false false "...") in
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 

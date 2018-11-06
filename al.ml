@@ -115,6 +115,6 @@ let move_tree gs probability personality depth =
 
 let best_move gs depth =
   let tree = move_tree gs 1. Personality.default depth in
-  print_endline ("current gs heuristic "^(string_of_float (Heuristic.heuristic gs Personality.default (current_player gs))));
-  List.map (fun edge -> print_endline ((string_of_move edge.move)^" "^(string_of_float edge.heuristic))) tree.moves;
+  (*print_endline ("current gs heuristic "^(string_of_float (Heuristic.heuristic gs Personality.default (current_player gs))));*)
+  (*List.map (fun edge -> print_endline ((string_of_move edge.move)^" "^(string_of_float edge.heuristic))) tree.moves;*)
   (List.sort_uniq heuristic_compare tree.moves |> List.rev |> List.hd).move

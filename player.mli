@@ -7,7 +7,7 @@ type t
 type color = ANSITerminal.color
 
 (** [create name color] is the player with [name] and [color]. *)
-val create : string -> color -> t
+val create : string -> color -> bool -> t
 
 (** [player_id player] is the [id] of [player]. *)
 val player_id : t -> int
@@ -17,6 +17,8 @@ val player_name : t -> string
 
 (** [player_color player] is the [color] of [player]. *)
 val player_color : t -> color
+
+val player_artificial : t -> bool
 
 (** [compare p1 p2] is the result of [Pervasives.compare] with the
     order in which the players were created. This allows players to
