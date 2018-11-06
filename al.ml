@@ -91,7 +91,7 @@ let heuristic_compare e1 e2 =
 let first_n list n =
   let rec internal acc = function
     | _,0 | [],_ -> acc
-    | hd :: tl, n' -> internal (hd :: acc) (tl, n')
+    | hd :: tl, n' -> internal (hd :: acc) (tl, n' - 1)
   in internal [] (list, n) |> List.rev
 
 let rec move_edge gs personality depth move = 

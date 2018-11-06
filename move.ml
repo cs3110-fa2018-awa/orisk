@@ -14,9 +14,9 @@ type move =
 let string_of_move = function
   | PickM node -> "Pick " ^ node
   | ReinforceM list ->
-    "Reinforce " ^
+    "Reinforce" ^
     (List.fold_left (fun acc (node, army) ->
-         acc ^ "   " ^ node ^ " with " ^ (string_of_int army) ^ "\n") "" list)
+         acc ^ "\n   " ^ node ^ " with " ^ (string_of_int army)) "" list)
   | AttackM (node1, node2, army) ->
     "Attack " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
   | OccupyM army -> "Occupy with " ^ (string_of_int army)
