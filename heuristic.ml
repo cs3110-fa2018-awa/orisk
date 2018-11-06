@@ -42,7 +42,7 @@ let player_heuristic bs personality player =
      +. frontier_heuristic personality frontiers
      +. frontier_armies_heuristic personality frontier_armies
      +. non_frontier_armies_heuristic personality non_frontier_armies
-     +. frontier_differential_heuristic personality frontier_differential
+(*+. frontier_differential_heuristic personality frontier_differential*)
 
 let heuristic gs personality player =
   let opponents = List.filter (fun p -> p <> player) (players gs)
