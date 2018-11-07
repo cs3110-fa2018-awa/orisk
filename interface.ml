@@ -249,7 +249,11 @@ let turn_valid_nodes st =
   in let b = board st
   in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
   in let pred = match turn gs with
-      | Pick _ -> fun node -> node_owner bs node = None
+      | Pick _ ->
+        let is_picked = List.length
+            (nodes_filter b (fun node -> node_owner bs node = None)) = 0
+        in let player = Some (current_player gs)
+        in fun node -> node_owner bs node = (if is_picked then player else None)
       | Trade -> is_owner
       | Reinforce (SelectR,_) -> is_owner
       | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
