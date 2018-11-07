@@ -34,19 +34,20 @@ let player_heuristic bs personality player =
   in let bonus = player_cont_bonus bs player
   in let regions = 0 (* TODO *)
   in let frontier_nodes = player_frontiers bs player
-  in let non_frontier_nodes = List.filter
-         (fun node -> not (List.mem node frontier_nodes)) all_nodes
+  (*in let non_frontier_nodes = List.filter
+         (fun node -> not (List.mem node frontier_nodes)) all_nodes*)
   in let frontiers = List.length frontier_nodes
   in let army_total node_list = List.fold_left
          (fun acc node -> acc + (node_army bs node) - 1) 0 node_list
   in let frontier_armies = army_total frontier_nodes
   in let avg_frontier_armies =
        (float_of_int frontier_armies) /. (float_of_int frontiers)
-  in let non_frontier_armies = army_total non_frontier_nodes
-  in let frontier_differential = List.fold_left
-         (fun acc node ->
-            acc + (max ((player_frontier_opponent_max_army bs player node)
-                                      - (node_army bs node)) 0)) 0 frontier_nodes
+       (*in let non_frontier_armies = army_total non_frontier_nodes
+         in let frontier_differential = List.fold_left
+              (fun acc node ->
+                 acc + (max ((player_frontier_opponent_max_army bs player node)
+                                           - (node_army bs node)) 0)) 0 
+                                           frontier_nodes*)
   in let stars = player_stars bs player
   in node_heuristic personality nodes
      +. bonus_heuristic personality bonus
@@ -69,8 +70,8 @@ let heuristic gs personality player =
        List.map (player_heuristic (board_st gs) personality) opponents
   in let avg_opponent =
        List.fold_left (+.) 0. opponent_heuristics /. (float_of_int opponent_num)
-  in let max_opponent = List.fold_left max 0. opponent_heuristics
-    in let heuristic = player_heuristic (board_st gs) personality player
+       (*in let max_opponent = List.fold_left max 0. opponent_heuristics*)
+  in let heuristic = player_heuristic (board_st gs) personality player
   in heuristic
      +. opponent_num_heuristic personality opponent_num
      (*+. max_opponent_heuristic personality max_opponent*)
