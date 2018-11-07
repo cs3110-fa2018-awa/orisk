@@ -207,7 +207,9 @@ let parse_num_input st msg search =
   let handle num =
     let st',msg' = game_nums st num in
     st', msg', None in
-  match read_num "" "" with
+  (* if there are no choices, then just go straight to default *)
+  if min = max then handle default
+  else match read_num "" "" with
   | Some str when str = "" -> handle default
   | Some str -> handle (int_of_string str)
   | None -> (change_game_st st (game_state st |> back_turn)), msg, None
