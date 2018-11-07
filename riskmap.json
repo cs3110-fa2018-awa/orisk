@@ -1,0 +1,644 @@
+{
+  "map": "Risk",
+  "ascii": "...",
+  "continents": [
+    {
+      "id": "northamerica",
+      "name": "North America",
+      "bonus": 5,
+      "territories": [
+        "alaska",
+        "northwest",
+        "greenland",
+        "alberta",
+        "ontario",
+        "quebec",
+        "westus",
+        "eastus",
+        "centralus"
+      ]
+    },
+    {
+      "id": "southamerica",
+      "name": "South America",
+      "bonus": 2,
+      "territories": [
+        "venezuela",
+        "brazil",
+        "peru",
+        "argentina"
+      ]
+    },
+    {
+      "id": "europe",
+      "name": "Europe",
+      "bonus": 5,
+      "territories": [
+        "britain",
+        "iceland",
+        "scandinavia",
+        "ukraine",
+        "northeu",
+        "southeu",
+        "westeu"
+      ]
+    },
+    {
+      "id": "africa",
+      "name": "Africa",
+      "bonus": 3,
+      "territories": [
+        "northaf",
+        "egypt",
+        "eastaf",
+        "congo",
+        "southaf",
+        "madagascar"
+      ]
+    },
+    {
+      "id": "asia",
+      "name": "Asia",
+      "bonus": 7,
+      "territories": [
+        "ural",
+        "siberia",
+        "yakutsk",
+        "kamchatka",
+        "irkusk",
+        "mongolia",
+        "japan",
+        "afghanistan",
+        "china",
+        "middleeast",
+        "india",
+        "siam"
+      ]
+    },
+    {
+      "id": "australia",
+      "name": "Australia",
+      "bonus": 2,
+      "territories": [
+        "indonesia",
+        "guinea",
+        "westaus",
+        "eastaus"
+      ]
+    }
+  ],
+  "territories": [
+    {
+      "id": "alaska",
+      "name": "Alaska",
+      "borders": [
+        "northwest",
+        "alberta",
+        "kamchatka"
+      ],
+      "coordinates": {
+        "x": 13,
+        "y": 10
+      }
+    },
+    {
+      "id": "northwest",
+      "name": "North West Territory",
+      "borders": [
+        "alaska",
+        "alberta",
+        "ontario",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 29,
+        "y": 10
+      }
+    },
+    {
+      "id": "alberta",
+      "name": "Alberta",
+      "borders": [
+        "alaska",
+        "northwest",
+        "ontario",
+        "westus"
+      ],
+      "coordinates": {
+        "x": 30,
+        "y": 15
+      }
+    },
+    {
+      "id": "ontario",
+      "name": "Ontario",
+      "borders": [
+        "northwest",
+        "alberta",
+        "westus",
+        "eastus",
+        "quebec",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 42,
+        "y": 17
+      }
+    },
+    {
+      "id": "quebec",
+      "name": "Quebec",
+      "borders": [
+        "greenland",
+        "ontario",
+        "eastus"
+      ],
+      "coordinates": {
+        "x": 53,
+        "y": 16
+      }
+    },
+    {
+      "id": "westus",
+      "name": "Western United States",
+      "borders": [
+        "alberta",
+        "ontario",
+        "eastus",
+        "centralus"
+      ],
+      "coordinates": {
+        "x": 30,
+        "y": 22
+      }
+    },
+    {
+      "id": "eastus",
+      "name": "Eastern United States",
+      "borders": [
+        "quebec",
+        "ontario",
+        "westus",
+        "centralus"
+      ],
+      "coordinates": {
+        "x": 43,
+        "y": 23
+      }
+    },
+    {
+      "id": "centralus",
+      "name": "Central America",
+      "borders": [
+        "westus",
+        "eastus",
+        "venezuela"
+      ],
+      "coordinates": {
+        "x": 29,
+        "y": 28
+      }
+    },
+    {
+      "id": "venezuela",
+      "name": "Venezuela",
+      "borders": [
+        "centralus",
+        "peru",
+        "brazil"
+      ],
+      "coordinates": {
+        "x": 45,
+        "y": 35
+      }
+    },
+    {
+      "id": "peru",
+      "name": "Peru",
+      "borders": [
+        "venezuela",
+        "brazil",
+        "argentina"
+      ],
+      "coordinates": {
+        "x": 49,
+        "y": 44
+      }
+    },
+    {
+      "id": "brazil",
+      "name": "Brazil",
+      "borders": [
+        "venezuela",
+        "peru",
+        "argentina",
+        "northaf"
+      ],
+      "coordinates": {
+        "x": 57,
+        "y": 41
+      }
+    },
+    {
+      "id": "argentina",
+      "name": "Argentina",
+      "borders": [
+        "peru",
+        "brazil"
+      ],
+      "coordinates": {
+        "x": 49,
+        "y": 50
+      }
+    },
+    {
+      "id": "northaf",
+      "name": "North Africa",
+      "borders": [
+        "brazil",
+        "egypt",
+        "eastaf",
+        "congo",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 87,
+        "y": 39
+      }
+    },
+    {
+      "id": "egypt",
+      "name": "Egypt",
+      "borders": [
+        "southeu",
+        "middleeast",
+        "northaf",
+        "eastaf"
+      ],
+      "coordinates": {
+        "x": 101,
+        "y": 36
+      }
+    },
+    {
+      "id": "eastaf",
+      "name": "East Africa",
+      "borders": [
+        "middleeast",
+        "egypt",
+        "northaf",
+        "congo",
+        "southaf",
+        "madagascar"
+      ],
+      "coordinates": {
+        "x": 108,
+        "y": 42
+      }
+    },
+    {
+      "id": "congo",
+      "name": "Congo",
+      "borders": [
+        "northaf",
+        "eastaf",
+        "southaf"
+      ],
+      "coordinates": {
+        "x": 101,
+        "y": 47
+      }
+    },
+    {
+      "id": "southaf",
+      "name": "South Africa",
+      "borders": [
+        "congo",
+        "eastaf",
+        "madagascar"
+      ],
+      "coordinates": {
+        "x": 103,
+        "y": 55
+      }
+    },
+    {
+      "id": "madagascar",
+      "name": "Madagascar",
+      "borders": [
+        "eastaf",
+        "southaf"
+      ],
+      "coordinates": {
+        "x": 119,
+        "y": 55
+      }
+    },
+    {
+      "id": "middleeast",
+      "name": "Middle East",
+      "borders": [
+        "egypt",
+        "southeu",
+        "afghanistan",
+        "india"
+      ],
+      "coordinates": {
+        "x": 117,
+        "y": 33
+      }
+    },
+    {
+      "id": "afghanistan",
+      "name": "Afghanistan",
+      "borders": [
+        "ukraine",
+        "ural",
+        "china",
+        "india",
+        "middleeast"
+      ],
+      "coordinates": {
+        "x": 127,
+        "y": 24
+      }
+    },
+    {
+      "id": "india",
+      "name": "India",
+      "borders": [
+        "afghanistan",
+        "china",
+        "siam",
+        "middleeast"
+      ],
+      "coordinates": {
+        "x": 137,
+        "y": 33
+      }
+    },
+    {
+      "id": "siam",
+      "name": "Siam",
+      "borders": [
+        "india",
+        "china",
+        "indonesia"
+      ],
+      "coordinates": {
+        "x": 151,
+        "y": 35
+      }
+    },
+    {
+      "id": "china",
+      "name": "China",
+      "borders": [
+        "mongolia",
+        "siberia",
+        "ural",
+        "afghanistan",
+        "india",
+        "siam"
+      ],
+      "coordinates": {
+        "x": 146,
+        "y": 28
+      }
+    },
+    {
+      "id": "mongolia",
+      "name": "Mongolia",
+      "borders": [
+        "kamchatka",
+        "irkutsk",
+        "siberia",
+        "china",
+        "japan"
+      ],
+      "coordinates": {
+        "x": 152,
+        "y": 22
+      }
+    },
+    {
+      "id": "japan",
+      "name": "Japan",
+      "borders": [
+        "kamchatka",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 170,
+        "y": 23
+      }
+    },
+    {
+      "id": "kamchatka",
+      "name": "Kamchatka",
+      "borders": [
+        "alaska",
+        "yakutsk",
+        "irkutsk",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 165,
+        "y": 10
+      }
+    },
+    {
+      "id": "irkutsk",
+      "name": "Irkutsk",
+      "borders": [
+        "kamchatka",
+        "yakutsk",
+        "siberia",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 152,
+        "y": 15
+      }
+    },
+    {
+      "id": "siberia",
+      "name": "Siberia",
+      "borders": [
+        "ural",
+        "yakutsk",
+        "irkutsk",
+        "mongolia",
+        "china"
+      ],
+      "coordinates": {
+        "x": 139,
+        "y": 12
+      }
+    },
+    {
+      "id": "ural",
+      "name": "Ural",
+      "borders": [
+        "siberia",
+        "china",
+        "afghanistan",
+        "ukraine"
+      ],
+      "coordinates": {
+        "x": 127,
+        "y": 14
+      }
+    },
+    {
+      "id": "ukraine",
+      "name": "Ukraine",
+      "borders": [
+        "ural",
+        "afghanistan",
+        "scandinavia",
+        "northeu",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 111,
+        "y": 17
+      }
+    },
+    {
+      "id": "scandinavia",
+      "name": "Scandinavia",
+      "borders": [
+        "ukraine",
+        "iceland",
+        "britain",
+        "northeu"
+      ],
+      "coordinates": {
+        "x": 91,
+        "y": 14
+      }
+    },
+    {
+      "id": "northeu",
+      "name": "Northern Europe",
+      "borders": [
+        "scandinavia",
+        "britain",
+        "westeu",
+        "southeu",
+        "ukraine"
+      ],
+      "coordinates": {
+        "x": 94,
+        "y": 21
+      }
+    },
+    {
+      "id": "southeu",
+      "name": "Southern Europe",
+      "borders": [
+        "ukraine",
+        "northeu",
+        "westeu",
+        "northaf",
+        "egypt"
+      ],
+      "coordinates": {
+        "x": 95,
+        "y": 26
+      }
+    },
+    {
+      "id": "westeu",
+      "name": "Western Europe",
+      "borders": [
+        "britain",
+        "northeu",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 80,
+        "y": 30
+      }
+    },
+    {
+      "id": "britain",
+      "name": "Great Britain",
+      "borders": [
+        "iceland",
+        "scandinavia",
+        "northeu",
+        "westeu"
+      ],
+      "coordinates": {
+        "x": 79,
+        "y": 21
+      }
+    },
+    {
+      "id": "iceland",
+      "name": "Iceland",
+      "borders": [
+        "scandinavia",
+        "britain",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 77,
+        "y": 11
+      }
+    },
+    {
+      "id": "indonesia",
+      "name": "Indonesia",
+      "borders": [
+        "siam",
+        "guinea",
+        "westaus"
+      ],
+      "coordinates": {
+        "x": 161,
+        "y": 54
+      }
+    },
+    {
+      "id": "guinea",
+      "name": "New Guinea",
+      "borders": [
+        "indonesia",
+        "westaus",
+        "eastaus"
+      ],
+      "coordinates": {
+        "x": 170,
+        "y": 43
+      }
+    },
+    {
+      "id": "westaus",
+      "name": "Western Australia",
+      "borders": [
+        "indonesia",
+        "guinea",
+        "eastaus"
+      ],
+      "coordinates": {
+        "x": 161,
+        "y": 54
+      }
+    },
+    {
+      "id": "eastaus",
+      "name": "Eastern Australia",
+      "borders": [
+        "guinea",
+        "westaus"
+      ],
+      "coordinates": {
+        "x": 177,
+        "y": 54
+      }
+    }
+  ]
+}
