@@ -332,10 +332,10 @@ let rec insert_players
     (msg:string) : Player.t list =
   ANSITerminal.set_cursor 0 (height ());
   ANSITerminal.erase Screen;
-  print_endline "(a)dd a player";
-  print_endline "add (w)atson player";
-  print_endline "(d)elete the last player added";
-  print_endline "(s)tart the game with current players\n";
+  print_endline "(h)uman player";
+  print_endline "(a)l player";
+  print_endline "(d)elete last player";
+  print_endline "(s)tart game\n";
   print_players (List.rev pl);
   print_endline "";
   (* different inputs depending on whether you're adding a player or not *)
@@ -354,12 +354,12 @@ let rec insert_players
   else (print_endline (msg ^ "\n");
         begin
           match read_input (), c, pl with
-          | ("a" | "w"), [], _ 
+          | ("h" | "a"), [], _ 
             -> insert_players pl c t false ("Can't add any more players!")
-          | "a", color::rest, _ 
+          | "h", color::rest, _ 
             -> insert_players pl c true false "Who is this player?"
-          | "w", color::rest, _
-            -> insert_players pl c true true "Who is this watson?"
+          | "a", color::rest, _
+            -> insert_players pl c true true "What is this al?"
           | "d", c, [] -> insert_players pl c t false ("No players to delete!")
           | "d", c, player::rest 
             -> insert_players rest ((player_color player)::c) t false "..."

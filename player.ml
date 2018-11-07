@@ -23,7 +23,7 @@ let player_id player = player.id (*BISECT-IGNORE*)
 
 (** [player_name player] is the [name] of [player]. *)
 let player_name player =
-  player.name ^ if player.artificial then " [watson]" else ""
+  player.name ^ if player.artificial then " [al]" else ""
 
 (** [player_color player] is the [color] of [player]. *)
 let player_color player = player.color
