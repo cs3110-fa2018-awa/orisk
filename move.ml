@@ -4,6 +4,7 @@ open Game_state
 
 type move =
   | PickM of node_id
+  | TradeM of int
   | ReinforceM of (node_id * army) list
   | AttackM of node_id * node_id * army
   | OccupyM of army
@@ -12,6 +13,7 @@ type move =
 
 let string_of_move = function
   | PickM node -> "Pick " ^ node
+  | TradeM stars -> "Trade in " ^ (string_of_int stars) ^ " stars" 
   | ReinforceM list ->
     "Reinforce " ^
     (List.fold_left (fun acc (node, army) ->
@@ -26,6 +28,8 @@ let string_of_move = function
 let apply_move gs move = match (turn gs), move with
   | Pick _, PickM node
     -> pick_nodes gs node
+  | Trade, TradeM stars
+    -> trade_stars gs stars
   | Reinforce (SelectR, _), ReinforceM list
     -> List.fold_left (fun acc (node, army) -> reinforce acc node army) gs list
   | Attack (AttackSelectA,_), AttackM (attacker, defender, army)
@@ -73,6 +77,7 @@ let valid_moves gs : move list =
   in let brd = board bs
   in match turn gs with
   | Pick _ -> List.map (fun node -> PickM node) (turn_valid_nodes gs)
+  | Trade -> [TradeM (player_stars bs (current_player gs))]
   | Reinforce (SelectR, remaining) -> valid_reinforcements gs remaining
   | Attack (AttackSelectA,_)
     -> let moves_for_attacker attacker : move list =

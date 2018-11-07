@@ -41,6 +41,7 @@ let player_heuristic bs personality player =
          (fun acc node ->
             acc + (max ((player_frontier_opponent_max_army bs player node)
                         - (node_army bs node)) 0)) 0 frontier_nodes
+  in let stars = player_stars bs player
   in node_heuristic personality nodes
      +. bonus_heuristic personality bonus
      +. army_heuristic personality armies
@@ -48,7 +49,8 @@ let player_heuristic bs personality player =
      +. frontier_heuristic personality frontiers
      +. frontier_armies_heuristic personality frontier_armies
      +. non_frontier_armies_heuristic personality non_frontier_armies
-(*+. frontier_differential_heuristic personality frontier_differential*)
+     (*+. frontier_differential_heuristic personality frontier_differential*)
+     +. stars_heuristic personality stars
 
 (** [heuristic gs personality player] is the [score] of [player] with 
     [personality] in [gs]. Takes into account the [player_heuristic] of all the 

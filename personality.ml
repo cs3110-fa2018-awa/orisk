@@ -36,6 +36,8 @@ let non_frontier_armies_heuristic p num = ~-. (~~ num) *. 30.
 
 let frontier_differential_heuristic p num = ~-. ((~~ num) *. 0.4) *. (~~ (p.defensivity))
 
+let stars_heuristic p num = (~~ num) *. 100.
+
 let opponent_num_heuristic p num = ~-. ((~~ num) *. 100.) *. (~~ (p.spite))
 
 let max_opponent_heuristic p num = ~-. (num *. 0.1) *. (~~ (p.spite))

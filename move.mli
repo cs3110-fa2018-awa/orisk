@@ -4,6 +4,7 @@ open Board
 
 type move =
   | PickM of node_id
+  | TradeM of int
   | ReinforceM of (node_id * army) list
   | AttackM of node_id * node_id * army
   | OccupyM of army

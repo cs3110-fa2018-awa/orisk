@@ -68,6 +68,8 @@ let move_probabilities gs move =
   match (turn gs), move with
   | Pick _, PickM node
     -> [{game_state = pick_nodes gs node; probability = 1.; moves = []}]
+  | Trade, TradeM stars
+    -> [{game_state = trade_stars gs stars; probability = 1.; moves = []}]
   | Reinforce (SelectR, _), ReinforceM list
     -> [{game_state = List.fold_left
              (fun acc (node, army) -> reinforce acc node army) gs list;
