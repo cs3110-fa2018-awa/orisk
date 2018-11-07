@@ -179,6 +179,10 @@ let build_move_map gs : ((arrow * node_id option) list) String_map.t =
     (fun node acc -> String_map.add node (build_move_list brd node) acc)
     String_map.empty
 
+let human_player_check gs =
+  let players = players gs in
+  List.map (fun p -> Player.player_artificial p) players |> List.mem false 
+
 (** [init gs] is the initial interface with game state [gs]. *)
 let init gs =
   {
@@ -187,7 +191,7 @@ let init gs =
     scroll = (0, 0);
     move_map = build_move_map gs;
     leaderboard = (false, CatPlayer);
-    help = (false, "pick")
+    help = (human_player_check gs, "pick")
   }
 
 (** [cursor st] is the coordinates of the cursor in interface [st]. *)

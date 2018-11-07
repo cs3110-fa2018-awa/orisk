@@ -38,7 +38,8 @@ let apply_move gs move = match (turn gs), move with
     -> occupy gs attacker defender army
   | Fortify FromSelectF, FortifyM (from_node, to_node, army)
     -> fortify gs from_node to_node army
-  | Reinforce _,FinishM | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
+  | Reinforce _,FinishM 
+  | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> end_turn_step gs
   | _, FinishM -> gs
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
@@ -85,7 +86,8 @@ let valid_moves gs : move list =
          in List.map (fun defender -> AttackM (attacker, defender, army))
            begin
              node_borders brd attacker |> List.filter
-               (fun defender -> (node_owner bs defender <> node_owner bs attacker))
+               (fun defender -> 
+                  (node_owner bs defender <> node_owner bs attacker))
            end
     in FinishM :: begin
         List.map (fun node -> moves_for_attacker node) (turn_valid_nodes gs)

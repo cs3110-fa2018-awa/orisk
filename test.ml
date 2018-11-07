@@ -287,15 +287,15 @@ let game_state_tests = [
   gen_comp "set turn1" 
     (lazy (turn_to_str (~$ turn_reinforce))) "Reinforce 0" str;
   gen_comp "set turn2" (lazy (turn_to_str (~$ turn_attack_defend))) 
-    "Attacking from Rose, select defender" str;
+    "Attacking from Flora Rose, select defender" str;
   gen_comp "set turn3" (lazy (turn_to_str (~$ turn_attack_occupy))) 
-    "Move troops from Rose to LR7" str;
+    "Move troops from Flora Rose to Low Rise 7" str;
   gen_comp "set turn4" (lazy (turn_to_str (~$ turn_fortify_fromselect))) 
     "Select territory to fortify from" str;
   gen_comp "set turn5" (lazy (turn_to_str (~$ turn_fortify_toselect))) 
-    "Fortifying from Rose, select destination" str;
+    "Fortifying from Flora Rose, select destination" str;
   gen_comp "set turn6" (lazy (turn_to_str (~$ turn_fortify_count))) 
-    "Move troops from Rose to LR7" str;
+    "Move troops from Flora Rose to Low Rise 7" str;
   gen_comp "remaining" 
     (lazy (remaining_reinforcements (~$ turn_reinforce))) 0 int;
 ]

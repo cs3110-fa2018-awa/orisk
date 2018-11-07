@@ -16,6 +16,15 @@ let default = {
   spontaneity = 5;
 }
 
+let personality_create a g d s spon = 
+  {
+    aggression = a;
+    gambling = g;
+    defensivity = d;
+    spite = s;
+    spontaneity = spon;
+  }
+
 let max = 10
 
 let (~~) a = float_of_int a
@@ -36,7 +45,8 @@ let avg_frontier_armies_heuristic p num = (num *. 15.) *. (~~ (p.defensivity))
 
 let non_frontier_armies_heuristic p num = ~-. (~~ num) *. 30.
 
-let frontier_differential_heuristic p num = ~-. ((~~ num) *. 0.4) *. (~~ (p.defensivity))
+let frontier_differential_heuristic p num = 
+  ~-. ((~~ num) *. 0.4) *. (~~ (p.defensivity))
 
 let stars_heuristic p num = (~~ num) *. 100.
 

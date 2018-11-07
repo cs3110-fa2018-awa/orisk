@@ -117,8 +117,8 @@ let rec move_edge gs player personality depth move =
       heuristic = move_edge_heuristic gs player move_trees personality}
 
 let move_tree gs probability player personality depth = 
-  let edges = List.map (move_edge gs player personality depth) (valid_moves gs) in 
-  {game_state = gs; probability = probability; moves = edges}
+  let edges = List.map (move_edge gs player personality depth) (valid_moves gs)  
+  in {game_state = gs; probability = probability; moves = edges}
 
 let best_move gs depth =
   let player = current_player gs
