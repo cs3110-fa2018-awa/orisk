@@ -1,0 +1,731 @@
+{
+  "map": "Risk",
+  "ascii": "
+                                                                *#%%                                                                                                                              
+                                                              @/     (%                                                                                                                           
+                                                         @(@@@         /@                                                          &*@# %*.(@                                                     
+                                                      @#                 (                                                        @(        (#@@%(&*//*##@%,%,%.                                  
+                                           *@#      _@*        XX        .@                                                     /@&@               |            &@%@.#3#@@%,                      
+          ,&%/#%(           ..            %#,    __/  @                @#&%                                                @/&.@#@.                |            /           @(#                   
+         //       ,&*/%@#/.   *%*,   %% %%#@ ___/    __@%@            @                        #(#%@,                  ///(@    \\                 _|    XX     /            &%.                   
+       @(        |              **. %       ((@    _/     &(          %\\    @@,               #@&.   &/#%         #@&&@&., ,@    \\               |            /              % (                  
+       ,    XX   |          XX             *&@. __/      /  @      *#@  \\  @   @             @(      |  @&     @&@,        &(     \\              \\           /      XX        %.                  
+      #          |                       .&.  _/        /  #    #*       \\& XX  %___        @.       |   &@*@&*           #@       \\              \\     ____|               ,@                    
+      ,%(/ #@@(&/ \\_____________________@# __/    #(@, /   &@  @          @    %    \\    &@    .&@   |                   @#        |      XX       \\___/    |           /*##                      
+        /%,      ,@#                |   @ /       &,  @ .@   # (           &@%       \\@@.     &@  @ /                   %@         |               /        |           @                         
+      @&            %               |   /@        @       @    %            |        ##   XX  %   @&@,                  #@    XX   |               |        |      @#..@                          
+                     @       XX     |     #%&@@,,#         @                |        / @#      @@   @@@                   #@        \\_          ___/   XX   \\__   %    \\                          
+                      &             /          |    XX      (%,            @%       /    @@#  ,%   @,%                     &@         \\        /               \\   @    \\                         
+                       (           |     XX    |          #@*             @  @@____/    /   @&@   @%          XX           (@.         \\       |         ____   |   #    |  ,,                    
+                       &___________|___        |      &*,                 @   %         |  &%  *@&@@                       &@*          \\      |________/    \\  |   @    |  %@                    
+                       &.              \\       |     @@#,                %#,   @        | @         \\               ,%&@@@@.  \\__        \\    /               \\_/   %    @&%#                     
+                      %*               |\\_______\\_____#&%@              ,##@    @_______@&           \\            .&%            \\_      |__ |                  \\   ,#   ##&*                     
+                      @                |            %..@               &@@  @ XX #      #    XX      |            #@               \\__  /   \\|                   \\@     @  @                      
+                      #      XX     ___|           (@                 %@&   @    *    @(            /              &&,.               \\/     \\___      XX        /     #    @                     
+                      #            /      XX     /&                          @@%*   @@\\            |               /@. &              |          \\              %_____#  XX #                     
+                       #          /                                          |   ##&   \\____________\\             %.    @     XX     /            \\            @    ,@      #                     
+                       @         /             /&                            |  %      /             \\@%%@&( @&#   %@   #           /              \\________  /#   @  #@ #,@                      
+                        @,______/   ,/(#(/,* .@                              |  @      |      XX      &   %#   @##%@   @@          /                        \\%      @#                            
+                         @       \\@         @#&                              |  @    /*@/            (@              %@           |                           @,                                  
+                         #  XX  @*           @@                            %##,.    @    @@         (&/@(*./*#&@@@@%#_____    ____|____          XX            %.                                 
+                          /     %                                          @.      @       #@&@*@  %@#@                   \\  /         \\                         @                                
+                            *#   #@%##(                                    @   XX  @        @@   @ @  #                    \\/           \\__                    @                                  
+                               #&(  %                                      &      %#       |     @&@  @@&%/(@,              \\              \\______ _            &.                                
+                                  # *@                                      #,%@&@    #@&,@%&     |          %               \\                    / \\__       ,@                                  
+                                  %(@    .&@@&@#                                ,.,..#       @.   |          %      XX        \\,..      XX       /      \\ #%/%                                    
+                                   @%#@@%         *@,                          @            /  *@@#.*&@@#   #             &%%(*   ##          ..@         &                                       
+                                      @*    XX       @@@,                     @/            |            }.@@@              %      (#&       &   @    XX  *%                                      
+                                     @&        _____/    &@,                 ##             \\__     XX     .@ @               @      @      .,    %*       .%                                     
+                                    ,@\\    ___/           @&                &%                 \\             @ (.             %      @      @        .       @                                    
+                                    @  \\__/                 #%@@@&.         @                   \\____ ________@  @           %        %    /,         @#     @                                    
+                                   ,@    /                          @@    __/@        XX             /         @   @       ,@          &   @            @  (@                                     
+                                    @(  |                            @@__/  &,                       |          @   /%@@@(,             &  %                |                                     
+                                     @@  \\______        XX         /@%      &&                       |           @ /                     &&                 |     %&&@ @@@(,,                     
+                                       @        \\__               *@          @,                     |_    XX     @@@@.%@                                  .@@#    @&        #                    
+                                       ,@&         \\_             @@           @(                 __/  \\                @                      .&          & &@_____.%   XX   %                   
+                                          %@    XX   \\            @@             *@@@@@*  @@*    /      \\__            @                        @&@#  ...,#  @        .       ..                  
+                                            @@        \\         ,@,                          @__/          \\__       @#                           @(%        @@        #&&&&&&&@                  
+                                            @ \\___     \\    #@@&,                            @              _/     @                               /@   XX   #,          |                        
+                                           .@     \\_   |   @@                               *@      XX     /      @ \\                               &&,       (          |     ,,                 
+                                           ,@       \\__|   @(                                 %@          |     @    \\                               #&(&,    @        @(,%@   *@                 
+                                           %&          \\ ,@                                    ,_____     |     %     \\                                  %((#. \\   *@&@/  %@@, @&&%               
+                                           #&   XX      @@,                                    @     \\    /     @     |                                         \\ @#  |     .%&( (@               
+                                           @(        @#                                        &*     \\__|_      @    |   @                                    #&*    |          .%@@             
+                                           @       @@@@                                       //           \\___  @    | @@@#                               @@#.       |             &@            
+                                           @,     @%                                          @                &&    @@   @                               %&,         |______        %@           
+                                           @*    @,                                           .@              @     @    @                                @&    XX           |  XX    &@          
+                                          ,@    @*                                              @     XX      %     @ XX @                                #&                 |        &%          
+                                          ,@    @&                                              *%           &    /@     @                                 @(         *(,    |      .%@           
+                                           @&   @,                                               @         .@__ _/ %    @                                   @.   ,/@@,   @%@ |      &@            
+                                            @&  @.                                                @        @       .%%%                                    @%.%@* ,       /@@#     %#             
+                                              @@@@                                                @      @@                                                                 %&*  /#@              
+                                                 #@@@#                                            @@@@@%                                                                     *@ @                 
+                                                                                                                                                                                                  
+                                                                                                                                                                                                     
+",
+  "continents": [
+    {
+      "id": "northamerica",
+      "name": "North America",
+      "bonus": 5,
+      "territories": [
+        "alaska",
+        "northwest",
+        "greenland",
+        "alberta",
+        "ontario",
+        "quebec",
+        "westus",
+        "eastus",
+        "centralus"
+      ]
+    },
+    {
+      "id": "southamerica",
+      "name": "South America",
+      "bonus": 2,
+      "territories": [
+        "venezuela",
+        "brazil",
+        "peru",
+        "argentina"
+      ]
+    },
+    {
+      "id": "europe",
+      "name": "Europe",
+      "bonus": 5,
+      "territories": [
+        "britain",
+        "iceland",
+        "scandinavia",
+        "ukraine",
+        "northeu",
+        "southeu",
+        "westeu"
+      ]
+    },
+    {
+      "id": "africa",
+      "name": "Africa",
+      "bonus": 3,
+      "territories": [
+        "northaf",
+        "egypt",
+        "eastaf",
+        "congo",
+        "southaf",
+        "madagascar"
+      ]
+    },
+    {
+      "id": "asia",
+      "name": "Asia",
+      "bonus": 7,
+      "territories": [
+        "ural",
+        "siberia",
+        "yakutsk",
+        "kamchatka",
+        "irkusk",
+        "mongolia",
+        "japan",
+        "afghanistan",
+        "china",
+        "middleeast",
+        "india",
+        "siam"
+      ]
+    },
+    {
+      "id": "australia",
+      "name": "Australia",
+      "bonus": 2,
+      "territories": [
+        "indonesia",
+        "guinea",
+        "westaus",
+        "eastaus"
+      ]
+    }
+  ],
+  "territories": [
+    {
+      "id": "greenland",
+      "name": "Greenland",
+      "borders": [
+        "northwest",
+        "ontario",
+        "quebec",
+        "iceland"
+      ],
+      "coordinates": {
+        "x": 63,
+        "y": 6
+      }
+    },
+    {
+      "id": "alaska",
+      "name": "Alaska",
+      "borders": [
+        "northwest",
+        "alberta"
+      ],
+      "coordinates": {
+        "x": 12,
+        "y": 10
+      }
+    },
+    {
+      "id": "northwest",
+      "name": "North West Territory",
+      "borders": [
+        "alaska",
+        "alberta",
+        "ontario",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 28,
+        "y": 10
+      }
+    },
+    {
+      "id": "alberta",
+      "name": "Alberta",
+      "borders": [
+        "alaska",
+        "northwest",
+        "ontario",
+        "westus"
+      ],
+      "coordinates": {
+        "x": 29,
+        "y": 15
+      }
+    },
+    {
+      "id": "ontario",
+      "name": "Ontario",
+      "borders": [
+        "northwest",
+        "alberta",
+        "westus",
+        "eastus",
+        "quebec",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 41,
+        "y": 17
+      }
+    },
+    {
+      "id": "quebec",
+      "name": "Quebec",
+      "borders": [
+        "greenland",
+        "ontario",
+        "eastus"
+      ],
+      "coordinates": {
+        "x": 52,
+        "y": 16
+      }
+    },
+    {
+      "id": "westus",
+      "name": "Western United States",
+      "borders": [
+        "alberta",
+        "ontario",
+        "eastus",
+        "centralus"
+      ],
+      "coordinates": {
+        "x": 29,
+        "y": 22
+      }
+    },
+    {
+      "id": "eastus",
+      "name": "Eastern United States",
+      "borders": [
+        "quebec",
+        "ontario",
+        "westus",
+        "centralus"
+      ],
+      "coordinates": {
+        "x": 42,
+        "y": 23
+      }
+    },
+    {
+      "id": "centralus",
+      "name": "Central America",
+      "borders": [
+        "westus",
+        "eastus",
+        "venezuela"
+      ],
+      "coordinates": {
+        "x": 28,
+        "y": 28
+      }
+    },
+    {
+      "id": "venezuela",
+      "name": "Venezuela",
+      "borders": [
+        "centralus",
+        "peru",
+        "brazil"
+      ],
+      "coordinates": {
+        "x": 44,
+        "y": 35
+      }
+    },
+    {
+      "id": "peru",
+      "name": "Peru",
+      "borders": [
+        "venezuela",
+        "brazil",
+        "argentina"
+      ],
+      "coordinates": {
+        "x": 48,
+        "y": 44
+      }
+    },
+    {
+      "id": "brazil",
+      "name": "Brazil",
+      "borders": [
+        "venezuela",
+        "peru",
+        "argentina",
+        "northaf"
+      ],
+      "coordinates": {
+        "x": 56,
+        "y": 41
+      }
+    },
+    {
+      "id": "argentina",
+      "name": "Argentina",
+      "borders": [
+        "peru",
+        "brazil"
+      ],
+      "coordinates": {
+        "x": 48,
+        "y": 50
+      }
+    },
+    {
+      "id": "northaf",
+      "name": "North Africa",
+      "borders": [
+        "brazil",
+        "egypt",
+        "eastaf",
+        "congo",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 86,
+        "y": 39
+      }
+    },
+    {
+      "id": "egypt",
+      "name": "Egypt",
+      "borders": [
+        "southeu",
+        "middleeast",
+        "northaf",
+        "eastaf"
+      ],
+      "coordinates": {
+        "x": 100,
+        "y": 36
+      }
+    },
+    {
+      "id": "eastaf",
+      "name": "East Africa",
+      "borders": [
+        "middleeast",
+        "egypt",
+        "northaf",
+        "congo",
+        "southaf",
+        "madagascar"
+      ],
+      "coordinates": {
+        "x": 107,
+        "y": 42
+      }
+    },
+    {
+      "id": "congo",
+      "name": "Congo",
+      "borders": [
+        "northaf",
+        "eastaf",
+        "southaf"
+      ],
+      "coordinates": {
+        "x": 100,
+        "y": 47
+      }
+    },
+    {
+      "id": "southaf",
+      "name": "South Africa",
+      "borders": [
+        "congo",
+        "eastaf",
+        "madagascar"
+      ],
+      "coordinates": {
+        "x": 102,
+        "y": 55
+      }
+    },
+    {
+      "id": "madagascar",
+      "name": "Madagascar",
+      "borders": [
+        "eastaf",
+        "southaf"
+      ],
+      "coordinates": {
+        "x": 118,
+        "y": 55
+      }
+    },
+    {
+      "id": "middleeast",
+      "name": "Middle East",
+      "borders": [
+        "egypt",
+        "southeu",
+        "afghanistan",
+        "india"
+      ],
+      "coordinates": {
+        "x": 116,
+        "y": 33
+      }
+    },
+    {
+      "id": "afghanistan",
+      "name": "Afghanistan",
+      "borders": [
+        "ukraine",
+        "ural",
+        "china",
+        "india",
+        "middleeast"
+      ],
+      "coordinates": {
+        "x": 126,
+        "y": 24
+      }
+    },
+    {
+      "id": "india",
+      "name": "India",
+      "borders": [
+        "afghanistan",
+        "china",
+        "siam",
+        "middleeast"
+      ],
+      "coordinates": {
+        "x": 136,
+        "y": 33
+      }
+    },
+    {
+      "id": "siam",
+      "name": "Siam",
+      "borders": [
+        "india",
+        "china",
+        "indonesia"
+      ],
+      "coordinates": {
+        "x": 150,
+        "y": 35
+      }
+    },
+    {
+      "id": "china",
+      "name": "China",
+      "borders": [
+        "mongolia",
+        "siberia",
+        "ural",
+        "afghanistan",
+        "india",
+        "siam"
+      ],
+      "coordinates": {
+        "x": 145,
+        "y": 28
+      }
+    },
+    {
+      "id": "mongolia",
+      "name": "Mongolia",
+      "borders": [
+        "kamchatka",
+        "irkutsk",
+        "siberia",
+        "china",
+        "japan"
+      ],
+      "coordinates": {
+        "x": 151,
+        "y": 22
+      }
+    },
+    {
+      "id": "japan",
+      "name": "Japan",
+      "borders": [
+        "kamchatka",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 169,
+        "y": 23
+      }
+    },
+    {
+      "id": "kamchatka",
+      "name": "Kamchatka",
+      "borders": [
+        "yakutsk",
+        "irkutsk",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 164,
+        "y": 10
+      }
+    },
+    {
+      "id": "irkutsk",
+      "name": "Irkutsk",
+      "borders": [
+        "kamchatka",
+        "yakutsk",
+        "siberia",
+        "mongolia"
+      ],
+      "coordinates": {
+        "x": 151,
+        "y": 15
+      }
+    },
+    {
+      "id": "yakutsk",
+      "name": "Yakutsk",
+      "borders": [
+        "kamchatka",
+        "irkutsk",
+        "siberia"
+      ],
+      "coordinates": {
+        "x": 152,
+        "y": 8
+      }
+    },
+    {
+      "id": "siberia",
+      "name": "Siberia",
+      "borders": [
+        "ural",
+        "yakutsk",
+        "irkutsk",
+        "mongolia",
+        "china"
+      ],
+      "coordinates": {
+        "x": 138,
+        "y": 12
+      }
+    },
+    {
+      "id": "ural",
+      "name": "Ural",
+      "borders": [
+        "siberia",
+        "china",
+        "afghanistan",
+        "ukraine"
+      ],
+      "coordinates": {
+        "x": 126,
+        "y": 14
+      }
+    },
+    {
+      "id": "ukraine",
+      "name": "Ukraine",
+      "borders": [
+        "ural",
+        "afghanistan",
+        "scandinavia",
+        "northeu",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 110,
+        "y": 17
+      }
+    },
+    {
+      "id": "scandinavia",
+      "name": "Scandinavia",
+      "borders": [
+        "ukraine",
+        "iceland",
+        "britain",
+        "northeu"
+      ],
+      "coordinates": {
+        "x": 90,
+        "y": 14
+      }
+    },
+    {
+      "id": "northeu",
+      "name": "Northern Europe",
+      "borders": [
+        "scandinavia",
+        "britain",
+        "westeu",
+        "southeu",
+        "ukraine"
+      ],
+      "coordinates": {
+        "x": 93,
+        "y": 21
+      }
+    },
+    {
+      "id": "southeu",
+      "name": "Southern Europe",
+      "borders": [
+        "ukraine",
+        "northeu",
+        "westeu",
+        "northaf",
+        "egypt"
+      ],
+      "coordinates": {
+        "x": 94,
+        "y": 26
+      }
+    },
+    {
+      "id": "westeu",
+      "name": "Western Europe",
+      "borders": [
+        "britain",
+        "northeu",
+        "southeu"
+      ],
+      "coordinates": {
+        "x": 79,
+        "y": 30
+      }
+    },
+    {
+      "id": "britain",
+      "name": "Great Britain",
+      "borders": [
+        "iceland",
+        "scandinavia",
+        "northeu",
+        "westeu"
+      ],
+      "coordinates": {
+        "x": 78,
+        "y": 21
+      }
+    },
+    {
+      "id": "iceland",
+      "name": "Iceland",
+      "borders": [
+        "scandinavia",
+        "britain",
+        "greenland"
+      ],
+      "coordinates": {
+        "x": 76,
+        "y": 11
+      }
+    },
+    {
+      "id": "guinea",
+      "name": "New Guinea",
+      "borders": [
+        "indonesia",
+        "westaus",
+        "eastaus"
+      ],
+      "coordinates": {
+        "x": 169,
+        "y": 43
+      }
+    },
+    {
+      "id": "indonesia",
+      "name": "Indonesia",
+      "borders": [
+        "siam",
+        "guinea",
+        "westaus"
+      ],
+      "coordinates": {
+        "x": 152,
+        "y": 46
+      }
+    },
+    {
+      "id": "westaus",
+      "name": "Western Australia",
+      "borders": [
+        "indonesia",
+        "guinea",
+        "eastaus"
+      ],
+      "coordinates": {
+        "x": 160,
+        "y": 54
+      }
+    },
+    {
+      "id": "eastaus",
+      "name": "Eastern Australia",
+      "borders": [
+        "guinea",
+        "westaus"
+      ],
+      "coordinates": {
+        "x": 176,
+        "y": 54
+      }
+    }
+  ]
+}

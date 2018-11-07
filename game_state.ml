@@ -140,11 +140,19 @@ let turn_to_str st =
   | Trade -> "Choose how many stars to trade in for armies" 
   | Reinforce (_,remaining) -> "Reinforce " ^ (string_of_int remaining)
   | Attack (AttackSelectA, _) -> "Select attacker"
-  | Attack (DefendSelectA node, _) -> "Attacking from " ^ node ^ ", select defender"
-  | Attack (OccupyA (node1,node2), _) -> "Move troops from " ^ node1 ^ " to " ^ node2
+  | Attack (DefendSelectA node, _) 
+    -> "Attacking from " ^ node_name (st.board_state |> board) node 
+       ^ ", select defender"
+  | Attack (OccupyA (node1,node2), _) 
+    -> "Move troops from " ^ node_name (st.board_state |> board) node1 
+       ^ " to " ^ node_name (st.board_state |> board) node2
   | Fortify FromSelectF -> "Select territory to fortify from"
-  | Fortify ToSelectF node -> "Fortifying from " ^ node ^ ", select destination"
-  | Fortify CountF (node1,node2) -> "Move troops from " ^ node1 ^ " to " ^ node2 
+  | Fortify ToSelectF node 
+    -> "Fortifying from " ^ node_name (st.board_state |> board) node 
+       ^ ", select destination"
+  | Fortify CountF (node1,node2) 
+    -> "Move troops from " ^ node_name (st.board_state |> board) node1 
+       ^ " to " ^ node_name (st.board_state |> board) node2
 
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
 let turn_to_attack st = {st with turn = Attack (AttackSelectA, false)}
