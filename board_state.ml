@@ -318,6 +318,8 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
               |> update_map prev_owner prev_player_st;
   }
 
+(** [player_frontiers bs player] is the list of nodes that are controlled by
+    [player] in [bs] and also border nodes not controlled by [player]. *)
 let player_frontiers bs player =
   let predicate node = not
       (List.for_all

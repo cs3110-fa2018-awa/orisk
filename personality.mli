@@ -1,3 +1,4 @@
+(** Representation of the personality of the AI. *)
 
 type t
 

@@ -1,3 +1,4 @@
+(** *) (* blank doc-comment to prevent docs from confusing first one *)
 
 type t = {
   aggression : int;

@@ -102,6 +102,7 @@ let rec cont_list_to_map m = function
   | ({id} : cont) as cont :: tl
     -> cont_list_to_map (String_map.add id cont m) tl
 
+(** [newline_regexp] is the regular expression for new lines.*)
 let newline_regexp = Str.regexp "\n"
 
 (** [board_ascii_lines board] is the list of lines in [board_ascii board]

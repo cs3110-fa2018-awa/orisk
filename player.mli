@@ -18,6 +18,8 @@ val player_name : t -> string
 (** [player_color player] is the [color] of [player]. *)
 val player_color : t -> color
 
+(** [player_artificial player] is [true] if [player] is AI and [false] if
+    [player] is human. *)
 val player_artificial : t -> bool
 
 (** [compare p1 p2] is the result of [Pervasives.compare] with the

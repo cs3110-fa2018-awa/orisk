@@ -109,9 +109,9 @@ let board_tests = [
     int;
 ]
 
-let player_a = lazy (Player.create "player_a" Red)
-let player_b = lazy (Player.create "player_b" Green)
-let player_c = lazy (Player.create "player_c" Blue)
+let player_a = lazy (Player.create "player_a" Red false)
+let player_b = lazy (Player.create "player_b" Green false)
+let player_c = lazy (Player.create "player_c" Blue false)
 
 let player_tests = [
   gen_comp "player name" (lazy (player_name (~$ player_a))) "player_a" str;
@@ -124,7 +124,7 @@ let demo_players = lazy [
   ~$ player_c;
 ]
 
-let false_player = lazy (Player.create "foo" Black)
+let false_player = lazy (Player.create "foo" Black false)
 
 let init_board_state = lazy (Board_state.init (~$ map_schema) (~$ demo_players))
 let init_ps_a = lazy (player_stats_make (~$ init_board_state) (~$ player_a))

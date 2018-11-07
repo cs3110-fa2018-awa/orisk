@@ -135,8 +135,8 @@ let game_nums st num = match st |> game_state |> turn with
     search string and the success flag resulting from performing a search
     for [str] in [st]. *)
 let perform_search st str : (string * bool) =
-    let found_node = node_search (st |> Interface.board) str in
-    str,found_node <> None
+  let found_node = node_search (st |> Interface.board) str in
+  str,found_node <> None
 
 (** [parse_standard_input st msg search] is the tuple (st', msg', search')
     resulting from parsing a single character of input. Called internally
@@ -260,16 +260,16 @@ let parse_input st msg search :
     otherwise, prints [msg]. *)
 let print_message st msg (search : string * bool) =
   match msg, search with
-    | Some m, _ -> print_endline m
-    | None, (s,success) when String.length s > 0 -> 
-      if success 
-      then print_endline ("Search: " ^ s)
-      else begin
-        ANSITerminal.(print_string [] "Failing search: "; 
-                      print_string [red] s);
-        print_endline ""
-      end
-    | None, _ -> print_endline "..."
+  | Some m, _ -> print_endline m
+  | None, (s,success) when String.length s > 0 -> 
+    if success 
+    then print_endline ("Search: " ^ s)
+    else begin
+      ANSITerminal.(print_string [] "Failing search: "; 
+                    print_string [red] s);
+      print_endline ""
+    end
+  | None, _ -> print_endline "..."
 
 (** [game_loop_new st msg] continuously prompts the player for input
     and updates the game state according to the user input and the current 
@@ -296,8 +296,10 @@ let rec game_loop_new ?(search : string * bool = "",false)
   else ();
   if st |> game_state |> current_player |> Player.player_artificial then
     begin
-      Unix.sleep 1; let gs = game_state st in
-      game_loop_new (Al.best_move gs 4 |> Move.apply_move gs |> change_game_st st) None
+      Unix.sleep 1; 
+      let gs = game_state st in
+      game_loop_new 
+        (Al.best_move gs 4 |> Move.apply_move gs |> change_game_st st) None
     end
   else begin
     (* parsing inputs *)
@@ -335,13 +337,15 @@ let rec insert_players
                        insert_players ((Player.create name color watson) :: pl) 
                          rest false false ("...")
                      end
-                   else insert_players pl c t watson ("Can't have an empty name")
+                   else insert_players pl c t watson 
+                       ("Can't have an empty name")
                  | _, _, _ -> insert_players pl c t watson msg
                end)
   else (print_endline (msg ^ "\n");
         begin
           match read_input (), c, pl with
-          | ("a" | "w"), [], _ -> insert_players pl c t false ("Can't add any more players!")
+          | ("a" | "w"), [], _ 
+            -> insert_players pl c t false ("Can't add any more players!")
           | "a", color::rest, _ 
             -> insert_players pl c true false "Who is this player?"
           | "w", color::rest, _
@@ -349,7 +353,8 @@ let rec insert_players
           | "d", c, [] -> insert_players pl c t false ("No players to delete!")
           | "d", c, player::rest 
             -> insert_players rest ((player_color player)::c) t false "..."
-          | "s", _, [] -> insert_players pl c t false ("Need at least one player!")
+          | "s", _, [] 
+            -> insert_players pl c t false ("Need at least one player!")
           | "s", _, _ -> pl 
           | "\004", _, _ | "\027", _, _ 
             -> print_endline("\nThanks for playing!\n"); exit 0
@@ -362,13 +367,14 @@ let rec insert_players
 let risk f = 
   let board = Board.from_json (Yojson.Basic.from_file f) in
   let players = List.rev 
-      (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false false "...") in
+      (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false false 
+         "...") in
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
 
 (** Ascii art splash screen. *)
 let title =
-   "\r\n         _            _         _            _        "
+  "\r\n         _            _         _            _        "
   ^"\r\n        /\\ \\         /\\ \\      / /\\         /\\_\\      "
   ^"\r\n       /  \\ \\        \\ \\ \\    / /  \\       / / /  _   "
   ^"\r\n      / /\\ \\ \\       /\\ \\_\\  / / /\\ \\__   / / /  /\\_\\ "

@@ -1,4 +1,3 @@
-
 open Board
 open Board_state
 open Game_state

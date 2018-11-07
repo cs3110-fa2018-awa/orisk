@@ -102,7 +102,7 @@ let rec move_edge gs personality depth move =
                           |> List.map fst
     in let best_moves = first_n sorted_moves depth
     in {move_tree with moves = List.map (move_edge move_tree.game_state personality 
-                                        (depth-1)) best_moves} in 
+                                           (depth-1)) best_moves} in 
   let move_trees = match depth,(turn gs) with
     | 0,_ | _,Fortify _ -> move_probabilities gs move
     | _ -> List.map fill_moves (move_probabilities gs move)

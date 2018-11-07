@@ -1,22 +1,28 @@
-
 open Board
 open Board_state
 open Game_state
 open Move
 open Personality
 
+(** Type alias for heuristic score *)
 type score = float
 
+(** [player_frontier_opponents bs player node] is the list of nodes that 
+    are not owned by [player] in [bs] and border [node]. *)
 let player_frontier_opponents bs player node =
   let is_opponent node = node_owner bs node <> Some player
   in List.filter is_opponent (node_borders (board bs) node)
 
+(** [player_frontier_opponent_max_army bs player node] is the maximum [army]
+    on a node that is not owned by [player] in [bs] and borders [node]. *)
 let player_frontier_opponent_max_army bs player node =
   0 :: begin List.map (node_army bs)
       (player_frontier_opponents bs player node)
              |> List.sort_uniq Pervasives.compare
   end |> List.rev |> List.hd
 
+(** [player_heuristic bs personality player] is the [score] of a [player] with
+    [personality] in [bs]. *)
 let player_heuristic bs personality player =
   let all_nodes = player_nodes bs player
   in let nodes = all_nodes |> List.length
@@ -44,6 +50,9 @@ let player_heuristic bs personality player =
      +. non_frontier_armies_heuristic personality non_frontier_armies
 (*+. frontier_differential_heuristic personality frontier_differential*)
 
+(** [heuristic gs personality player] is the [score] of [player] with 
+    [personality] in [gs]. Takes into account the [player_heuristic] of all the 
+    other players. *)
 let heuristic gs personality player =
   let opponents = List.filter (fun p -> p <> player) (players gs)
   in let opponent_num = List.length opponents

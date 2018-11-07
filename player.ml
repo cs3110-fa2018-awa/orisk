@@ -3,7 +3,8 @@
 (** Type alias for terminal colors. *)
 type color = ANSITerminal.color
 
-(** A [Player.t] is a unique [id], a [name], and a [color]. *)
+(** A [Player.t] is a unique [id], a [name], a [color], and a boolean flag 
+    [artifical] which indicates what kind of player. *)
 type t = {id : int; name : string; color : color; artificial : bool}
 
 (** [id_counter] is a unique player [id]. This function makes use of mutable
@@ -27,6 +28,8 @@ let player_name player =
 (** [player_color player] is the [color] of [player]. *)
 let player_color player = player.color
 
+(** [player_artificial player] is [true] if [player] is AI and [false] if
+    [player] is human. *)
 let player_artificial player = player.artificial
 
 (** [compare player1 player2] is implemented using [Pervasives.compare]
