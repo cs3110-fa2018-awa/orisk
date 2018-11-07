@@ -33,16 +33,19 @@ type fortify_step =
   | CountF of (node_id * node_id)
 
 (** The type of a turn. Either [Pick], in which the players rotate
-    through to select nodes at the beginning of the game, [Reinforce
-    (reinforce_step, army)], in which the player reinforces [army]
-    troops to nodes of their choosing, [Attack attack_step], in which
-    the player attacks other players' nodes, and [Fortify fortify_step],
-    in which the player fortifies troops from one node that they
-    control to another that they control. *)
+    through to select nodes at the beginning of the game, [Trade], in
+    which the player can choose to trade in their stars for more
+    reinforcements, [Reinforce (reinforce_step, army)], in which the
+    player reinforces [army] troops to nodes of their choosing,
+    [Attack (attack_step, bool)], in which the player attacks other players'
+    nodes (and keeps track of whether the player has won a battle),
+    and [Fortify fortify_step], in which the player fortifies
+    troops from one node that they control to another that they control. *)
 type turn_state =
-  | Pick
+  | Pick of army
+  | Trade
   | Reinforce of (reinforce_step * army)
-  | Attack of attack_step
+  | Attack of (attack_step * bool)
   | Fortify of fortify_step
 
 (** The type of a list of players. *)
@@ -88,6 +91,10 @@ exception InvalidState of turn_state
     attack with, in the event that they win the battle. *)
 exception InsufficientArmies of (node_id * army)
 
+(** [InsufficientStars n] is raised when a player attempts to 
+    trade in [n] stars when they don't own [n] stars. *)
+exception InsufficientStars of int
+
 (** [FriendlyFire (Some p)] is raised when player [p] attempts to attack 
     a node they own. *)
 exception FriendlyFire of Player.t option
@@ -109,7 +116,9 @@ let init board players =
     board_state = board_st;
     players = players;
     current_player = curr_player;
-    turn = Pick;
+    turn = let total_nodes = board |> nodes |> List.length in
+      let total_players = players |> List.length in
+      Pick ((total_nodes/total_players)+total_nodes);
   }
 
 (** [board_st st] is the board state of [st]. *)
@@ -127,17 +136,18 @@ let turn st = st.turn
 (** [turn_to_str st] is the string of the [turn_state] of [st]. *)
 let turn_to_str st =
   match st.turn with
-  | Pick -> "Picking territories"
+  | Pick _ -> "Picking territories"
+  | Trade -> "Choose how many stars to trade in for armies" 
   | Reinforce (_,remaining) -> "Reinforce " ^ (string_of_int remaining)
-  | Attack AttackSelectA -> "Select attacker"
-  | Attack DefendSelectA node -> "Attacking from " ^ node ^ ", select defender"
-  | Attack OccupyA (node1,node2) -> "Move troops from " ^ node1 ^ " to " ^ node2
+  | Attack (AttackSelectA, _) -> "Select attacker"
+  | Attack (DefendSelectA node, _) -> "Attacking from " ^ node ^ ", select defender"
+  | Attack (OccupyA (node1,node2), _) -> "Move troops from " ^ node1 ^ " to " ^ node2
   | Fortify FromSelectF -> "Select territory to fortify from"
   | Fortify ToSelectF node -> "Fortifying from " ^ node ^ ", select destination"
   | Fortify CountF (node1,node2) -> "Move troops from " ^ node1 ^ " to " ^ node2 
 
 (** [turn_to_attack st] is the game state [st] with the [turn_state] [Attack].*)
-let turn_to_attack st = {st with turn = Attack AttackSelectA}
+let turn_to_attack st = {st with turn = Attack (AttackSelectA, false)}
 
 (** [set_turn st turn] is [st] with its turn state changed to [turn]. *)
 let set_turn st turn = {st with turn = turn}
@@ -146,13 +156,28 @@ let set_turn st turn = {st with turn = turn}
     [board_st]. *)
 let change_board_st st board_st = {st with board_state = board_st}
 
+(** [battle_won st] is whether the current player in attack state [st] has
+    already won a battle in that turn. *)
+let battle_won st = 
+  match st.turn with
+  | Attack (_, won) -> won
+  | _ -> failwith "Turn is not attack"
+
 (*BISECT-IGNORE-BEGIN*) (*helpers not exposed and also play tested*)
 (** [is_pick st] is true iff the turn state of [st] is [Pick].
     This is useful because the turn state may be parameterized, making
     it more difficult to determine the general term state without pattern
     matching. *)
 let is_pick st = match st.turn with
-  | Pick -> true
+  | Pick _ -> true
+  | _ -> false
+
+(** [is_trade st] is true iff the turn state of [st] is [Trade]. 
+    This is useful because the turn state may be parameterized, making
+    it more difficult to determine the general term state without pattern
+    matching.*)
+let is_trade st = match st.turn with
+  | Trade -> true
   | _ -> false
 
 (** [is_reinforce st] is true iff the turn state of [st] is Reinforce.
@@ -201,10 +226,10 @@ let reinforce st n armies =
   if not (is_reinforce st) then raise (InvalidState st.turn) else (); 
   if remaining_reinforcements st <= 0 then failwith "need more armies" else ();  
   if armies > remaining_reinforcements st || armies < 0
-  then raise (InsufficientArmies (n,armies)) else (); (*better exception*)
+  then raise (InsufficientArmies (n,armies)) else (); (*TODO: better exception*)
   {st with board_state = place_army st.board_state n armies; 
            turn = if remaining_reinforcements st = armies
-             then Attack AttackSelectA 
+             then Attack (AttackSelectA, false)
              else Reinforce (SelectR,remaining_reinforcements st - armies)}
 
 (** [next_player curr_player lst] is the element in [lst] immediately after 
@@ -235,9 +260,9 @@ let assign_random_nodes (st : t) : t =
       (st,st.current_player) (board st.board_state |> nodes
                               |> List.filter unselected |> shuffle_lst) |> fst
   in let first_player = List.hd st.players in 
-  {st' with turn = Reinforce 
-                (SelectR,
-                 Board_state.player_reinforcements st.board_state first_player);
+  {st' with turn = (let total_nodes = st.board_state |> board |> nodes |> List.length in
+                    let total_players = st.players |> List.length in
+                    Pick (total_nodes/total_players));
             current_player = first_player}
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
@@ -245,32 +270,57 @@ let assign_random_nodes (st : t) : t =
     current player and has an army added.
 
     If all nodes have been picked, then advances to the first turn, with game
-    state [Reinforce SelectR].
+    state [Trade].
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)
 let pick_nodes st node =
-  if not (is_pick st) then raise (InvalidState st.turn) else (); 
-  if node_owner st.board_state node <> None then raise (NotOwner node) else ();
-  let board_state = place_army 
-      (set_owner st.board_state node (Some st.current_player)) node 1 in
-  if List.mem None (owners board_state) then 
-    {st with board_state = board_state; 
-             current_player = next_player st.current_player st.players}
-  else let first_player = List.hd st.players in 
-    {st with board_state = board_state;
-             turn = Reinforce 
-                 (SelectR,player_reinforcements st.board_state first_player);
-             current_player = first_player}
+  match st.turn with
+  | Pick army ->   
+    let owner = node_owner st.board_state node in
+    if owner <> Some (current_player st) && owner <> None 
+    then raise (NotOwner node) else ();
+    let board_state = place_army 
+        (set_owner st.board_state node (Some st.current_player)) node 1 in
+    if List.mem None (owners board_state) || army > 1
+    then {st with board_state = board_state; 
+                  current_player = next_player st.current_player st.players;
+                  turn = Pick (army - 1)}
+    else let first_player = List.hd st.players in 
+      {st with board_state = board_state;
+               turn = Trade;
+               current_player = first_player}
+  | _ -> raise (InvalidState st.turn)
 
-(** [setup_reinforce st] is the new state resulting from advancing [st] to the
-    reinforce turn. [st.current_player] is advanced to the next player in the
-    list and [st.turn] becomes [Reinforce (SelectR, n)], where [n] is the number
-    of reinforcements that the next player should receive. *)
-let setup_reinforce st =
+(** [stars_to_armies] is the number of armies awarded based on the
+    number of stars traded in. The max number of stars available to be
+    traded in is 5. *)
+let stars_to_armies = function 
+  | 0 -> 0
+  | 1 -> 1
+  | 2 -> 2
+  | 3 -> 4
+  | 4 -> 8
+  | 5 -> 10
+  | _ -> failwith "shouldn't happen"
+
+(** [trade_stars st stars] is the result of the current player in [st] trading 
+    in [stars] during the [Trade] phase of the game; the player will lose
+    [stars] and will gain a number of armies to reinforce with. *)
+let trade_stars st (stars:int) =
+  if not (is_trade st) then raise (InvalidState st.turn) else (); 
+  if stars > player_stars st.board_state st.current_player
+  then raise (InsufficientStars stars) else ();
+  {st with 
+   board_state = place_stars st.board_state st.current_player (-stars);
+   turn = Reinforce 
+       (SelectR, (player_reinforcements st.board_state st.current_player)
+                 + stars_to_armies stars)}
+
+(** [setup_trade state] is the new state resulting from advancing [state] to
+    the trade turn. The current player is advanced to the next player. *)
+let setup_trade st =
   let next = next_player st.current_player st.players
-  in {st with
-      current_player = next;
-      turn = Reinforce (SelectR,player_reinforcements st.board_state next)}
+  in {st with current_player = next; turn = Trade}
 
 (** [end_turn_step st] is the game state [st] resulting from skipping the
     current turn step. If in reinforce, then moves to attack. If in attack,
@@ -278,10 +328,11 @@ let setup_reinforce st =
     reinforce. *)
 let end_turn_step st =
   match st.turn with
-  | Pick -> st
-  | Reinforce _ -> {st with turn = Attack AttackSelectA}
+  | Pick _ -> st
+  | Trade -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
+  | Reinforce _ -> {st with turn = Attack (AttackSelectA, false)}
   | Attack _ -> {st with turn = Fortify FromSelectF}
-  | Fortify _ -> setup_reinforce st
+  | Fortify _ -> setup_trade st
 
 (** [back_turn st] is [st] with the turn state reverted one step, but
     not leaving the current general turn state. This function behaves
@@ -298,9 +349,10 @@ let back_turn st =
   match st.turn with
   | Reinforce _ 
     -> {st with turn = Reinforce (SelectR,remaining_reinforcements st)}
-  | Attack _ -> {st with turn = Attack AttackSelectA}
+  | Attack _ -> {st with turn = Attack (AttackSelectA, battle_won st)}
   | Fortify _ -> {st with turn = Fortify FromSelectF}
-  | Pick -> st
+  | Pick _ -> st
+  | Trade -> st
 (*BISECT-IGNORE-END*)
 
 (** [rand_int_list acc num] is a list with [num] random ints in the range 0 to
@@ -328,6 +380,7 @@ let rec battle attack defend (deatha,deathd) =
 (*BISECT-IGNORE-BEGIN*) (*extensive play test*)
 (** [fortify st f t] sends one army from territory [f] to territory [t] if 
     they are connected by a path of territories that the current player owns.
+    Once fortification is finished, the turn moves to [Trade].
 
     Raises:
         - [InvalidState turn] when [turn] is not [Fortify]
@@ -350,10 +403,19 @@ let fortify st from_node to_node armies : t =
   then raise (NonconnectedNode (from_node,to_node)) else ();
   if (node_army st.board_state from_node) <= armies || armies < 0
   then raise (InsufficientArmies (from_node,armies)) else ();
-  setup_reinforce 
+  setup_trade
     {st with board_state =  place_army 
                  (place_army st.board_state to_node armies) from_node (-armies)}
 (*BISECT-IGNORE-END*)
+
+(** [place_stars_conditional st won] is the state with stars added to
+    the current player in [st] only if the current player has not already 
+    captured a territory during their overall attack turn, as flagged by [won]. *)
+let place_stars_conditional st won =
+  if not won then 
+    {st with board_state = place_stars 
+                 st.board_state st.current_player (star_generator ())}
+  else st
 
 (** [attack st a d invading_armies] is the game state [st] after node [a] 
     attacks node [d]. Each pair of attacking and defending armies constitutes 
@@ -403,21 +465,22 @@ let attack st a d invading_armies =
   let attack_deaths,defend_deaths = battle attack_dice defend_dice (0,0) in 
   if defend_deaths = total_defenders 
   (* attacker won *)
-  then {st with board_state = 
-                  Board_state.set_army 
-                    (Board_state.set_army 
-                       (Board_state.set_owner st.board_state d attacker) d 
-                       (invading_armies - attack_deaths)) a 
-                    (total_attackers - invading_armies + 1);
-                turn = Attack (OccupyA (a,d))}, 
-       attack_dice, defend_dice
-  (* attacker lost *)
+  then let add_stars_st = place_stars_conditional st (battle_won st) in
+    {add_stars_st with board_state = 
+                         Board_state.set_army 
+                           (Board_state.set_army 
+                              (Board_state.set_owner add_stars_st.board_state d attacker) d 
+                              (invading_armies - attack_deaths)) a 
+                           (total_attackers - invading_armies + 1);
+                       turn = Attack ((OccupyA (a,d)), true)},
+    attack_dice, defend_dice
+    (* attacker lost *)
   else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 
                        (total_defenders - defend_deaths)) a 
                     (total_attackers - attack_deaths + 1);
-                turn = Attack AttackSelectA}, 
+                turn = Attack (AttackSelectA, battle_won st)},
        attack_dice, defend_dice
 
 (*BISECT-IGNORE-BEGIN*) (*extensive play test*)
@@ -430,7 +493,7 @@ let attack st a d invading_armies =
         - [InsufficientArmies (a, occupying_armies)] if node [a] does not have
           enough armies to fortify with [occupying_armies]. *)
 let occupy st a d occupying_armies = 
-  if st.turn <> Attack (OccupyA (a,d))
+  if st.turn <> Attack ((OccupyA (a,d)), battle_won st)
   then raise (InvalidState st.turn) else ();
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
   if occupying_armies > total_attackers || occupying_armies < 0 
@@ -438,23 +501,27 @@ let occupy st a d occupying_armies =
   {st with board_state = Board_state.place_army 
                (Board_state.place_army st.board_state a (~- occupying_armies)) d 
                occupying_armies;
-           turn = Attack AttackSelectA}
+           turn = Attack (AttackSelectA, true)}
 
 (** [min_max_default st] is a tuple of the minimum, maximum, and default
-    number of troops that can be filled for [st].
+    number of troops that can be filled or the number of stars that
+    can be traded for [st].
 
     This function is only defined for turn states that involve the selection
-    of a number of troops - i.e. Reinforce PlacR, attack OccupyA, and Fortify
-    CountF. For all other turn states, raises [InvalidState state]. *)
+    of a number of troops or a number of stars - i.e. Reinforce PlacR, attack
+    OccupyA, Fortify CountF, and Trade. For all other turn states, raises
+    [InvalidState state]. *)
 let min_max_default st : (army * army * army) = match st.turn with
   | Reinforce ((PlaceR node), remaining)
     -> (0, remaining, 1)
-  | Attack (OccupyA (n1, n2))
+  | Attack ((OccupyA (n1, n2)), _)
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
   | Fortify (CountF (n1, n2))
     -> let max = (node_army st.board_state n1) - 1
     in (0, max, max)
+  | Trade -> let max = min 5 (player_stars st.board_state st.current_player)
+    in (0, max, 0)
   | _ -> raise (InvalidState st.turn)
 (*BISECT-IGNORE-END*)
 
@@ -465,22 +532,26 @@ let turn_valid_nodes gs =
   in let b = board bs
   in let is_owner = fun node -> node_owner bs node = Some (current_player gs)
   in let pred = match turn gs with
-      | Pick -> fun node -> node_owner bs node = None
+      | Pick army ->
+        let is_picked = List.length
+            (nodes_filter b (fun node -> node_owner bs node = None)) = 0
+        in let player = Some (current_player gs)
+        in fun node -> node_owner bs node = (if is_picked then player else None)
       | Reinforce (SelectR,_) -> is_owner
       | Reinforce (PlaceR _,_) -> failwith "shouldn't happen"
-      | Attack AttackSelectA
+      | Attack (AttackSelectA,_)
         -> fun node -> node_owner bs node = Some (current_player gs)
                        && node_army bs node > 1
-      | Attack (DefendSelectA n)
+      | Attack ((DefendSelectA n),_)
         -> fun node -> node_owner bs node <> Some (current_player gs)
                        && List.mem node (node_borders b n)
-      | Attack (OccupyA _) -> failwith "shouldn't happen"
+      | Attack ((OccupyA _),_) -> failwith "shouldn't happen"
       | Fortify FromSelectF -> fun node -> is_owner node
                                            && node_army bs node > 1
       | Fortify (ToSelectF n)
         -> let reachable = dfs bs n []
         in fun node -> node <> n && List.mem node reachable
-      | Fortify (CountF _) -> failwith "shouldn't happen"
+      | Fortify (CountF _) | Trade -> failwith "shouldn't happen"
   in nodes_filter b pred
 
 (* random seed *)

@@ -38,7 +38,7 @@ let attack_tree gs attacker defender armies =
                 (node_owner (board_st gs) attacker)) defender 
              (armies - a)) attacker (total_attackers - armies + 1) in 
       let gs' = change_board_st gs board_state in 
-      set_turn gs' (Attack (OccupyA (attacker,defender)))
+      set_turn gs' (Attack (OccupyA (attacker,defender),true))
     end
     else begin
       let board_state = Board_state.set_army 
@@ -46,7 +46,7 @@ let attack_tree gs attacker defender armies =
              (total_defenders - d)) attacker 
           (total_attackers - a + 1) in
       let gs' = change_board_st gs board_state in
-      set_turn gs' (Attack AttackSelectA)
+      set_turn gs' (Attack (AttackSelectA,false))
     end in
   let outcomes lst =
     List.fold_left 
@@ -66,21 +66,21 @@ let attack_tree gs attacker defender armies =
 
 let move_probabilities gs move =
   match (turn gs), move with
-  | Pick, PickM node
+  | Pick _, PickM node
     -> [{game_state = pick_nodes gs node; probability = 1.; moves = []}]
   | Reinforce (SelectR, _), ReinforceM list
     -> [{game_state = List.fold_left
              (fun acc (node, army) -> reinforce acc node army) gs list;
          probability = 1.; moves = []}]
-  | Attack AttackSelectA, AttackM (attacker, defender, army)
+  | Attack (AttackSelectA,_), AttackM (attacker, defender, army)
     -> attack_tree gs attacker defender army
-  | Attack (OccupyA (attacker, defender)), OccupyM army
+  | Attack (OccupyA (attacker, defender),_), OccupyM army
     -> [{game_state = occupy gs attacker defender army; probability = 1.; 
          moves = []}]
   | Fortify FromSelectF, FortifyM (from_node, to_node, army)
     -> [{game_state = fortify gs from_node to_node army; probability = 1.; 
          moves = []}]
-  | (Attack AttackSelectA | Fortify FromSelectF), FinishM
+  | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> [{game_state = end_turn_step gs; probability = 1.; moves = []}]
   | _, FinishM -> [{game_state = gs; probability = 1.; moves = []}]
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))

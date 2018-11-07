@@ -35,7 +35,7 @@ let board st = board_state st |> Board_state.board
     occupying from, or [None] if the current player is not selecting a defender
     or occupying. *)
 let attacking_node st = match (turn st.game_state) with
-  | Attack ((DefendSelectA node) | OccupyA (node,_)) -> Some node 
+  | Attack ((DefendSelectA node),_ | OccupyA (node,_),_) -> Some node 
   | _ -> None
 
 (** [leaderboard_on st] is whether or not the leaderboard
@@ -85,7 +85,9 @@ let change_attack_node st (node:node_id option) =
   match node with 
   | None -> st
   | Some n 
-    -> {st with game_state = set_turn st.game_state (Attack (DefendSelectA n))}
+    -> {st with
+        game_state = 
+          set_turn st.game_state (Attack (DefendSelectA n, battle_won st.game_state))}
 
 (** [from_fortify_node st] is the node that the current player is fortifying
     from in interface [st]. *)

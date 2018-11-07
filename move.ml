@@ -24,17 +24,17 @@ let string_of_move = function
   | FinishM -> "Finish"
 
 let apply_move gs move = match (turn gs), move with
-  | Pick, PickM node
+  | Pick _, PickM node
     -> pick_nodes gs node
   | Reinforce (SelectR, _), ReinforceM list
     -> List.fold_left (fun acc (node, army) -> reinforce acc node army) gs list
-  | Attack AttackSelectA, AttackM (attacker, defender, army)
+  | Attack (AttackSelectA,_), AttackM (attacker, defender, army)
     -> let gs', _, _ = attack gs attacker defender army in gs'
-  | Attack (OccupyA (attacker, defender)), OccupyM army
+  | Attack (OccupyA (attacker, defender),_), OccupyM army
     -> occupy gs attacker defender army
   | Fortify FromSelectF, FortifyM (from_node, to_node, army)
     -> fortify gs from_node to_node army
-  | (Attack AttackSelectA | Fortify FromSelectF), FinishM
+  | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> end_turn_step gs
   | _, FinishM -> gs
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
@@ -72,9 +72,9 @@ let valid_moves gs : move list =
   let bs = board_st gs
   in let brd = board bs
   in match turn gs with
-  | Pick -> List.map (fun node -> PickM node) (turn_valid_nodes gs)
+  | Pick _ -> List.map (fun node -> PickM node) (turn_valid_nodes gs)
   | Reinforce (SelectR, remaining) -> valid_reinforcements gs remaining
-  | Attack AttackSelectA
+  | Attack (AttackSelectA,_)
     -> let moves_for_attacker attacker : move list =
          let army = min ((node_army bs attacker) - 1) 3
          in List.map (fun defender -> AttackM (attacker, defender, army))
@@ -85,7 +85,7 @@ let valid_moves gs : move list =
     in FinishM :: begin
         List.map (fun node -> moves_for_attacker node) (turn_valid_nodes gs)
         |> List.flatten end
-  | Attack (OccupyA (attacker, _))
+  | Attack (OccupyA (attacker, _),_)
     -> let min, max = 0, (node_army bs attacker) - 1
     in List.map (fun n -> OccupyM n) (range min max)
   | Fortify FromSelectF -> valid_fortifications gs

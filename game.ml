@@ -100,20 +100,21 @@ let rec read_num str prev : string option =
 (** [game_stage st] is [(st',x)] where [st'] is the new state from evaluating
     the turn state of [st] and [x] is [Some msg] or [None]. *)
 let game_stage st = match st |> game_state |> turn with 
-  | Pick -> pick st,None
+  | Pick _ -> pick st,None
+  | Trade -> failwith "sanity check"
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
-  | Attack AttackSelectA -> Some (cursor_node st) |> change_attack_node st,None
-  | Attack (DefendSelectA node)
+  | Attack (AttackSelectA, _) -> Some (cursor_node st) |> change_attack_node st,None
+  | Attack (DefendSelectA node, _)
     -> let gst',attack,defend = attack (game_state st) node (cursor_node st) 
            (min ((node_army (board_state st) node) - 1) 3)
     in begin match turn gst' with
-      | Attack (OccupyA _) -> change_game_st st gst'
+      | Attack (OccupyA _, _) -> change_game_st st gst'
       | _ -> change_game_st (set_cursor_node st (attacking_node st)) gst'
     end
      , (Some ("A: " ^ (string_of_dice attack) 
               ^ " vs D: " ^ (string_of_dice defend))) 
-  | Attack (OccupyA (n1,n2)) -> failwith "shouldn't happen"
+  | Attack (OccupyA (n1,n2), _) -> failwith "shouldn't happen"
   | Fortify FromSelectF 
     -> Some (cursor_node st) |> change_from_fortify_node st,None
   | Fortify (ToSelectF node) 
@@ -123,9 +124,11 @@ let game_stage st = match st |> game_state |> turn with
 (** [game_nums st num] is [(st',x)] where [st'] is the new state from evaluating
     the turn state of [st] using [num] and [x] is [Some msg] or [None]. *)
 let game_nums st num = match st |> game_state |> turn with 
+  | Trade
+    -> trade_stars (game_state st) num |> change_game_st st, None
   | Reinforce ((PlaceR node),_) 
     -> change_game_st st (reinforce (game_state st) (cursor_node st) num),None
-  | Attack (OccupyA (n1,n2)) 
+  | Attack (OccupyA (n1,n2), _) 
     -> change_game_st st (occupy (game_state st) n1 n2 num),None
   | Fortify (CountF (n1,n2)) 
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
@@ -155,6 +158,7 @@ let parse_standard_input st msg search =
     | "a" -> (set_leaderboard_cat st CatArmy), msg, None
     | "n" -> (set_leaderboard_cat st CatNode), msg, None
     | "c" -> (set_leaderboard_cat st CatCont), msg, None
+    | "s" -> (set_leaderboard_cat st CatStar), msg, None
     | "-" -> (toggle_help st), msg, None
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | _ -> st, msg, None
@@ -177,13 +181,15 @@ let parse_standard_input st msg search =
     | "\\" -> (change_game_st st (game_state st |> back_turn)), msg, None
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
-      -> st, msg, Some (perform_search st ((fst search) ^ c))
+      -> let search = perform_search st ((fst search) ^ c) in 
+      let found_node = node_search (st |> Interface.board) (fst search) in
+      (set_cursor_node st found_node), msg, Some search 
     | "\127" -> if String.length (fst search) <= 1
       then st, msg, None
       else st, msg, Some
              (perform_search st (String.sub (fst search) 0
                                    (String.length (fst search) - 1)))
-    | "`" -> if (game_state st |> turn) = Pick
+    | "`" -> if st |> game_state |> is_pick
       then (game_state st |> assign_random_nodes
             |> change_game_st st), msg, None
       else st, msg, None
@@ -201,7 +207,9 @@ let parse_num_input st msg search =
   let handle num =
     let st',msg' = game_nums st num in
     st', msg', None in
-  match read_num "" "" with
+  (* if there are no choices, then just go straight to default *)
+  if min = max then handle default
+  else match read_num "" "" with
   | Some str when str = "" -> handle default
   | Some str -> handle (int_of_string str)
   | None -> (change_game_st st (game_state st |> back_turn)), msg, None
@@ -215,13 +223,13 @@ let parse_input st msg search :
   try 
     begin
       match game_state st |> turn with 
-      | Pick 
+      | Pick _
       | Reinforce (SelectR,_) 
-      | Attack (AttackSelectA | DefendSelectA _) 
+      | Attack (AttackSelectA, _ | DefendSelectA _, _) 
       | Fortify (FromSelectF | ToSelectF _)
         (* these states have standard input *)
         -> parse_standard_input st msg search
-      | Reinforce (PlaceR _,_) | Attack (OccupyA _) | Fortify (CountF _)
+      | Trade | Reinforce (PlaceR _,_) | Attack (OccupyA _, _) | Fortify (CountF _)
         (* these states have numerical input *)
         -> parse_num_input st msg search
     end
@@ -241,6 +249,8 @@ let parse_input st msg search :
     -> st, (Some ("You only have " ^ (string_of_int army) ^
                   " armies to attack with! You can't attack from " ^
                   node_id ^ "!")), None
+  | InsufficientStars s
+    -> st, (Some ("You don't have " ^ string_of_int s ^ " stars!")), None
   | FriendlyFire player
     -> st, (Some "You can't attack yourself!"), None
   | UnknownNode n
@@ -290,7 +300,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
   if (Interface.help_on st) then
     (begin match (leaderboard_on st), (turn (game_state st)) with
        | true, _ -> pick_help st "leaderboard"
-       | false, Pick -> pick_help st "pick"
+       | false, Pick _ -> pick_help st "pick"
        | false, _ -> pick_help st "game"
      end;)
   else ();
@@ -386,6 +396,13 @@ let title =
   ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
   ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
+let json_in_dir d =
+  let rec build acc dir =
+    try build ((Unix.readdir dir) :: acc) dir with
+    | End_of_file -> Unix.closedir dir; acc
+  in Unix.opendir d |> build []
+     |> List.filter (fun s -> Filename.check_suffix s ".json")
+
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
@@ -393,7 +410,9 @@ let title =
 let rec game () = 
   ANSITerminal.(print_string [red]
                   ("\n\nWelcome to..." ^ title ^ "\n\n"));
-  print_endline "Please enter the map file you want to load:";
+  print_endline "Maps in directory:";
+  ignore(List.map print_endline (json_in_dir (Sys.getcwd ())));
+  print_endline "\nPlease enter the map file you want to load:";
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()

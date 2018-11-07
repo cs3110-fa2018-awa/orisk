@@ -9,11 +9,12 @@ type t
 
 (** The type representing a player's board statistics. *)
 type player_stats = 
-  {player : Player.t; army_tot : int; node_tot : int; cont_tot : int}
+  {player : Player.t; army_tot : int; 
+   node_tot : int; cont_tot : int; star_tot : int}
 
 (** [stats_category] is the category that the board leaderboard can be sorted 
     by. *)
-type stats_category = CatPlayer | CatArmy | CatNode | CatCont
+type stats_category = CatPlayer | CatArmy | CatNode | CatCont | CatStar
 
 (** [stats_player ps] is the player in [ps]. *)
 val stats_player : player_stats -> Player.t
@@ -56,6 +57,10 @@ val player_conts : t -> Player.t -> cont_id list
     by [player] in [state]. *)
 val player_army : t -> Player.t -> army
 
+(** [player_stars state player] is the number of stars owned
+    by [player] in [state]. *)
+val player_stars : t -> Player.t -> int
+
 (** [get_players state] is the list of all existing players in [state]. *)
 val get_players: t -> Player.t list
 
@@ -84,6 +89,18 @@ val set_army : t -> node_id -> army -> t
 (** [place_army state node army] is the new state resulting from adding
     [army] armies to [node] in [state]. *)
 val place_army : t -> node_id -> army -> t
+
+(** [set_stars state player stars] is the new state resulting from setting
+    [player] to have [stars] in [state]. *)
+val set_stars : t -> Player.t -> int -> t
+
+(** [place_stars state player stars] is the new state resulting from
+    adding [stars] stars to [player] in [state]. *)
+val place_stars : t -> Player.t -> int -> t
+
+(** [star_generator ()] is either 1 star or sometimes, with a
+    low probability, 2 stars. *)
+val star_generator : unit -> int
 
 (** [set_owner state node player] is the new state resulting from
     changing ownership of [node] to [player] in [state]. *)

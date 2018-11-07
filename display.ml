@@ -92,7 +92,7 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] " -- ";
   print_string [] (turn_to_str (game_state st));
   print_string [] " -- ";
-  if (st |> game_state |> turn <> Pick) 
+  if (st |> game_state |> is_pick |> not)
   then print_string [] (Al.best_move (game_state st) 4 |> Move.string_of_move) 
   else ();
   print_string [] "\n"
@@ -175,7 +175,7 @@ let centered_y_coord board_height leaderboard_height =
 let stats_draw_one_line (ps : Board_state.player_stats)
     gs brd header set_cursor_y_incr col_len : unit =
   match ps with
-  | {player=p; army_tot=a; node_tot=n; cont_tot=c} -> 
+  | {player=p; army_tot=a; node_tot=n; cont_tot=c; star_tot=s} -> 
     let name = p |> Player.player_name in
     let total_col_space = header_len + spacing in
     ANSITerminal.set_cursor (centered_x_coord (board_ascii_width brd)
@@ -187,10 +187,13 @@ let stats_draw_one_line (ps : Board_state.player_stats)
                    (string_of_int n) ^
                    column_spacing (string_of_int n) (total_col_space) ^ 
                    (string_of_int c) ^
-                   column_spacing (string_of_int c) (total_col_space) ^ " |")
+                   column_spacing (string_of_int c) (total_col_space) ^ 
+                   (string_of_int s) ^ 
+                   column_spacing (string_of_int s) (total_col_space) ^ " |")
 
 (** [draw_stats st] draws a leaderboard of players and their respective 
-    army, territory, and continent statistics on top of the board in [st]. *)
+    army, territory, continent, and star statistics on top of the board
+    in [st]. *)
 let draw_stats (st : Interface.t) =
   let gs = Interface.game_state st in
   let brd = st |> board in
@@ -198,7 +201,7 @@ let draw_stats (st : Interface.t) =
   let header = "| " ^ "(p)layer" ^ make_n_chars (col_len - header_len_fst) " " ^
                "(a)rmy" ^ make_n_chars spacing " " ^ "(n)ode" ^
                make_n_chars spacing " " ^ "(c)ont" ^ make_n_chars spacing " " ^
-               " |" in
+               "(s)tar" ^ make_n_chars spacing " " ^ " |" in
   let divider = make_n_chars (String.length header) "-" in
   let leaderboard_height = List.length (gs |> board_st |> get_players) + 4 in
   (* [set_cursor_y_incr] handles drawing each line at the correct height *)

@@ -84,7 +84,7 @@ let board_tests = [
     "Just About Music" str;
   except_comp "invalid node" (lazy (node_name (~$ map_schema) "foo")) 
     (UnknownNode "foo");
-  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 3) 
+  gen_comp "node coords" (lazy (node_coords (~$ map_schema) "RPCC")) (8, 4) 
     coord;
   gen_comp "node borders"
     (lazy (List.sort Pervasives.compare (node_borders (~$ map_schema) "JAM")))
@@ -221,9 +221,9 @@ let init_game_state = lazy (Game_state.init (~$ map_schema) (~$ demo_players))
 let turn_reinforce = 
   lazy (set_turn (~$ init_game_state) (Reinforce (SelectR,0)))
 let turn_attack_defend = 
-  lazy (set_turn (~$ init_game_state) (Attack (DefendSelectA "Rose")))
+  lazy (set_turn (~$ init_game_state) (Attack ((DefendSelectA "Rose"), false)))
 let turn_attack_occupy = 
-  lazy (set_turn (~$ init_game_state) (Attack (OccupyA ("Rose","LR7"))))
+  lazy (set_turn (~$ init_game_state) (Attack ((OccupyA ("Rose","LR7")), true)))
 let turn_fortify_fromselect = 
   lazy (set_turn (~$ init_game_state) (Fortify FromSelectF))
 let turn_fortify_toselect = 
@@ -256,7 +256,7 @@ let game_state_tests = [
   gen_comp "game state current_player"
     (lazy (current_player (~$ init_game_state))) (~$ player_a) player_p;
   gen_comp "game state turn"
-    (lazy (turn (~$ init_game_state))) (Pick) null;
+    (lazy (turn (~$ init_game_state))) (Pick 8) null;
 
   (* exceptions *)
   except_comp "game state no players"
@@ -266,7 +266,7 @@ let game_state_tests = [
     (FriendlyFire (Some (~$ player_a)));
   except_comp "game state invalid state"
     (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) 
-    (InvalidState (Pick));
+    (InvalidState (Pick 8));
   except_comp "game state insufficient armies"
     (lazy (attack (~$ attack_state) "RPCC" "HR5" 16))
     (InsufficientArmies ("RPCC", 1));
