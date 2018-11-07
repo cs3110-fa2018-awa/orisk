@@ -358,4 +358,3 @@ let player_frontiers bs player =
          (fun border -> node_owner bs border = Some player)
          (node_borders (board bs) node))
   in List.filter predicate (player_nodes bs player)
-
