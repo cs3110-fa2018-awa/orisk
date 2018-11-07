@@ -411,7 +411,7 @@ let rec game () =
   ANSITerminal.(print_string [red]
                   ("\n\nWelcome to..." ^ title ^ "\n\n"));
   print_endline "Maps in directory:";
-  ignore(List.map print_endline (json_in_dir (Sys.getcwd ())));
+  ignore (List.map print_endline (json_in_dir (Sys.getcwd ())));
   print_endline "\nPlease enter the map file you want to load:";
   print_string  "> ";
   match read_line () with

@@ -275,13 +275,17 @@ let assign_random_nodes (st : t) : t =
     Raises [InvalidState st] if [turn] is not [Pick]. *)
 let pick_nodes st node =
   match st.turn with
-  | Pick army ->   
+  | Pick army ->
+    let board_full = not (List.mem None (owners st.board_state)) in
+    if node_owner st.board_state node <> None && not board_full
+    then raise (NotOwner node) else ();
     let owner = node_owner st.board_state node in
     if owner <> Some (current_player st) && owner <> None 
     then raise (NotOwner node) else ();
     let board_state = place_army 
-        (set_owner st.board_state node (Some st.current_player)) node 1 in
-    if List.mem None (owners board_state) || army > 1
+        (if board_full then st.board_state
+         else set_owner st.board_state node (Some st.current_player)) node 1 in
+    if army > 1
     then {st with board_state = board_state; 
                   current_player = next_player st.current_player st.players;
                   turn = Pick (army - 1)}

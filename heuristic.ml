@@ -21,6 +21,10 @@ let player_frontier_opponent_max_army bs player node =
              |> List.sort_uniq Pervasives.compare
   end |> List.rev |> List.hd
 
+let option_printer printer = function
+  | None -> "none"
+  | Some x -> printer x
+
 (** [player_heuristic bs personality player] is the [score] of a [player] with
     [personality] in [bs]. *)
 let player_heuristic bs personality player =
@@ -34,13 +38,13 @@ let player_heuristic bs personality player =
          (fun node -> not (List.mem node frontier_nodes)) all_nodes
   in let frontiers = List.length frontier_nodes
   in let army_total node_list = List.fold_left
-         (fun acc node -> acc + (node_army bs node)) 0 node_list
+         (fun acc node -> acc + (node_army bs node) - 1) 0 node_list
   in let frontier_armies = army_total frontier_nodes
   in let non_frontier_armies = army_total non_frontier_nodes
   in let frontier_differential = List.fold_left
          (fun acc node ->
             acc + (max ((player_frontier_opponent_max_army bs player node)
-                        - (node_army bs node)) 0)) 0 frontier_nodes
+                                      - (node_army bs node)) 0)) 0 frontier_nodes
   in let stars = player_stars bs player
   in node_heuristic personality nodes
      +. bonus_heuristic personality bonus
@@ -48,7 +52,7 @@ let player_heuristic bs personality player =
      +. region_heuristic personality regions
      +. frontier_heuristic personality frontiers
      +. frontier_armies_heuristic personality frontier_armies
-     +. non_frontier_armies_heuristic personality non_frontier_armies
+     (*+. non_frontier_armies_heuristic personality non_frontier_armies*)
      (*+. frontier_differential_heuristic personality frontier_differential*)
      +. stars_heuristic personality stars
 
@@ -63,7 +67,7 @@ let heuristic gs personality player =
   in let avg_opponent =
        List.fold_left (+.) 0. opponent_heuristics /. (float_of_int opponent_num)
   in let max_opponent = List.fold_left max 0. opponent_heuristics
-  in let heuristic = player_heuristic (board_st gs) personality player
+    in let heuristic = player_heuristic (board_st gs) personality player
   in heuristic
      +. opponent_num_heuristic personality opponent_num
      (*+. max_opponent_heuristic personality max_opponent*)

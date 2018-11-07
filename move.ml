@@ -38,7 +38,7 @@ let apply_move gs move = match (turn gs), move with
     -> occupy gs attacker defender army
   | Fortify FromSelectF, FortifyM (from_node, to_node, army)
     -> fortify gs from_node to_node army
-  | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
+  | Reinforce _,FinishM | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> end_turn_step gs
   | _, FinishM -> gs
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
@@ -78,7 +78,7 @@ let valid_moves gs : move list =
   in match turn gs with
   | Pick _ -> List.map (fun node -> PickM node) (turn_valid_nodes gs)
   | Trade -> [TradeM (player_stars bs (current_player gs))]
-  | Reinforce (SelectR, remaining) -> valid_reinforcements gs remaining
+  | Reinforce (SelectR, remaining) -> FinishM :: valid_reinforcements gs remaining
   | Attack (AttackSelectA,_)
     -> let moves_for_attacker attacker : move list =
          let army = min ((node_army bs attacker) - 1) 3
