@@ -453,10 +453,10 @@ let place_stars_conditional st won =
         - [FriendlyFire (Some p)] if current player [p] of [st] owns both 
           [a] and [d]
         - [SameNode n] if [n] is both the attacking and defending node *)
-let attack st a d invading_armies = 
+let attack st a d invading_armies =
   if not (is_attack st) then raise (InvalidState st.turn) else (); 
   if a = d then raise (SameNode d) else ();
-  if not 
+  if not
       (List.mem d (Board.node_borders (Board_state.board st.board_state) a)) 
   then raise (NonadjacentNode (a,d)) else (); 
   let attacker = Board_state.node_owner st.board_state a in
@@ -478,13 +478,20 @@ let attack st a d invading_armies =
   if defend_deaths = total_defenders 
   (* attacker won *)
   then let add_stars_st = place_stars_conditional st (battle_won st) in
-    {add_stars_st with board_state = 
-                         Board_state.set_army 
-                           (Board_state.set_army 
-                              (Board_state.set_owner add_stars_st.board_state d attacker) d 
-                              (invading_armies - attack_deaths)) a 
-                           (total_attackers - invading_armies + 1);
-                       turn = Attack ((OccupyA (a,d)), true)},
+    let bs' = Board_state.set_army 
+        (Board_state.set_army 
+           (Board_state.set_owner add_stars_st.board_state d attacker) d 
+           (invading_armies - attack_deaths)) a 
+        (total_attackers - invading_armies + 1)
+    in {add_stars_st
+        with board_state = bs';
+             players =
+               if List.mem (node_owner add_stars_st.board_state d) (owners bs')
+               then add_stars_st.players
+               else List.filter (fun p ->
+                   Some p <> node_owner add_stars_st.board_state d)
+                   add_stars_st.players;
+             turn = Attack ((OccupyA (a,d)), true)},
     attack_dice, defend_dice
     (* attacker lost *)
   else {st with board_state = (*BISECT-IGNORE*) (* play tested *)

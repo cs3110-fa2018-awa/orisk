@@ -16,6 +16,8 @@ val frontier_heuristic : t -> int -> float
 
 val frontier_armies_heuristic : t -> int -> float
 
+val avg_frontier_armies_heuristic : t -> float -> float
+
 val non_frontier_armies_heuristic : t -> int -> float
 
 val frontier_differential_heuristic : t -> int -> float

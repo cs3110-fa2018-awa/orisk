@@ -40,6 +40,8 @@ let player_heuristic bs personality player =
   in let army_total node_list = List.fold_left
          (fun acc node -> acc + (node_army bs node) - 1) 0 node_list
   in let frontier_armies = army_total frontier_nodes
+  in let avg_frontier_armies =
+       (float_of_int frontier_armies) /. (float_of_int frontiers)
   in let non_frontier_armies = army_total non_frontier_nodes
   in let frontier_differential = List.fold_left
          (fun acc node ->
@@ -52,6 +54,7 @@ let player_heuristic bs personality player =
      +. region_heuristic personality regions
      +. frontier_heuristic personality frontiers
      +. frontier_armies_heuristic personality frontier_armies
+     +. avg_frontier_armies_heuristic personality avg_frontier_armies
      (*+. non_frontier_armies_heuristic personality non_frontier_armies*)
      (*+. frontier_differential_heuristic personality frontier_differential*)
      +. stars_heuristic personality stars

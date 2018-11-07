@@ -32,6 +32,8 @@ let frontier_heuristic p num = ~-. ((~~ num) *. 5.) *. (~~ (p.defensivity))
 
 let frontier_armies_heuristic p num = ((~~ num) *. 5.) *. (~~ (p.defensivity))
 
+let avg_frontier_armies_heuristic p num = (num *. 15.) *. (~~ (p.defensivity))
+
 let non_frontier_armies_heuristic p num = ~-. (~~ num) *. 30.
 
 let frontier_differential_heuristic p num = ~-. ((~~ num) *. 0.4) *. (~~ (p.defensivity))

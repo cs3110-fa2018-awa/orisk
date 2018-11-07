@@ -193,7 +193,7 @@ let parse_standard_input st msg search =
       then (game_state st |> assign_random_nodes
             |> change_game_st st), msg, None
       else st, msg, None
-    | _ -> st, msg, None
+    (*| _ -> st, msg, None *)
   end
 
 (** [parse_standard_input st msg search] is the tuple (st', msg', search')
@@ -263,7 +263,7 @@ let parse_input st msg search :
     -> st, (Some "You don't control this territory"), None
   | Failure s when s = "int_of_string" 
     -> st, (Some "Invalid integer"), None
-  | _ -> st, msg, None
+(*| _ -> st, msg, None*)
 
 (** [print_message st msg search] prints the message for the current game
     state [st]. If [search] is successful, then prints the search message;
