@@ -311,7 +311,7 @@ let stars_to_armies = function
   | 1 -> 1
   | 2 -> 2
   | 3 -> 4
-  | 4 -> 8
+  | 4 -> 7
   | 5 -> 10
   | _ -> failwith "shouldn't happen"
 
@@ -492,7 +492,7 @@ let attack st a d invading_armies =
                    Some p <> node_owner add_stars_st.board_state d)
                    add_stars_st.players;
              turn = Attack ((OccupyA (a,d)), true)},
-    attack_dice, defend_dice
+       attack_dice, defend_dice
     (* attacker lost *)
   else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 

@@ -274,7 +274,7 @@ let help_str_game = [
   "1 star  :  1 army";
   "2 stars :  2 armies";
   "3 stars :  4 armies";
-  "4 stars :  8 armies";
+  "4 stars :  7 armies";
   "5 stars : 10 armies"
 ]
 
