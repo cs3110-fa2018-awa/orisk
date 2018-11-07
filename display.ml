@@ -270,7 +270,14 @@ let help_str_game = [
   "[a-z 0-9]     search the board";
   "[=]           toggle leaderboard";
   "[-]           toggle help";
-  "[esc]         quit game"
+  "[esc]         quit game";
+  "";
+  "Stars to armies:";
+  "1 star  :  1 army";
+  "2 stars :  2 armies";
+  "3 stars :  4 armies";
+  "4 stars :  8 armies";
+  "5 stars : 10 armies"
 ]
 
 (** [max_help_str] is the length of the longest line in [s]. *)
