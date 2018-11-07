@@ -181,7 +181,9 @@ let parse_standard_input st msg search =
     | "\\" -> (change_game_st st (game_state st |> back_turn)), msg, None
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
-      -> st, msg, Some (perform_search st ((fst search) ^ c))
+      -> let search = perform_search st ((fst search) ^ c) in 
+      let found_node = node_search (st |> Interface.board) (fst search) in
+      (set_cursor_node st found_node), msg, Some search 
     | "\127" -> if String.length (fst search) <= 1
       then st, msg, None
       else st, msg, Some
@@ -375,6 +377,13 @@ let title =
   ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
   ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
+let json_in_dir d =
+  let rec build acc dir =
+    try build ((Unix.readdir dir) :: acc) dir with
+    | End_of_file -> Unix.closedir dir; acc
+  in Unix.opendir d |> build []
+     |> List.filter (fun s -> Filename.check_suffix s ".json")
+
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
@@ -382,7 +391,9 @@ let title =
 let rec game () = 
   ANSITerminal.(print_string [red]
                   ("\n\nWelcome to..." ^ title ^ "\n\n"));
-  print_endline "Please enter the map file you want to load:";
+  print_endline "Maps in directory:";
+  ignore(List.map print_endline (json_in_dir (Sys.getcwd ())));
+  print_endline "\nPlease enter the map file you want to load:";
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
