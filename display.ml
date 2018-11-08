@@ -92,7 +92,7 @@ let draw_turn (st : Interface.t) : unit =
   print_string [] " -- ";
   print_string [] (turn_to_str (game_state st));
   print_string [] " -- ";
-  (*print_string [] (Al.best_move (game_state st) 4 |> Move.string_of_move);*)
+  (* print_string [] (Al.best_move (game_state st) 0 |> Move.string_of_move);*)
   print_string [] "\n"
 
 let draw_line st num line : int =
