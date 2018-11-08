@@ -26,3 +26,7 @@ val player_artificial : t -> bool
     order in which the players were created. This allows players to
     be stored in binary search trees. *)
 val compare : t -> t -> int
+
+val player_of_json : Yojson.Basic.json -> t
+
+val json_of_player : t -> Yojson.Basic.json

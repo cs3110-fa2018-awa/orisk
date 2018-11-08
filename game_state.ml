@@ -575,3 +575,65 @@ let turn_valid_nodes gs =
 
 (* random seed *)
 let () = Random.self_init ()
+
+open Yojson.Basic.Util
+
+(* quick note: we don't care about the sub-turn state when saving/loading
+   because these sub-states don't change the game at all. *)
+
+let turn_of_json json =
+  try begin
+    let name = json |> member "name" |> to_string
+    in let data = json |> member "data"
+    in try
+      begin
+        match name with
+        | "pick" -> Pick (data |> to_int)
+        | "trade" -> Trade
+        | "reinforce" -> Reinforce (SelectR, data |> to_int)
+        | "attack" -> Attack (AttackSelectA, data |> to_bool)
+        | "fortify" -> Fortify FromSelectF
+        | _ -> failwith ("invalid turn name string: " ^ name)
+      end with
+    | ex -> failwith ("turn_of_json failed: " ^ (Printexc.to_string ex))
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load game state turn: " ^ msg)
+
+let json_of_turn turn =
+  let name, data = match turn with
+    | Pick army -> "pick", `Int army
+    | Trade -> "trade", `Null
+    | Reinforce (_, army) -> "reinforce", `Int army
+    | Attack (_, starred) -> "attack", `Bool starred
+    | Fortify _ -> "fortify", `Null
+  in `Assoc [
+    ("name", `String name);
+    ("data", data);
+  ]
+
+let game_state_of_json json =
+  try begin
+    let players = json |> member "players" |> to_list |> List.map player_of_json
+    in let current_player_id = json |> member "current_player" |> to_int
+    in let current_player = List.find
+           (fun player -> player_id player = current_player_id) players
+    in {
+      board_state = json |> member "board_state" |> board_state_of_json;
+      players = players;
+      current_player = current_player;
+      turn = json |> member "turn" |> turn_of_json;
+    }
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load game state: " ^ msg)
+
+let json_of_game_state gs =
+  `Assoc [
+    ("board_state", gs.board_state |> json_of_board_state);
+    ("players", `List (List.map json_of_player gs.players));
+    ("current_player", `Int (player_id gs.current_player));
+    ("turn", json_of_turn gs.turn);
+  ]

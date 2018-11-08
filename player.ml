@@ -36,3 +36,45 @@ let player_artificial player = player.artificial
     and the respective IDs of each player, which are unique. This allows
     [Player.t] to be stored in a binary search tree. *)
 let compare player1 player2 = Pervasives.compare player1.id player2.id
+
+open ANSITerminal
+open Yojson.Basic.Util
+
+let color_of_string = function
+  | "black" -> Black
+  | "red" -> Red
+  | "green" -> Green
+  | "yellow" -> Yellow
+  | "blue" -> Blue
+  | "magenta" -> Magenta
+  | "cyan" -> Cyan
+  | "white" -> White
+  | "default" -> Default
+  | str -> failwith ("bad color str: " ^ str)
+
+let string_of_color = function
+  | Black -> "black"
+  | Red -> "red"
+  | Green -> "green"
+  | Yellow -> "yellow"
+  | Blue -> "blue"
+  | Magenta -> "magenta"
+  | Cyan -> "cyan"
+  | White -> "white"
+  | Default -> "default"
+
+let player_of_json json =
+  {
+    id = json |> member "id" |> to_int;
+    name = json |> member "name" |> to_string;
+    color = json |> member "color" |> to_string |> color_of_string;
+    artificial = json |> member "artificial" |> to_bool
+  }
+
+let json_of_player player =
+  `Assoc [
+    ("id", `Int player.id);
+    ("name", `String player.name);
+    ("color", `String (string_of_color player.color));
+    ("artificial", `Bool player.artificial);
+  ]

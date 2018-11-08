@@ -76,6 +76,25 @@ let char_regexp = Str.regexp "[A-Za-z0-9]"
     an integer. *)
 let int_regexp = Str.regexp "[0-9]"
 
+let rec read_abstr_int allow_space regexp str prev : string option =
+  ANSITerminal.move_cursor (- (String.length prev)) 0;
+  ANSITerminal.erase Eol;
+  print_string str;
+  flush stdout;
+  match read_input () with
+  | c when Str.string_match regexp c 0 ->
+    read_abstr_int allow_space regexp (str ^ c) str
+  | "\127" -> if String.length str <= 0
+    then read_abstr_int allow_space regexp str str
+    else read_abstr_int allow_space regexp
+        (String.sub str 0 (String.length str - 1)) str
+  | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
+  | "\n" -> Some str
+  | " " -> if allow_space then Some str
+    else read_abstr_int allow_space regexp str str
+  | "?" | "\\" -> None
+  | _ -> read_abstr_int allow_space regexp str str
+
 (** [read_num str prev] is [Some s] where [s] is the string entered by the user
     before pressing either the spacebar or return key and [None] if the user
     inputs "?"" or "\\"". 
@@ -83,19 +102,9 @@ let int_regexp = Str.regexp "[0-9]"
     This prevents users from entering anything except 
     integers when [read_num] is applied. However, they will still be able to 
     quit and rewind the turn. *)
-let rec read_num str prev : string option =
-  ANSITerminal.move_cursor (- (String.length prev)) 0;
-  ANSITerminal.erase Eol;
-  print_string str;
-  flush stdout;
-  match read_input () with
-  | c when Str.string_match int_regexp c 0 -> read_num (str ^ c) str
-  | "\127" -> if String.length str <= 0 then read_num str str
-    else read_num (String.sub str 0 (String.length str - 1)) str
-  | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
-  | " " | "\n" -> Some str
-  | "?" | "\\" -> None
-  | _ -> read_num str str
+let read_num str : string option = read_abstr_int true int_regexp "" ""
+
+let read_str str : string option = read_abstr_int false char_regexp "" ""
 
 (** [game_stage st] is [(st',x)] where [st'] is the new state from evaluating
     the turn state of [st] and [x] is [Some msg] or [None]. *)
@@ -134,12 +143,25 @@ let game_nums st num = match st |> game_state |> turn with
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
   | _ -> failwith "shouldnt happen"
 
+let save st file =
+  Yojson.Basic.to_file file (st |> game_state |> json_of_game_state)
+
+let load file =
+  Yojson.Basic.from_file file |> game_state_of_json |> Interface.init
+
 (** [perform_search st str] is the (string * bool) tuple containing the
     search string and the success flag resulting from performing a search
     for [str] in [st]. *)
 let perform_search st str : (string * bool) =
   let found_node = node_search (st |> Interface.board) str in
   str,found_node <> None
+
+let handle_save st msg search =
+  print_string "Enter file name to save to [.risk] > ";
+  match (read_str "") with
+  | Some str when String.length str > 0 -> let file = str ^ ".risk"
+    in save st file; st, (Some ("Game saved to " ^ file)), None
+  | None | Some _ -> st, None, None
 
 (** [parse_standard_input st msg search] is the tuple (st', msg', search')
     resulting from parsing a single character of input. Called internally
@@ -179,6 +201,7 @@ let parse_standard_input st msg search =
     | "-" -> (toggle_help st), msg, None
     | "\t" -> (set_cursor_node st (next_valid_node st)), msg, None
     | "\\" -> (change_game_st st (game_state st |> back_turn)), msg, None
+    | "." -> handle_save st msg search
     | "\004" | "\027" -> print_endline("\nThanks for playing!\n"); exit 0
     | c when Str.string_match char_regexp c 0
       -> let search = perform_search st ((fst search) ^ c) in 
@@ -209,7 +232,7 @@ let parse_num_input st msg search =
     st', msg', None in
   (* if there are no choices, then just go straight to default *)
   if min = max then handle default
-  else match read_num "" "" with
+  else match read_num "" with
     | Some str when str = "" -> handle default
     | Some str -> handle (int_of_string str)
     | None -> (change_game_st st (game_state st |> back_turn)), msg, None
@@ -371,16 +394,28 @@ let rec insert_players
           | _, _, _ -> insert_players pl c t false msg
         end)
 
-(** [risk f] starts the game in [f]. 
-
-    Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
-let risk f = 
+let risk_board f =
   let board = Board.from_json (Yojson.Basic.from_file f) in
   let players = List.rev 
       (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false false 
          "...") in
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
-  | End_of_file -> print_endline("\nThanks for playing!\n"); exit 0
+  | End_of_file -> print_endline ("\nThanks for playing!\n"); exit 0
+
+let risk_saved_game f =
+  try game_loop_new (load f) None with
+  | End_of_file -> print_endline ("\nThanks for playing!\n"); exit 0
+
+exception BadExtension of string
+
+(** [risk f] starts the game in [f]. 
+
+    Requires: file [f] is a valid JSON respresentation of a Risk! game. *)
+let risk f =
+  match Filename.extension f with
+  | ".json" -> risk_board f
+  | ".risk" -> risk_saved_game f
+  | ext -> raise (BadExtension ext)
 
 (** Ascii art splash screen. *)
 let title =
@@ -396,30 +431,35 @@ let title =
   ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
   ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
-let json_in_dir d =
+let ext_in_dir ext d =
   let rec build acc dir =
     try build ((Unix.readdir dir) :: acc) dir with
     | End_of_file -> Unix.closedir dir; acc
   in Unix.opendir d |> build []
-     |> List.filter (fun s -> Filename.check_suffix s ".json")
+     |> List.filter (fun s -> Filename.check_suffix s ext)
 
 (** [game ()] prompts for the game json file to load and then starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
     not exist. *)
-let rec game () = 
+let rec game () =
   ANSITerminal.(print_string [red]
                   ("\n\nWelcome to..." ^ title ^ "\n\n"));
   print_endline "Maps in directory:";
-  ignore (List.map print_endline (json_in_dir (Sys.getcwd ())));
-  print_endline "\nPlease enter the map file you want to load:";
+  ignore (List.map print_endline (ext_in_dir ".json" (Sys.getcwd ())));
+  print_endline "\nSaved games in directory:";
+  ignore (List.map print_endline (ext_in_dir ".risk" (Sys.getcwd ())));
+  print_endline "\nPlease enter the map file or saved game you want to load:";
   print_string  "> ";
   match read_line () with
   | exception End_of_file -> ()
   | file_name -> try risk file_name with 
-    | Sys_error _ -> print_endline("\nInvalid file"); game ()
+    | Sys_error _ -> print_endline ("\nInvalid file"); game ()
     | Yojson.Json_error _ -> 
-      print_endline("\nInvalid file, unable to parse JSON"); game ()
+      print_endline ("\nInvalid file, unable to parse JSON"); game ()
+    | BadExtension ext ->
+      print_endline ("\nUnrecognized file extension: " ^ ext
+                     ^ ", please select another file."); game ()
 
 (* execute game *)
 let () = game ()

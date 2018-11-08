@@ -14,15 +14,15 @@ module Player_map = Map.Make (Player)
 
 (** [node_state] is the state of a node, used internally.
     Owner (may be none to represent not owned by anyone) and army. *)
-type node_state = {owner : Player.t option; army : army}
+type node_state = {id : node_id; owner : Player.t option; army : army}
 
 (** [cont_state] is the state of a continent, used internally.
     Owner (may by none to represent not owned by anyone). *)
-type cont_state = {owner : Player.t option}
+type cont_state = {id : cont_id; owner : Player.t option}
 
 (** [player_state] is the state of a player, used internally.
     Set of nodes and continents owned by the player. *)
-type player_state = {nodes : String_set.t; conts : String_set.t; stars : int}
+type player_state = {player : Player.t; nodes : String_set.t; conts : String_set.t; stars : int}
 
 (** [player_stats] is the board statistics of a player.
     It contains the total number of armies, territories, continents,
@@ -62,15 +62,16 @@ let init board players =
     board = board;
     nodes = fold_nodes board
         (fun node_id acc -> String_map.add node_id
-            {owner = None; army = 0} acc)
+            {id = node_id; owner = None; army = 0} acc)
         String_map.empty;
     conts = fold_conts board
         (fun cont_id acc -> String_map.add cont_id
-            {owner = None} acc)
+            {id = cont_id; owner = None} acc)
         String_map.empty;
     players = List.fold_left
         (fun acc player -> Player_map.add player
-            {nodes = String_set.empty; conts = String_set.empty; stars = 0} acc)
+            {player = player; nodes = String_set.empty;
+             conts = String_set.empty; stars = 0} acc)
         Player_map.empty players;
   }
 
@@ -305,8 +306,9 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
 
   (* update state of new owner *)
   in let new_player_st
-      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
+      (({nodes=nodes'; conts=conts'; stars=stars'} : player_state) as ps) : player_state =
        {
+         ps with
          (* add node to list of controlled nodes *)
          nodes = String_set.add node nodes';
          (* add continents that the player now fully controls *)
@@ -319,8 +321,9 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
 
   (* update state of previous owner *)
   in let prev_player_st
-      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
+      (({nodes=nodes'; conts=conts'; stars=stars'} : player_state) as ps) : player_state =
        {
+         ps with
          (* remove node from list of controlled nodes *)
          nodes = String_set.remove node nodes';
          (* remove continents that the player no longer controls *)
@@ -336,7 +339,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
   in let new_conts conts' player' = List.fold_left
          (fun acc cont ->
             String_map.update cont (fun cont_st_opt ->
-                if is_owner st player node cont then Some {owner = player'}
+                if is_owner st player node cont then Some {id = cont; owner = player'}
                 else None) conts'
          ) conts' node_conts
 
@@ -358,3 +361,98 @@ let player_frontiers bs player =
          (fun border -> node_owner bs border = Some player)
          (node_borders (board bs) node))
   in List.filter predicate (player_nodes bs player)
+
+open Yojson.Basic.Util
+
+let node_state_of_json json =
+  {
+    id = json |> member "id" |> to_string;
+    owner = json |> member "owner" |> to_option player_of_json;
+    army = json |> member "army" |> to_int;
+  }
+
+let json_of_node_state (ns : node_state) =
+  `Assoc begin
+    ("id", `String ns.id) ::
+    ("army", `Int ns.army) ::
+    begin
+      match ns.owner with
+      | Some player -> [("owner", json_of_player player)]
+      | None -> []
+    end
+  end
+
+let json_of_player_stars (ps : player_state) =
+  `Assoc [("player",
+           `String (player_name ps.player)); ("stars", `Int (ps.stars))]
+
+let player_stars_of_json json =
+  json |> to_list |> List.map (fun j ->
+      (j |> member "player" |> to_string,
+       j |> member "stars" |> to_int))
+
+let rec map_of_list adder ider map = function
+  | [] -> map
+  | hd :: tl -> map_of_list adder ider (adder (ider hd) hd map) tl
+
+let rec set_of_list adder set = function
+  | [] -> set
+  | hd :: tl -> set_of_list adder (adder hd set) tl
+
+let board_state_of_json json =
+  try begin
+    let board = json |> member "board" |> Board.from_json
+    in let node_states = json |> member "node_states" |> to_list
+                         |> List.map node_state_of_json
+    in let player_stars = json |> member "player_stars" |> player_stars_of_json
+    in let nodes = map_of_list String_map.add (fun ({id} : node_state) -> id)
+           String_map.empty node_states
+    in let node_owner node = (String_map.find node nodes).owner
+    in let cont_owner cont =
+         let ns = cont_nodes board cont
+         in let potential = match ns with
+             | [] -> None
+             | node :: tl -> node_owner node
+         in if List.for_all (fun node -> node_owner node = potential) ns
+         then potential else None
+    in let conts = List.fold_left (fun acc cont ->
+        String_map.add cont {id = cont; owner = cont_owner cont} acc)
+        String_map.empty (conts board)
+    in let player_list = List.map node_owner (Board.nodes board)
+                         |> List.fold_left (fun acc -> function
+                             | Some x -> x :: acc
+                             | None -> acc) []
+                         |> List.sort_uniq Player.compare
+    in let node_cont_maker fcn all_fcn player =
+         set_of_list String_set.add String_set.empty
+           (List.filter (fun x -> fcn x = Some player) (all_fcn board))
+    in let players = List.fold_left
+           (fun acc player -> Player_map.add player
+               {
+                 player = player;
+                 nodes = node_cont_maker node_owner Board.nodes player;
+                 conts = node_cont_maker cont_owner Board.conts player;
+                 stars = List.assoc (player_name player) player_stars;
+               }
+               acc) Player_map.empty player_list
+    in {
+      board = board;
+      nodes = nodes;
+      conts = conts;
+      players = players;
+    }
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load board state: " ^ msg)
+
+let json_of_board_state st =
+  `Assoc [
+    ("board", st.board |> Board.json_of_board);
+    ("node_states",
+     `List (List.map json_of_node_state
+              (st.nodes |> String_map.bindings |> List.map snd)));
+    ("player_stars",
+     `List (Player_map.fold
+              (fun _ ps acc -> json_of_player_stars ps :: acc) st.players []));
+  ]
