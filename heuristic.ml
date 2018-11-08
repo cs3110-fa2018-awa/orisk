@@ -21,6 +21,7 @@ let player_frontier_opponent_max_army bs player node =
              |> List.sort_uniq Pervasives.compare
   end |> List.rev |> List.hd
 
+(** [option_printer printer opt] prints a string representation of [opt]. *)
 let option_printer printer = function
   | None -> "none"
   | Some x -> printer x

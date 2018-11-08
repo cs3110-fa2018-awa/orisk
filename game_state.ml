@@ -32,14 +32,18 @@ type fortify_step =
   | ToSelectF of node_id
   | CountF of (node_id * node_id)
 
-(** The type of a turn. Either [Pick], in which the players rotate
-    through to select nodes at the beginning of the game, [Trade], in
+(** The type of a turn. 
+    - [Pick army], in which the players rotate
+    through to select nodes at the beginning of the game until 
+    [army] is exhausted
+    - [Trade], in
     which the player can choose to trade in their stars for more
-    reinforcements, [Reinforce (reinforce_step, army)], in which the
+    reinforcements 
+    - [Reinforce (reinforce_step, army)], in which the
     player reinforces [army] troops to nodes of their choosing,
-    [Attack (attack_step, bool)], in which the player attacks other players'
-    nodes (and keeps track of whether the player has won a battle),
-    and [Fortify fortify_step], in which the player fortifies
+    - [Attack (attack_step, bool)], in which the player attacks other players'
+    nodes (and keeps track of whether the player has won a battle)
+    - [Fortify fortify_step], in which the player fortifies
     troops from one node that they control to another that they control. *)
 type turn_state =
   | Pick of army
@@ -268,16 +272,19 @@ let assign_random_nodes (st : t) : t =
       (st,st.current_player) (board st.board_state |> nodes
                               |> List.filter unselected |> shuffle_lst) |> fst
   in let first_player = List.hd st.players in 
-  {st' with turn = (let total_nodes = st.board_state |> board |> nodes |> List.length in
+  {st' with turn = (let total_nodes = 
+                      st.board_state |> board |> nodes |> List.length in
                     let total_players = st.players |> List.length in
                     Pick (total_nodes/total_players));
             current_player = first_player}
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
     [node] during the [Pick] phase of the game; [node] becomes owned by the
-    current player and has an army added.
+    current player, if they are not already the owner, and has an army added.
+    If the board is not full, players cannot pick a node that has already 
+    been picked even if they are the owner. 
 
-    If all nodes have been picked, then advances to the first turn, with game
+    If all armies have been used, then advances to the first turn, with game
     state [Trade].
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)
@@ -422,7 +429,8 @@ let fortify st from_node to_node armies : t =
 
 (** [place_stars_conditional st won] is the state with stars added to
     the current player in [st] only if the current player has not already 
-    captured a territory during their overall attack turn, as flagged by [won]. *)
+    captured a territory during their overall attack turn, as flagged by 
+    [won]. *)
 let place_stars_conditional st won =
   if not won then 
     {st with board_state = place_stars 

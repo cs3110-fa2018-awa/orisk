@@ -35,13 +35,19 @@ type fortify_step =
   | ToSelectF of node_id
   | CountF of (node_id * node_id)
 
-(** The type of a turn. Either [Pick], in which the players rotate
-    through to select nodes at the beginning of the game, [Reinforce
-    (reinforce_step, army)], in which the player reinforces [army]
-    troops to nodes of their choosing, [Attack attack_step], in which
-    the player attacks other players' nodes, and [Fortify fortify_step],
-    in which the player fortifies troops from one node that they
-    control to another that they control. *)
+(** The type of a turn. 
+    - [Pick army], in which the players rotate
+    through to select nodes at the beginning of the game until 
+    [army] is exhausted
+    - [Trade], in
+    which the player can choose to trade in their stars for more
+    reinforcements 
+    - [Reinforce (reinforce_step, army)], in which the
+    player reinforces [army] troops to nodes of their choosing,
+    - [Attack (attack_step, bool)], in which the player attacks other players'
+    nodes (and keeps track of whether the player has won a battle)
+    - [Fortify fortify_step], in which the player fortifies
+    troops from one node that they control to another that they control. *)
 type turn_state =
   | Pick of army
   | Trade
@@ -192,9 +198,11 @@ val fortify : t -> node_id -> node_id -> army -> t
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
     [node] during the [Pick] phase of the game; [node] becomes owned by the
-    current player and has an army added.
+    current player, if they are not already the owner, and has an army added.
+    If the board is not full, players cannot pick a node that has already 
+    been picked even if they are the owner. 
 
-    If all nodes have been picked, then advances to the first turn, with game
+    If all armies have been used, then advances to the first turn, with game
     state [Trade].
 
     Raises [InvalidState st] if [turn] is not [Pick]. *)

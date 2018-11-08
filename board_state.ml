@@ -246,14 +246,6 @@ let star_generator =
     let p = 0.08 in
     if (Random.float 1.0) > p then 1 else 2
 
-(** [player_color_from_node st node] is the option of the color of [node]
-    in [st]. This is [Some color] if the owner of the node is [Some player]
-    and [None] if the owner of the node is [None]. *)
-let player_color_from_node (st : t) (node_id : Board.node_id) = 
-  match (node_owner st node_id) with
-  | Some p -> Some (Player.player_color p)
-  | None -> None
-
 (** [dfs node visited] is a special implementation of a depth first search that
     will only go along monochromatic paths. 
     Returns a list of nodes visited. *)
@@ -305,7 +297,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
 
   (* update state of new owner *)
   in let new_player_st
-      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
+      {nodes=nodes'; conts=conts'; stars=stars'} =
        {
          (* add node to list of controlled nodes *)
          nodes = String_set.add node nodes';
@@ -319,7 +311,7 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
 
   (* update state of previous owner *)
   in let prev_player_st
-      ({nodes=nodes'; conts=conts'; stars=stars'} : player_state) : player_state =
+      {nodes=nodes'; conts=conts'; stars=stars'} =
        {
          (* remove node from list of controlled nodes *)
          nodes = String_set.remove node nodes';

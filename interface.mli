@@ -101,8 +101,8 @@ val move_arrow : t -> arrow -> t
     [node]. *)
 val set_cursor_node : t -> node_id option -> t
 
-(** [pick st] is the interface [st] with the game state with the cursor node
-    selected to be owned by the current player. *)
+(** [pick st] is the interface [st] with a new game state resulting from the 
+    current player picking the current cursor node in [st]. *)
 val pick : t -> t
 
 (** [change_game_st st gamestate] is the interface with 

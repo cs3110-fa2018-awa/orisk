@@ -116,6 +116,7 @@ let player_c = lazy (Player.create "player_c" Blue false)
 let player_tests = [
   gen_comp "player name" (lazy (player_name (~$ player_a))) "player_a" str;
   gen_comp "player color" (lazy (player_color (~$ player_a))) Red null;
+  gen_comp "player ai" (lazy (player_artificial (~$ player_a))) false bool; 
 ]
 
 let demo_players = lazy [
@@ -201,6 +202,8 @@ let board_state_tests = [
     (pp_list str);
   gen_comp "owners" (lazy (owners (~$ init_board_state))) 
     [None;None;None;None;None;None] null;
+  gen_comp "frontier nodes" 
+    (lazy (player_frontiers (~$ init_board_state) (~$ player_a))) [] null;
 
   (* player stats *)
   gen_comp "stats player" 
@@ -230,6 +233,7 @@ let turn_fortify_toselect =
   lazy (set_turn (~$ init_game_state) (Fortify (ToSelectF "Rose")))
 let turn_fortify_count = 
   lazy (set_turn (~$ init_game_state) (Fortify (CountF ("Rose","LR7"))))
+let turn_trade = lazy (set_turn (~$ init_game_state) Trade)
 
 let player_a_own_RPCC_LR7 = lazy 
   (set_owner (set_owner (~$ init_board_state) "RPCC" (Some (~$ player_a))) 
@@ -273,6 +277,17 @@ let game_state_tests = [
   except_comp "game state cannot attack oneself"
     (lazy (attack (~$ attack_state) "Keeton" "Rose" 2))
     (NotOwner "Keeton");
+  except_comp "battle won" (lazy (battle_won (~$ init_game_state))) 
+    (Failure "Turn is not attack");
+  except_comp "remain reinforce exn" 
+    (lazy (remaining_reinforcements (~$ init_game_state))) 
+    (InvalidState (Pick 8));
+  except_comp "turn valid node attack occupy" 
+    (lazy (turn_valid_nodes (~$ turn_attack_occupy))) 
+    (Failure "shouldn't happen");
+  except_comp "turn valid node fortify count" 
+    (lazy (turn_valid_nodes (~$ turn_fortify_count))) 
+    (Failure "shouldn't happen");
 
   (* attack *)
   gen_comp "game state attack"
@@ -296,8 +311,24 @@ let game_state_tests = [
     "Fortifying from Flora Rose, select destination" str;
   gen_comp "set turn6" (lazy (turn_to_str (~$ turn_fortify_count))) 
     "Move troops from Flora Rose to Low Rise 7" str;
+  gen_comp "set turn7" (lazy (turn_to_str (~$ turn_trade))) 
+    "Choose how many stars to trade in for armies" str;
   gen_comp "remaining" 
     (lazy (remaining_reinforcements (~$ turn_reinforce))) 0 int;
+  gen_comp "turn valid pick" 
+    (lazy (turn_valid_nodes (~$ init_game_state))) 
+    ["HR5"; "JAM"; "Keeton"; "LR7"; "RPCC"; "Rose"] (pp_list str);
+  gen_comp "turn valid reinforce select" 
+    (lazy (turn_valid_nodes (~$ turn_reinforce))) [] (pp_list str);
+  gen_comp "turn valid attack select" 
+    (lazy (turn_valid_nodes (~$ attack_state))) ["RPCC"] (pp_list str);
+  gen_comp "turn valid attack defend" 
+    (lazy (turn_valid_nodes (~$ turn_attack_defend))) ["Keeton"] (pp_list str);
+  gen_comp "turn valid fortify select" 
+    (lazy (turn_valid_nodes (~$ turn_fortify_fromselect))) [] (pp_list str);
+  gen_comp "turn valid fortify to" 
+    (lazy (turn_valid_nodes (~$ turn_fortify_toselect))) 
+    ["HR5"; "JAM"; "Keeton"; "LR7"; "RPCC"] (pp_list str);
 ]
 
 let suite =

@@ -104,7 +104,8 @@ let game_stage st = match st |> game_state |> turn with
   | Trade -> failwith "sanity check"
   | Reinforce (SelectR,_) -> reinforce_place st (Some (cursor_node st)),None
   | Reinforce (PlaceR node,remaining) -> failwith ";-;"
-  | Attack (AttackSelectA, _) -> Some (cursor_node st) |> change_attack_node st,None
+  | Attack (AttackSelectA, _) 
+    -> Some (cursor_node st) |> change_attack_node st,None
   | Attack (DefendSelectA node, _)
     -> let gst',attack,defend = attack (game_state st) node (cursor_node st) 
            (min ((node_army (board_state st) node) - 1) 3)
@@ -229,7 +230,10 @@ let parse_input st msg search :
       | Fortify (FromSelectF | ToSelectF _)
         (* these states have standard input *)
         -> parse_standard_input st msg search
-      | Trade | Reinforce (PlaceR _,_) | Attack (OccupyA _, _) | Fortify (CountF _)
+      | Trade 
+      | Reinforce (PlaceR _,_) 
+      | Attack (OccupyA _, _) 
+      | Fortify (CountF _)
         (* these states have numerical input *)
         -> parse_num_input st msg search
     end
@@ -396,6 +400,7 @@ let title =
   ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
   ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
+(** [json_in_dir d] is a list of all files in [d] with [.json] extension. *)
 let json_in_dir d =
   let rec build acc dir =
     try build ((Unix.readdir dir) :: acc) dir with
@@ -403,7 +408,8 @@ let json_in_dir d =
   in Unix.opendir d |> build []
      |> List.filter (fun s -> Filename.check_suffix s ".json")
 
-(** [game ()] prompts for the game json file to load and then starts it. 
+(** [game ()] lists all the json files in the current directory and then 
+    prompts for the game json file to load and starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
     in the current directory, files without .json extension, or files that do 
     not exist. *)

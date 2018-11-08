@@ -2,6 +2,9 @@ open Board
 open Board_state
 open Game_state
 
+(** [move] is the type of move a player can perform in the game. Corresponds
+    to [Game_state.turn_state] because a player can perform a move for each 
+    turn. [FinishM] is equivalent to ending the turn. *)
 type move =
   | PickM of node_id
   | TradeM of int
@@ -11,6 +14,7 @@ type move =
   | FortifyM of node_id * node_id * army
   | FinishM
 
+(** [string_of_move move] is the [string] representation of [move]. *)
 let string_of_move = function
   | PickM node -> "Pick " ^ node
   | TradeM stars -> "Trade in " ^ (string_of_int stars) ^ " stars" 
@@ -25,6 +29,8 @@ let string_of_move = function
     "Fortify " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
   | FinishM -> "Finish"
 
+(** [apply_move gs move] is the game state resulting from applying [move] in
+    [gs]. *)
 let apply_move gs move = match (turn gs), move with
   | Pick _, PickM node
     -> pick_nodes gs node
@@ -44,19 +50,25 @@ let apply_move gs move = match (turn gs), move with
   | _, FinishM -> gs
   | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
 
+(** [range min max] is a list of consecutive integers from [min] to 
+    [max], inclusive. *)
 let range min max =
   let rec internal acc = function
     | n when n = min - 1 -> acc
     | n -> internal (n :: acc) (n - 1)
   in internal [] max
 
-(** ['a String_map] is a map with keys of [node_id] or [cont_id]. *)
-module String_map = Map.Make (String)
-
+(** [valid_reinforcements gs remaining] is a list of valid [ReinforceM]. 
+    Valid is defined as reinforcing a frontier node, i.e. a node owned by the 
+    current player of [gs] that borders at least one node not owned by the 
+    current player, with [remaining] armies. *)
 let valid_reinforcements gs remaining =
   let frontiers = player_frontiers (board_st gs) (current_player gs)
   in List.map (fun frontier -> ReinforceM [(frontier, remaining)]) frontiers
 
+(** [valid_fortifications gs] is a list of valid [FortifyM]. 
+    Valid is defined as fortifying a frontier node with any amount of armies
+    from 1 to the amount of armies on the origin node minus 1. *)
 let valid_fortifications gs =
   let bs = board_st gs
   in let frontiers = player_frontiers (board_st gs) (current_player gs)
@@ -65,7 +77,7 @@ let valid_fortifications gs =
        in List.map (fun target ->
            begin List.map (fun n ->
                FortifyM (origin, target, n)) (range min max)
-           end) (dfs bs origin []
+           end) (dfs bs origin [] 
                  |> List.filter (fun target ->
                      target <> origin && List.mem target frontiers))
           |> List.flatten
@@ -73,6 +85,8 @@ let valid_fortifications gs =
       List.map (fun node -> moves_for_origin node) (turn_valid_nodes gs)
       |> List.flatten end
 
+(** [valid_moves gs] is a list of valid [moves] that can be applied by
+    the current player of [gs]. *)
 let valid_moves gs : move list =
   let bs = board_st gs
   in let brd = board bs
