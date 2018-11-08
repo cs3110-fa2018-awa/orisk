@@ -33,10 +33,15 @@ let rec move_edge_heuristic gs player move_trees personality =
     List.sort Pervasives.compare |> List.rev |> List.hd in
   (** [heur tree] is the heuristic score of [tree]. *) (*TODO*)
   let heur tree = match tree.moves with
-    | [] -> heuristic tree.game_state personality player
+    | [] -> print_endline "GOT HERE";heuristic tree.game_state personality player
     | _ -> internal tree in
+  print_endline ("move edge heur: "^(string_of_float (List.fold_left 
+                                                        (fun acc ({probability} as tree) ->
+                                                           acc+.(probability*.(heur tree))) 0. move_trees)));
   List.fold_left 
     (fun acc ({probability} as tree) ->
+       print_endline ("tree heur: "^(string_of_float (heur tree)));
+       print_endline ("probability: "^(string_of_float (probability)));
        acc+.(probability*.(heur tree))) 0. move_trees
 
 (** [attack_tree gs attacker defender armies] is a list of [move_tree] 
@@ -149,8 +154,8 @@ let rec move_edge gs player personality depth move =
   let move_trees = match depth,(turn gs) with
     | 0,_ | _,Fortify _ | _,Pick _ -> move_probabilities gs move
     | _ -> List.map fill_moves (move_probabilities gs move)
-  in {move = move; outcomes = move_trees; 
-      heuristic = move_edge_heuristic gs player move_trees personality}
+  in print_endline ("calc move: "^(string_of_move move));{move = move; outcomes = move_trees; 
+                                                          heuristic = move_edge_heuristic gs player move_trees personality}
 
 (** [move_tree gs probability player personality depth] is the [move_tree]
     with [probability] built from [depth] best moves out of all the valid moves 

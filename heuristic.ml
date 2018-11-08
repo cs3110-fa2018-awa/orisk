@@ -42,7 +42,8 @@ let player_heuristic bs personality player =
          (fun acc node -> acc + (node_army bs node) - 1) 0 node_list
   in let frontier_armies = army_total frontier_nodes
   in let avg_frontier_armies =
-       (float_of_int frontier_armies) /. (float_of_int frontiers)
+       if frontiers = 0 then 0. 
+       else (float_of_int frontier_armies) /. (float_of_int frontiers)
        (*in let non_frontier_armies = army_total non_frontier_nodes
          in let frontier_differential = List.fold_left
               (fun acc node ->
@@ -50,16 +51,33 @@ let player_heuristic bs personality player =
                                            - (node_army bs node)) 0)) 0 
                                            frontier_nodes*)
   in let stars = player_stars bs player
-  in node_heuristic personality nodes
-     +. bonus_heuristic personality bonus
-     +. army_heuristic personality armies
-     +. region_heuristic personality regions
-     +. frontier_heuristic personality frontiers
-     +. frontier_armies_heuristic personality frontier_armies
-     +. avg_frontier_armies_heuristic personality avg_frontier_armies
-     (*+. non_frontier_armies_heuristic personality non_frontier_armies*)
-     (*+. frontier_differential_heuristic personality frontier_differential*)
-     +. stars_heuristic personality stars
+  in print_endline ("node heuristic: "^(string_of_float (node_heuristic personality nodes)));
+  print_endline ("army heuristic: "^(string_of_float (army_heuristic personality armies)));
+  print_endline ("region heuristic: "^(string_of_float (region_heuristic personality regions))); 
+  print_endline ("frontier heuristic: "^(string_of_float (frontier_heuristic personality frontiers))); 
+  print_endline ("avg frontier armies heuristic: "^(string_of_float (avg_frontier_armies_heuristic personality avg_frontier_armies))); 
+  print_endline ("stars heuristic: "^(string_of_float (stars_heuristic personality stars))); 
+  print_endline ("sum: "^(string_of_float (node_heuristic personality nodes
+                                           +. bonus_heuristic personality bonus 
+                                           +. army_heuristic personality armies
+                                           +. region_heuristic personality regions
+                                           +. frontier_heuristic personality frontiers
+                                           +. frontier_armies_heuristic personality frontier_armies
+                                           +. avg_frontier_armies_heuristic personality avg_frontier_armies
+                                           (*+. non_frontier_armies_heuristic personality non_frontier_armies*)
+                                           (*+. frontier_differential_heuristic personality frontier_differential*)
+                                           +. stars_heuristic personality stars)));
+
+  node_heuristic personality nodes
+  +. bonus_heuristic personality bonus 
+  +. army_heuristic personality armies
+  +. region_heuristic personality regions
+  +. frontier_heuristic personality frontiers
+  +. frontier_armies_heuristic personality frontier_armies
+  +. avg_frontier_armies_heuristic personality avg_frontier_armies
+  (*+. non_frontier_armies_heuristic personality non_frontier_armies*)
+  (*+. frontier_differential_heuristic personality frontier_differential*)
+  +. stars_heuristic personality stars
 
 (** [heuristic gs personality player] is the [score] of [player] with 
     [personality] in [gs]. Takes into account the [player_heuristic] of all the 
@@ -73,7 +91,16 @@ let heuristic gs personality player =
        List.fold_left (+.) 0. opponent_heuristics /. (float_of_int opponent_num)
        (*in let max_opponent = List.fold_left max 0. opponent_heuristics*)
   in let heuristic = player_heuristic (board_st gs) personality player
-  in heuristic
-     +. opponent_num_heuristic personality opponent_num
-     (*+. max_opponent_heuristic personality max_opponent*)
-     +. avg_opponent_heuristic personality avg_opponent
+  in 
+  print_endline ("opponent heuristic: "^(string_of_float (opponent_num_heuristic personality opponent_num))); 
+  print_endline ("avg opponent heuristic: "^(string_of_float (avg_opponent_heuristic personality avg_opponent))); 
+  print_endline ("total heuristic: "^(string_of_float (heuristic
+                                                       +. opponent_num_heuristic personality opponent_num
+                                                       (*+. max_opponent_heuristic personality max_opponent*)
+                                                       +. avg_opponent_heuristic personality avg_opponent)));
+  print_endline "";
+
+  heuristic
+  +. opponent_num_heuristic personality opponent_num
+  (*+. max_opponent_heuristic personality max_opponent*)
+  +. avg_opponent_heuristic personality avg_opponent
