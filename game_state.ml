@@ -589,6 +589,7 @@ open Yojson.Basic.Util
 (* quick note: we don't care about the sub-turn state when saving/loading
    because these sub-states don't change the game at all. *)
 
+(** [turn_of_json] is the game turn that [json] represents. *)
 let turn_of_json json =
   try begin
     let name = json |> member "name" |> to_string
@@ -609,6 +610,7 @@ let turn_of_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load game state turn: " ^ msg)
 
+(** [json_of_turn turn] is the JSON assoc object representing [turn]. *)
 let json_of_turn turn =
   let name, data = match turn with
     | Pick army -> "pick", `Int army
@@ -621,6 +623,7 @@ let json_of_turn turn =
     ("data", data);
   ]
 
+(** [game_state_of_json json] is the game state that [json] represents. *)
 let game_state_of_json json =
   try begin
     let players = json |> member "players" |> to_list |> List.map player_of_json
@@ -638,6 +641,8 @@ let game_state_of_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load game state: " ^ msg)
 
+(** [json_of_game_state gamestate] is the JSON assoc object
+    representing [gamestate].*)
 let json_of_game_state gs =
   `Assoc [
     ("board_state", gs.board_state |> json_of_board_state);

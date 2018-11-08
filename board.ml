@@ -73,6 +73,8 @@ let coords_of_node json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load board coords: " ^ msg)
 
+(** [json_of_chords (x, y)] is the JSON assoc object representing 
+    coordinates [(x,y)]. *)
 let json_of_coords (x, y) =
   `Assoc [("x", `Int x); ("y", `Int y)]
 
@@ -90,6 +92,7 @@ let node_of_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load board node: " ^ msg)
 
+(** [json_of_node node] is the JSON assoc object representing [node]. *)
 let json_of_node (node : node) =
   `Assoc [
     ("id", `String node.id);
@@ -112,6 +115,7 @@ let cont_of_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load board cont: " ^ msg)
 
+(** [json_of_cont cont] is the JSON assoc object representing [cont]. *)
 let json_of_cont (cont : cont) =
   `Assoc [
     ("id", `String cont.id);
@@ -171,6 +175,7 @@ let from_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load board: " ^ msg)
 
+(** [json_of_board board] is the JSON assoc object representing [board]. *)
 let json_of_board board : Yojson.Basic.json =
   `Assoc [
     ("map", `String board.name);

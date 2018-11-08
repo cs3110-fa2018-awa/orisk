@@ -354,8 +354,11 @@ let player_frontiers bs player =
          (node_borders (board bs) node))
   in List.filter predicate (player_nodes bs player)
 
+(* save/load JSON functions ----------------------------------------------- *)
+
 open Yojson.Basic.Util
 
+(** [node_state_of_json] is the node state that [json] represents. *)
 let node_state_of_json json =
   {
     id = json |> member "id" |> to_string;
@@ -363,6 +366,8 @@ let node_state_of_json json =
     army = json |> member "army" |> to_int;
   }
 
+(** [json_of_node_state node_state] is the JSON assoc object that 
+    represents [node_state]. *)
 let json_of_node_state (ns : node_state) =
   `Assoc begin
     ("id", `String ns.id) ::
@@ -374,23 +379,33 @@ let json_of_node_state (ns : node_state) =
     end
   end
 
+(** [json_of_player_stars player_state] is the JSON assoc object that 
+    represents [player_state]. *)
 let json_of_player_stars (ps : player_state) =
   `Assoc [("player",
            `String (player_name ps.player)); ("stars", `Int (ps.stars))]
 
+(** [player_stars_of_json json] is the JSON assoc object that represents
+    [json]. *)
 let player_stars_of_json json =
   json |> to_list |> List.map (fun j ->
       (j |> member "player" |> to_string,
        j |> member "stars" |> to_int))
 
+(** [map_of_list adder ider map list] is the map of bindings of [ider e]
+    to [e] in [map], for each [e] element [e] in [list], using [adder]. *)
 let rec map_of_list adder ider map = function
   | [] -> map
   | hd :: tl -> map_of_list adder ider (adder (ider hd) hd map) tl
 
+(** [set_of_list adder set list] is the set of elements in [list] using
+    [adder].*)
 let rec set_of_list adder set = function
   | [] -> set
   | hd :: tl -> set_of_list adder (adder hd set) tl
 
+(** [board_state_of_json json] is the board state that [json] represents. 
+    Fails when a Yojson type error is raised. *)
 let board_state_of_json json =
   try begin
     let board = json |> member "board" |> Board.from_json
@@ -438,6 +453,8 @@ let board_state_of_json json =
     j |> Yojson.Basic.to_string |> print_endline;
     failwith ("failed to load board state: " ^ msg)
 
+(** [json_of_board_state board_state] is the JSON assoc object that 
+    represents [board_state]. *)
 let json_of_board_state st =
   `Assoc [
     ("board", st.board |> Board.json_of_board);

@@ -95,6 +95,9 @@ let draw_turn (st : Interface.t) : unit =
   (*print_string [] (Al.best_move (game_state st) 4 |> Move.string_of_move);*)
   print_string [] "\n"
 
+(** [draw_line state num line] prints a substring of [line] bounded by the
+    scroll parameters of [state] if [num] is within vertical scroll bounds, and
+    returns [num] + 1. *)
 let draw_line st num line : int =
   let scrollx, scrolly = scroll st
   in let disp = 
@@ -170,6 +173,9 @@ let centered_y_coord board_height leaderboard_height =
   min ((terminal_height - 3) / 2 - (leaderboard_height / 2) + 1)
     (board_height / 2 - (leaderboard_height / 2) + 1)
 
+(** [stats_draw_one_line ps gs brd header scyi col_len] prints one row of 
+    player stats given by [ps] at its correct location in [gs].
+    Helper for [draw_stats]. *)
 let stats_draw_one_line (ps : Board_state.player_stats)
     gs brd header set_cursor_y_incr col_len : unit =
   match ps with

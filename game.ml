@@ -76,6 +76,14 @@ let char_regexp = Str.regexp "[A-Za-z0-9]"
     an integer. *)
 let int_regexp = Str.regexp "[0-9]"
 
+(** [read_abst_int as regexp str prev] is [Some s] where [s] is the 
+    string representation of the input entered by the user before
+    pressing either the spacebar or return key and [None] if the
+    user inputs "?"" or "\\"". 
+
+    This prevents users from entering anything except the characters
+    specified by [regexp], but they will still be able to quit or
+    rewind the turn to [prev]. *)
 let rec read_abstr_int allow_space regexp str prev : string option =
   ANSITerminal.move_cursor (- (String.length prev)) 0;
   ANSITerminal.erase Eol;
@@ -104,6 +112,13 @@ let rec read_abstr_int allow_space regexp str prev : string option =
     quit and rewind the turn. *)
 let read_num str : string option = read_abstr_int true int_regexp "" ""
 
+(** [read_num str prev] is [Some s] where [s] is the string entered by the user
+    before pressing either the spacebar or return key and [None] if the user
+    inputs "?"" or "\\"". 
+
+    This prevents users from entering anything except 
+    alphanumeric characters when [read_num] is applied. However, they will
+    still be able to quit and rewind the turn. *)
 let read_str str : string option = read_abstr_int false char_regexp "" ""
 
 (** [game_stage st] is [(st',x)] where [st'] is the new state from evaluating
@@ -144,9 +159,11 @@ let game_nums st num = match st |> game_state |> turn with
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
   | _ -> failwith "shouldnt happen"
 
+(** [save st file] saves the JSON object representing game state [st] to [file]. *)
 let save st file =
   Yojson.Basic.to_file file (st |> game_state |> json_of_game_state)
 
+(** [load file] initializes the game with the game state represented in [file]. *)
 let load file =
   Yojson.Basic.from_file file |> game_state_of_json |> Interface.init
 
@@ -157,6 +174,9 @@ let perform_search st str : (string * bool) =
   let found_node = node_search (st |> Interface.board) str in
   str,found_node <> None
 
+(** [handle_save st msg search] saves [st] to a user specified file with a message
+    and no search if the file name is valid, or returns [st] with no state and 
+    search. *)
 let handle_save st msg search =
   print_string "Enter file name to save to [.risk] > ";
   match (read_str "") with
@@ -398,6 +418,7 @@ let rec insert_players
           | _, _, _ -> insert_players pl c t false msg
         end)
 
+(** [risk_board f] starts a new game of Risk! from board [f]. *)
 let risk_board f =
   let board = Board.from_json (Yojson.Basic.from_file f) in
   let players = List.rev 
@@ -406,10 +427,13 @@ let risk_board f =
   try game_loop_new (Game_state.init board players |> Interface.init) None with 
   | End_of_file -> print_endline ("\nThanks for playing!\n"); exit 0
 
+(** [risk_saved_game f] loads a saved game of Risk! from save file [f]. *)
 let risk_saved_game f =
   try game_loop_new (load f) None with
   | End_of_file -> print_endline ("\nThanks for playing!\n"); exit 0
 
+(** [BadExtension] is raised when the user attempts to load a file that 
+    does not have an extension of .json or .risk. *)
 exception BadExtension of string
 
 (** [risk f] starts the game in [f]. 

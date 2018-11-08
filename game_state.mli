@@ -260,6 +260,9 @@ val is_pick : t -> bool
     [stars] and will gain a number of armies to reinforce with. *)
 val trade_stars : t -> int -> t
 
+(** [game_state_of_json json] is the game state that [json] represents. *)
 val game_state_of_json : Yojson.Basic.json -> t
 
+(** [json_of_game_state gamestate] is the JSON assoc object
+    representing [gamestate].*)
 val json_of_game_state : t -> Yojson.Basic.json
