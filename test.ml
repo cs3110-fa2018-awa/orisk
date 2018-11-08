@@ -260,7 +260,7 @@ let game_state_tests = [
   gen_comp "game state current_player"
     (lazy (current_player (~$ init_game_state))) (~$ player_a) player_p;
   gen_comp "game state turn"
-    (lazy (turn (~$ init_game_state))) (Pick 8) null;
+    (lazy (turn (~$ init_game_state))) (Pick 6) null;
 
   (* exceptions *)
   except_comp "game state no players"
@@ -270,7 +270,7 @@ let game_state_tests = [
     (FriendlyFire (Some (~$ player_a)));
   except_comp "game state invalid state"
     (lazy (attack (~$ init_game_state) "LR7" "JAM" 2)) 
-    (InvalidState (Pick 8));
+    (InvalidState (Pick 6));
   except_comp "game state insufficient armies"
     (lazy (attack (~$ attack_state) "RPCC" "HR5" 16))
     (InsufficientArmies ("RPCC", 1));
@@ -281,7 +281,7 @@ let game_state_tests = [
     (Failure "Turn is not attack");
   except_comp "remain reinforce exn" 
     (lazy (remaining_reinforcements (~$ init_game_state))) 
-    (InvalidState (Pick 8));
+    (InvalidState (Pick 6));
   except_comp "turn valid node attack occupy" 
     (lazy (turn_valid_nodes (~$ turn_attack_occupy))) 
     (Failure "shouldn't happen");
