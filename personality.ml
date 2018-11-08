@@ -95,7 +95,7 @@ let stars_heuristic p num = (~~ num) *. 100.
 (** [opponent_num_heuristic p num] is the heuristic score of [num] opponent
     players from personality [p]. Negatively weights more opponents so 
     incentivize opponent elimination. *)
-let opponent_num_heuristic p num = ~-. ((~~ num) *. 100.) *. (~~ (p.spite))
+let opponent_num_heuristic p num = ~-. ((~~ num) *. 5000.) *. (~~ (p.spite))
 
 (** [max_opponent_heuristic p num] is the heuristic score of [num] where
     [num] is the maximum opponent heuristic from personality [p]. 
