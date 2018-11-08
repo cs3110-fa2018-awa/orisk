@@ -259,3 +259,7 @@ val is_pick : t -> bool
     in [stars] during the [Trade] phase of the game; the player will lose
     [stars] and will gain a number of armies to reinforce with. *)
 val trade_stars : t -> int -> t
+
+val game_state_of_json : Yojson.Basic.json -> t
+
+val json_of_game_state : t -> Yojson.Basic.json

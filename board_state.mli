@@ -119,6 +119,10 @@ val owners : t -> (Player.t option) list
     [player] in [bs] and also border nodes not controlled by [player]. *)
 val player_frontiers : t -> Player.t -> node_id list
 
+val board_state_of_json : Yojson.Basic.json -> t
+
+val json_of_board_state : t -> Yojson.Basic.json
+
 (** [UnknownPlayer player] is raised if [player] is not in the [players] of 
     the current [state]. *)
 exception UnknownPlayer of Player.t

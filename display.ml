@@ -241,6 +241,7 @@ let help_str_pick = [
   "[tab]         cycle through nodes";
   "[a-z 0-9]     search the board";
   "[`]           populate the board territories randomly";
+  "[.]           save game";
   "[-]           toggle help";
   "[esc]         quit game"
 ]
@@ -267,6 +268,7 @@ let help_str_game = [
   "[tab]         cycle through relevant nodes";
   "[a-z 0-9]     search the board";
   "[=]           toggle leaderboard";
+  "[.]           save game";
   "[-]           toggle help";
   "[esc]         quit game";
   "";

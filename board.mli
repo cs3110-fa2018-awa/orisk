@@ -21,6 +21,8 @@ type army = int
 (** [from_json json] is the board represented by [json]. *)
 val from_json : Yojson.Basic.json -> t
 
+val json_of_board : t -> Yojson.Basic.json
+
 (** [x coords] is the x coordinate of [coords]. *)
 val x : coords -> int
 

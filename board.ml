@@ -68,25 +68,57 @@ exception UnknownCont of cont_id
 
 (** [coords_of_node json] is the [coords] value represented by [json]. *)
 let coords_of_node json =
-  (json |> member "x" |> to_int), (json |> member "y" |> to_int)
+  try (json |> member "x" |> to_int), (json |> member "y" |> to_int) with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load board coords: " ^ msg)
+
+let json_of_coords (x, y) =
+  `Assoc [("x", `Int x); ("y", `Int y)]
 
 (** [node_of_json json] is the [node] value represented by [json]. *)
 let node_of_json json =
-  {
-    id = json |> member "id" |> to_string;
-    name = json |> member "name" |> to_string;
-    coords = json |> member "coordinates" |> coords_of_node;
-    borders = json |> member "borders" |> to_list |> List.map to_string;
-  }
+  try begin
+    {
+      id = json |> member "id" |> to_string;
+      name = json |> member "name" |> to_string;
+      coords = json |> member "coordinates" |> coords_of_node;
+      borders = json |> member "borders" |> to_list |> List.map to_string;
+    }
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load board node: " ^ msg)
+
+let json_of_node (node : node) =
+  `Assoc [
+    ("id", `String node.id);
+    ("name", `String node.name);
+    ("coordinates", json_of_coords node.coords);
+    ("borders", `List (List.map (fun border -> `String border) node.borders))
+  ]
 
 (** [cont_of_json json] is the [cont] value represented by [json]. *)
 let cont_of_json json =
-  {
-    id = json |> member "id" |> to_string;
-    name = json |> member "name" |> to_string;
-    bonus = json |> member "bonus" |> to_int;
-    nodes = json |> member "territories" |> to_list |> List.map to_string;
-  }
+  try begin
+    {
+      id = json |> member "id" |> to_string;
+      name = json |> member "name" |> to_string;
+      bonus = json |> member "bonus" |> to_int;
+      nodes = json |> member "territories" |> to_list |> List.map to_string;
+    }
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load board cont: " ^ msg)
+
+let json_of_cont (cont : cont) =
+  `Assoc [
+    ("id", `String cont.id);
+    ("name", `String cont.name);
+    ("bonus", `Int cont.bonus);
+    ("territories", `List (List.map (fun border -> `String border) cont.nodes))
+  ]
 
 (** [node_list_to_map m lst] is the map [m] with the nodes in
     [lst] added. *)
@@ -122,17 +154,32 @@ let count_width str =
     is populated as expected using the helper functions above, except for
     [ascii_height], which is calculated from the [ascii] field. *)
 let from_json json =
-  let ascii =  json |> member "ascii" |> to_string in
-  {
-    name = json |> member "map" |> to_string;
-    ascii = ascii;
-    ascii_height = (count_newlines ascii) + 1;
-    ascii_width = count_width ascii;
-    nodes = json |> member "territories" |> to_list
-            |> List.map node_of_json |> node_list_to_map String_map.empty;
-    conts = json |> member "continents" |> to_list
-            |> List.map cont_of_json |> cont_list_to_map String_map.empty;
-  }
+  try begin
+    let ascii = json |> member "ascii" |> to_string in
+    {
+      name = json |> member "map" |> to_string;
+      ascii = ascii;
+      ascii_height = (count_newlines ascii) + 1;
+      ascii_width = count_width ascii;
+      nodes = json |> member "territories" |> to_list
+              |> List.map node_of_json |> node_list_to_map String_map.empty;
+      conts = json |> member "continents" |> to_list
+              |> List.map cont_of_json |> cont_list_to_map String_map.empty;
+    }
+  end with
+  | Yojson.Basic.Util.Type_error (msg, j) ->
+    j |> Yojson.Basic.to_string |> print_endline;
+    failwith ("failed to load board: " ^ msg)
+
+let json_of_board board : Yojson.Basic.json =
+  `Assoc [
+    ("map", `String board.name);
+    ("ascii", `String board.ascii);
+    ("territories", `List (board.nodes |> String_map.bindings
+                     |> List.map (fun (_, node) -> json_of_node node)));
+    ("continents", `List (board.conts |> String_map.bindings
+                     |> List.map (fun (_, cont) -> json_of_cont cont)));
+  ]
 
 (** [board_node board] is the name of [board]. *)
 let board_name board = board.name
