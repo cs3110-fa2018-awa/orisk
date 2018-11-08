@@ -276,7 +276,7 @@ let assign_random_nodes (st : t) : t =
   {st' with turn = (let total_nodes = 
                       st.board_state |> board |> nodes |> List.length in
                     let total_players = st.players |> List.length in
-                    Pick (total_nodes/total_players));
+                    Pick ((total_nodes/total_players) + 1));
             current_player = first_player}
 
 (** [pick_nodes st node] is the result of the current player in [st] picking
