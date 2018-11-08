@@ -336,7 +336,7 @@ let rec game_loop_new ?(search : string * bool = "",false)
       Unix.sleep 1; 
       let gs = game_state st in
       game_loop_new 
-        (Al.best_move gs 4 |> Move.apply_move gs |> change_game_st st) None
+        (Al.best_move gs 3 |> Move.apply_move gs |> change_game_st st) None
     end
   else begin
     (* parsing inputs *)

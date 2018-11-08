@@ -130,12 +130,14 @@ let fortify_select st node1 node2 =
 (** [pi] is the float approximation of the mathematical constant pi. *)
 let pi = acos (~-. 1.)
 
-(** [target_angle arrow] is the angle in radians corresponding to [arrow]. *)
-let target_angle arrow : float = match arrow with
-  | Up -> ~-. (pi /. 2.)
-  | Down -> (pi /. 2.)
-  | Left -> pi
-  | Right -> 0.
+(** [target_angle arrow wrapx wrapy] is the angle in radians corresponding to 
+    [arrow]. If [wrapx] and horizontal [arrow] then the angle is inverted. 
+    Similarly with [wrapy] and vertical [arrow].*)
+let target_angle arrow wrapx wrapy : float = match arrow with
+  | Up -> if wrapy then (pi /. 2.) else ~-. (pi /. 2.)
+  | Down -> if wrapy then ~-. (pi /. 2.) else (pi /. 2.)
+  | Left -> if wrapx then 0. else pi
+  | Right -> if wrapx then pi else 0.
 
 (** [angle_diff a b] is the angle difference between angles [a] and [b],
     in radians. *)
@@ -146,16 +148,19 @@ let angle_diff a b = atan2 (sin (b -. a)) (cos (b -. a)) |> abs_float
     in about the same direction from [node] as [arrow] in [board], or 
     [None] if such a node does not exist. *)
 let find_best_move brd node arrow : (arrow * node_id option) =
-  let target = target_angle arrow
-  in (arrow, snd begin
+  (arrow, snd begin
       List.fold_left
         (fun ((prev, _) as acc : float * node_id option) (adj : node_id) ->
            begin
              let x, y = node_coords brd node
              in let ax, ay = node_coords brd adj
+             in let distancex = abs (x - ax)
+             in let distancey = abs (y - ay) 
+             in let wrapx = (board_ascii_width brd) / 2 < distancex 
+             in let wrapy = (board_ascii_height brd) / 2 < distancey
              in let theta =
                   atan2 (float_of_int (ay - y)) (float_of_int (ax - x))
-             in let diff = angle_diff theta target
+             in let diff = angle_diff theta (target_angle arrow wrapx wrapy)
              in if diff < prev then (diff, Some adj) else acc
            end
         ) (pi /. 2., None) (node_borders brd node)
