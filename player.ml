@@ -35,6 +35,7 @@ let player_artificial player = player.artificial
 (** [compare player1 player2] is implemented using [Pervasives.compare]
     and the respective IDs of each player, which are unique. This allows
     [Player.t] to be stored in a binary search tree. *)
+
 let compare player1 player2 = Pervasives.compare player1.id player2.id
 
 open ANSITerminal

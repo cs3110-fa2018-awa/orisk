@@ -86,8 +86,8 @@ let change_attack_node st (node:node_id option) =
   | None -> st
   | Some n 
     -> {st with
-        game_state = 
-          set_turn st.game_state (Attack (DefendSelectA n, battle_won st.game_state))}
+        game_state = set_turn st.game_state 
+            (Attack (DefendSelectA n, battle_won st.game_state))}
 
 (** [from_fortify_node st] is the node that the current player is fortifying
     from in interface [st]. *)
@@ -179,6 +179,8 @@ let build_move_map gs : ((arrow * node_id option) list) String_map.t =
     (fun node acc -> String_map.add node (build_move_list brd node) acc)
     String_map.empty
 
+(** [human_player_check gs] is [true] if [gs] has at least one human player in 
+    the list of players and [false] otherwise. *)
 let human_player_check gs =
   let players = players gs in
   List.map (fun p -> Player.player_artificial p) players |> List.mem false 
@@ -204,8 +206,7 @@ let cursor_node st = st.cursor_node
 let scroll st = st.scroll
 
 (** [constrain n min max] bounds [n] between [min] and [max]. *)
-let constrain num minim maxim =
-  max (min num maxim) minim
+let constrain num minim maxim = max (min num maxim) minim
 
 (** [scroll_by st xscroll yscroll] is the interface [st] with the ASCII map in 
     the board display scrolled horizontally by [xscroll] and vertically by 
@@ -219,8 +220,7 @@ let scroll_by st xscroll yscroll =
                        (y st.scroll + yscroll) 0 (board_height - height + 3))}
 
 (** [gs st gs] is the interface [st] with game state [gs]. *)
-let gs st gs =
-  {st with game_state = gs}
+let gs st gs = {st with game_state = gs}
 
 (** [move_arrow st arrow] is the interface [st] with the cursor moved to the
     destination node corresponding with [arrow] from the current cursor node
@@ -237,8 +237,8 @@ let set_cursor_node st = function
   | None -> st
   | Some node_id -> {st with cursor_node = node_id} 
 
-(** [pick st] is the interface [st] with the game state with the cursor node
-    selected to be owned by the current player. *)
+(** [pick st] is the interface [st] with a new game state resulting from the 
+    current player picking the current cursor node in [st]. *)
 let pick st = {st with game_state = pick_nodes st.game_state st.cursor_node} 
 
 (** [change_game_st st gamestate] is the interface with 
