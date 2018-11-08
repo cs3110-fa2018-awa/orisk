@@ -28,9 +28,8 @@ val frontier_heuristic : t -> int -> float
     armies on frontier nodes using [p]. *)
 val frontier_armies_heuristic : t -> int -> float
 
-(** [avg_frontier_armies_heuristic p num] is the heuristic score of [num] 
-    average frontier armies using [p]. *)
-val avg_frontier_armies_heuristic : t -> float -> float
+(** *)
+val min_frontier_armies_heuristic : t -> float -> float
 
 (** [non_frontier_armies_heuristic p num] is the heuristic score of [num] 
     non-frontier armies using [p]. *)

@@ -67,11 +67,8 @@ let frontier_heuristic p num = ~-. ((~~ num) *. 5.) *. (~~ (p.defensivity))
     armies on frontier nodes. *)
 let frontier_armies_heuristic p num = ((~~ num) *. 5.) *. (~~ (p.defensivity))
 
-(** [avg_frontier_armies_heuristic p num] is the heuristic score of [num] 
-    average frontier armies from personality [p]. Frontier node is defined
-    the same as in [frontier_heuristic]. Positively weights evenly
-    spreading out armies among frontier nodes. *)
-let avg_frontier_armies_heuristic p num = (num *. 15.) *. (~~ (p.defensivity))
+(** *)
+let min_frontier_armies_heuristic p num = (num *. 15.) *. (~~ (p.defensivity))
 
 (** [non_frontier_armies_heuristic p num] is the heuristic score of [num] 
     non-frontier armies from personality [p]. Frontier node is defined
