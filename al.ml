@@ -140,7 +140,7 @@ let move_probabilities gs move =
   | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> [{game_state = end_turn_step gs; probability = 1.; moves = []}]
   | _, FinishM -> [{game_state = gs; probability = 1.; moves = []}]
-  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
+  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move (gs |> board_st |> board) move))
 
 (** [heuristic_compare e1 e2] compares the heuristic score of [e1] and [e2]
     using [Pervasives.compare]. *)

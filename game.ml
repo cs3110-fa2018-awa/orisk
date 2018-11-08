@@ -314,10 +314,10 @@ let print_message st msg (search : string * bool) =
     message [msg].
 
     Helper for [risk f]. *)
-let rec game_loop_new ?(search : string * bool = "",false) 
+let rec game_loop_new ?(search : string * bool = "",false) ?move
     (st : Interface.t) (msg : string option) : unit =
 
-  draw_board st;
+  draw_board st move;
   win_yet (game_state st);
   (* print message *)
   print_message st msg search;
@@ -335,8 +335,9 @@ let rec game_loop_new ?(search : string * bool = "",false)
     begin
       Unix.sleep 1; 
       let gs = game_state st in
-      game_loop_new 
-        (Al.best_move gs 4 |> Move.apply_move gs |> change_game_st st) None
+      let best_move = Al.best_move gs 4 in
+      game_loop_new ~move:best_move
+        (best_move|> Move.apply_move gs |> change_game_st st) None
     end
   else begin
     (* parsing inputs *)

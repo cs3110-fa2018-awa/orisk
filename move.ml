@@ -14,19 +14,19 @@ type move =
   | FortifyM of node_id * node_id * army
   | FinishM
 
-(** [string_of_move move] is the [string] representation of [move]. *)
-let string_of_move = function
-  | PickM node -> "Pick " ^ node
+(** [string_of_move brd move] is the [string] representation of [move]. *)
+let string_of_move brd = function
+  | PickM node -> "Pick " ^ node_name brd node
   | TradeM stars -> "Trade in " ^ (string_of_int stars) ^ " stars" 
   | ReinforceM list ->
     "Reinforce " ^
     (List.fold_left (fun acc (node, army) ->
-         acc ^ node ^ " with " ^ (string_of_int army)) "" list)
+         acc ^ node_name brd node ^ " with " ^ (string_of_int army)) "" list)
   | AttackM (node1, node2, army) ->
-    "Attack " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
+    "Attack " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " ^ (string_of_int army)
   | OccupyM army -> "Occupy with " ^ (string_of_int army)
   | FortifyM (node1, node2, army) ->
-    "Fortify " ^ node2 ^ " from " ^ node1 ^ " with " ^ (string_of_int army)
+    "Fortify " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " ^ (string_of_int army)
   | FinishM -> "Finish"
 
 (** [apply_move gs move] is the game state resulting from applying [move] in
@@ -48,7 +48,7 @@ let apply_move gs move = match (turn gs), move with
   | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> end_turn_step gs
   | _, FinishM -> gs
-  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
+  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move (gs |> board_st |> board) move))
 
 (** [range min max] is a list of consecutive integers from [min] to 
     [max], inclusive. *)
