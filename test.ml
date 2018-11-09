@@ -329,6 +329,11 @@ let game_state_tests = [
   gen_comp "turn valid fortify to" 
     (lazy (turn_valid_nodes (~$ turn_fortify_toselect))) 
     ["HR5"; "JAM"; "Keeton"; "LR7"; "RPCC"] (pp_list str);
+  
+  gen_comp "save load"
+    (lazy ((~$ init_game_state) |> json_of_game_state
+           |> game_state_of_json |> json_of_game_state))
+    (~$ init_game_state |> json_of_game_state) Yojson.Basic.pretty_to_string;
 ]
 
 let suite =

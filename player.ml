@@ -40,6 +40,7 @@ let compare player1 player2 = Pervasives.compare player1.id player2.id
 open ANSITerminal
 open Yojson.Basic.Util
 
+(*BISECT-IGNORE-BEGIN*)
 (** [color_of_string s] is the ANSITerminal color corresponding to [s]. *)
 let color_of_string = function
   | "black" -> Black
@@ -65,6 +66,7 @@ let string_of_color = function
   | Cyan -> "cyan"
   | White -> "white"
   | Default -> "default"
+(*BISECT-IGNORE-END*)
 
 (** [player_of_json json] is the player that [json] represents. *)
 let player_of_json json =
