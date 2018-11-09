@@ -4,6 +4,7 @@ open Board
 open Player
 open Board_state
 open Game_state
+open Personality
 
 (* General note to all those concerned.
 
@@ -350,6 +351,34 @@ let game_state_tests = [
     (lazy ((~$ turn_fortify_count) |> json_of_game_state
            |> game_state_of_json |> json_of_game_state))
     (~$ turn_fortify_count |> json_of_game_state) Yojson.Basic.pretty_to_string;
+] 
+
+let personality_default = lazy Personality.default
+
+let personality_tests = [
+  gen_comp "node heur" 
+    (lazy (node_heuristic (~$ personality_default) 5)) 500. string_of_float;
+  gen_comp "bonus heur" 
+    (lazy (bonus_heuristic (~$ personality_default) 5)) 250. string_of_float;
+  gen_comp "army heur" 
+    (lazy (army_heuristic (~$ personality_default) 5)) 125. string_of_float;
+  gen_comp "frontier heur" 
+    (lazy (frontier_heuristic (~$ personality_default) 5)) (~-. 125.)
+    string_of_float;
+  gen_comp "frontier army heur" 
+    (lazy (frontier_armies_heuristic (~$ personality_default) 5)) 125. 
+    string_of_float;
+  gen_comp "min frontier army" 
+    (lazy (min_frontier_armies_heuristic (~$ personality_default) 5.)) 375. 
+    string_of_float;
+  gen_comp "stars heur" 
+    (lazy (stars_heuristic (~$ personality_default) 5)) 500. string_of_float;
+  gen_comp "opponent num heur" 
+    (lazy (opponent_num_heuristic (~$ personality_default) 5)) (~-. 125000.)
+    string_of_float;
+  gen_comp "avg opponent heur" 
+    (lazy (avg_opponent_heuristic (~$ personality_default) 5.)) (~-. 1.25)
+    string_of_float;
 ]
 
 let suite =
@@ -358,6 +387,7 @@ let suite =
     player_tests;
     board_state_tests;
     game_state_tests;
+    personality_tests;
   ]
 
 let () = run_test_tt_main suite

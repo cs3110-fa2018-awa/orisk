@@ -38,7 +38,7 @@ let player_color player = player.color
 let player_artificial player = player.artificial
 
 (** [player_personality player] is the Personality.t of [player]. *)
-let player_personality player = player.personality
+let player_personality player = player.personality (*BISECT-IGNORE*) (*need ai*)
 
 (** [compare player1 player2] is implemented using [Pervasives.compare]
     and the respective IDs of each player, which are unique. This allows
