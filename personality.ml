@@ -33,6 +33,15 @@ let personality_create a g d s spon =
 (** [default] is the default [personality]. All fields are weighted equally. *)
 let default = personality_create 5 5 5 5 5
 
+(** [random] is a (non-deterministic) personality with each of the
+    characteristics randomized somewhere within the range [4,6]. *)
+let random _ = personality_create
+    (4 + Random.int 3)
+    (4 + Random.int 3)
+    (4 + Random.int 3)
+    (4 + Random.int 3)
+    (4 + Random.int 3)
+
 (** [~~ a] is equivalent to applying [Pervasives.float_of_int] to [a]. *)
 let (~~) a = float_of_int a
 
@@ -80,3 +89,25 @@ let opponent_num_heuristic p num = ~-. ((~~ num) *. 5000.) *. (~~ (p.spite))
     [num] is the average opponent heuristic from personality [p]. 
     Negatively weights allowing the average opponent heuristic to increase. *)
 let avg_opponent_heuristic p num = ~-. (num *. 0.05) *. (~~ (p.spite))
+
+open Yojson.Basic.Util
+
+(** [personality_of_json json] is the persoanlity that [json] represents. *)
+let personality_of_json json =
+  {
+    aggression = json |> member "aggression" |> to_int;
+    gambling = json |> member "gambling" |> to_int;
+    defensivity = json |> member "defensivity" |> to_int;
+    spite = json |> member "spite" |> to_int;
+    spontaneity = json |> member "spontaneity" |> to_int;
+  }
+
+(** [json_of_personality p] is the JSON representation of [p]. *)
+let json_of_personality p =
+  `Assoc [
+    ("aggression", `Int p.aggression);
+    ("gambling", `Int p.gambling);
+    ("defensivity", `Int p.defensivity);
+    ("spite", `Int p.spite);
+    ("spontaneity", `Int p.spontaneity);
+  ]

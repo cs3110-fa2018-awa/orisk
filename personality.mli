@@ -6,6 +6,10 @@ type t
 (** [default] is the default [t]. *)
 val default : t
 
+(** [random] is a (non-deterministic) personality with each of the
+    characteristics slightly randomized. *)
+val random : unit -> t
+
 (** [node_heuristic p num] is the heuristic score of [num] nodes using [p]. *)
 val node_heuristic : t -> int -> float
 
@@ -39,3 +43,9 @@ val opponent_num_heuristic : t -> int -> float
 (** [avg_opponent_heuristic p num] is the heuristic score of [num] where
     [num] is the average opponent heuristic using [p]. *)
 val avg_opponent_heuristic : t -> float -> float
+
+(** [personality_of_json json] is the persoanlity that [json] represents. *)
+val personality_of_json : Yojson.Basic.json -> t
+
+(** [json_of_personality p] is the JSON representation of [p]. *)
+val json_of_personality : t -> Yojson.Basic.json
