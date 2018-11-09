@@ -191,7 +191,7 @@ let move_tree gs probability player personality depth =
     computing heuristic. *)
 let best_move gs depth =
   let player = current_player gs
-  in let tree = move_tree gs 1. player Personality.default depth in
+  in let tree = move_tree gs 1. player (Player.player_personality player) depth in
   (*print_endline ("current gs heuristic "^
                  (string_of_float
                     (Heuristic.heuristic gs
