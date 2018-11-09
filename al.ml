@@ -35,15 +35,28 @@ let rec move_edge_heuristic gs player move_trees personality =
   let heur tree = match tree.moves with
     | [] -> (*print_endline "GOT HERE";*)heuristic tree.game_state personality player
     | _ -> internal tree in
-  (*print_endline ("\nmove edge heur: "^(string_of_float (List.fold_left 
-                                                          (fun acc ({probability} as tree) ->
-                                                             acc+.(probability*.(heur tree))) 0. move_trees)));*)
+  (* print_endline ("\nmove edge heur: "^(string_of_float (List.fold_left 
+                                                           (fun acc ({probability} as tree) ->
+                                                              acc+.(probability*.(heur tree))) 0. move_trees)));*)
   List.fold_left 
     (fun acc ({probability} as tree) ->
        (*print_endline ("tree heur: "^(string_of_float (heur tree)));
          print_endline ("probability: "^(string_of_float (probability)));
          print_endline "";*)
        acc+.(probability*.(heur tree))) 0. move_trees
+
+let large_attack_probability gs attacker defender = 
+  (* we are not statisticians so did some diffuse learning with 
+     https://boardgames.stackexchange.com/questions/3514/how-can-i-estimate-
+     my-chances-to-win-a-risk-battle *)
+  let expected_attack_loss = 0.922
+  in let expected_defend_loss = 1.08
+  in let total_attackers = (Board_state.node_army (board_st gs) attacker) - 1
+  in let total_defenders = Board_state.node_army (board_st gs) defender
+  in let ratio = (expected_attack_loss *. (float_of_int total_attackers)) /. 
+                 (expected_defend_loss *. (float_of_int total_defenders))
+  in if ratio > 1. then 1. 
+  else (ratio /. 2.) +. (0.015 *. (float_of_int total_attackers))
 
 (** [attack_tree gs attacker defender armies] is a list of [move_tree] 
     resulting from [attacker] attacking [defender] with [armies] in [gs].
@@ -84,15 +97,23 @@ let attack_tree gs attacker defender armies =
          {game_state = attack_outcome gs a d;
           probability = p; 
           moves = []} :: acc) [] lst in
-  match attack_armies,defend_armies with
-  (* Probabilities from https://web.stanford.edu/~guertin/risk.notes.html *)
-  | 1,1 -> outcomes [(1,0,0.5833);(0,1,0.4267)]
-  | 1,2 -> outcomes [(1,0,0.7454);(0,1,0.2546)]
-  | 2,1 -> outcomes [(1,0,0.4213);(0,1,0.5787)]
-  | 2,2 -> outcomes [(2,0,0.4483);(1,1,0.3241);(0,2,0.2276)]
-  | 3,1 -> outcomes [(1,0,0.3403);(0,1,0.6597)]
-  | 3,2 -> outcomes [(2,0,0.2926);(1,1,0.3358);(0,2,0.3717)]
-  | _ -> failwith "shouldn't happen"
+  if total_attackers > 3 || total_defenders > 2 
+  then let gs',_,_ =  attack gs attacker defender attack_armies 
+    in (*print_endline (string_of_float (large_attack_probability gs attacker defender));*)
+    [{game_state = gs';
+      probability = large_attack_probability gs attacker defender;
+      moves = []}]
+  else begin 
+    match attack_armies,defend_armies with
+    (* Probabilities from https://web.stanford.edu/~guertin/risk.notes.html *)
+    | 1,1 -> outcomes [(1,0,0.5833);(0,1,0.4267)]
+    | 1,2 -> outcomes [(1,0,0.7454);(0,1,0.2546)]
+    | 2,1 -> outcomes [(1,0,0.4213);(0,1,0.5787)]
+    | 2,2 -> outcomes [(2,0,0.4483);(1,1,0.3241);(0,2,0.2276)]
+    | 3,1 -> outcomes [(1,0,0.3403);(0,1,0.6597)]
+    | 3,2 -> outcomes [(2,0,0.2926);(1,1,0.3358);(0,2,0.3717)]
+    | _ -> failwith "shouldn't happen"
+  end
 
 (** [move_probabilities gs move] is a list of [move_tree] resulting from 
     applying [move] in [gs]. [moves] of each [move_tree] is empty. 
@@ -119,7 +140,7 @@ let move_probabilities gs move =
   | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> [{game_state = end_turn_step gs; probability = 1.; moves = []}]
   | _, FinishM -> [{game_state = gs; probability = 1.; moves = []}]
-  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move move))
+  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move (gs |> board_st |> board) move))
 
 (** [heuristic_compare e1 e2] compares the heuristic score of [e1] and [e2]
     using [Pervasives.compare]. *)
@@ -148,7 +169,7 @@ let rec move_edge gs player personality depth move =
     in let sorted_moves = List.sort
            (fun (_, h1) (_, h2) -> Pervasives.compare h2 h1) pairs
                           |> List.map fst
-    in let best_moves = sorted_moves(*first_n sorted_moves depth*)
+    in let best_moves = first_n sorted_moves depth
     in {move_tree with moves = List.map
                            (move_edge move_tree.game_state player personality
                               (depth-1)) best_moves} in 
@@ -171,12 +192,12 @@ let move_tree gs probability player personality depth =
 let best_move gs depth =
   let player = current_player gs
   in let tree = move_tree gs 1. player Personality.default depth in
-  print_endline ("current gs heuristic "^
+  (*print_endline ("current gs heuristic "^
                  (string_of_float
                     (Heuristic.heuristic gs
                        Personality.default player)));
-  ignore (List.map
+    ignore (List.map
             (fun edge -> print_endline
                 ((string_of_move edge.move)^" "^
-                 (string_of_float edge.heuristic))) tree.moves);
+                 (string_of_float edge.heuristic))) tree.moves);*)
   (List.sort_uniq heuristic_compare tree.moves |> List.rev |> List.hd).move

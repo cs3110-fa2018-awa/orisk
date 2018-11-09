@@ -122,7 +122,8 @@ let init board players =
     current_player = curr_player;
     turn = let total_nodes = board |> nodes |> List.length in
       let total_players = players |> List.length in
-      Pick ((total_nodes/total_players)+total_nodes);
+      let armies = (total_nodes / total_players) + total_nodes in
+      Pick (armies - (armies mod total_players));
   }
 
 (** [board_st st] is the board state of [st]. *)
@@ -275,7 +276,7 @@ let assign_random_nodes (st : t) : t =
   {st' with turn = (let total_nodes = 
                       st.board_state |> board |> nodes |> List.length in
                     let total_players = st.players |> List.length in
-                    Pick (total_nodes/total_players));
+                    Pick ((total_nodes/total_players) + 1));
             current_player = first_player}
 
 (** [pick_nodes st node] is the result of the current player in [st] picking

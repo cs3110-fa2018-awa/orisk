@@ -13,7 +13,7 @@ type move =
   | FinishM
 
 (** [string_of_move move] is the [string] representation of [move]. *)
-val string_of_move : move -> string
+val string_of_move : Board.t -> move -> string
 
 (** [apply_move gs move] is the game state resulting from applying [move] in
     [gs]. *)

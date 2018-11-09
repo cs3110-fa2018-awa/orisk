@@ -86,13 +86,19 @@ let draw_nodes (st : Interface.t) : unit =
 
 (** [draw_turn gamestate] prints the current turn information based
     on [gamestate]. *)
-let draw_turn (st : Interface.t) : unit = 
+let draw_turn (st : Interface.t) (move : Move.move option) : unit = 
   let player = game_state st |> current_player
   in print_string [Foreground (player_color player)] (player_name player);
   print_string [] " -- ";
   print_string [] (turn_to_str (game_state st));
-  print_string [] " -- ";
-  (* print_string [] (Al.best_move (game_state st) 0 |> Move.string_of_move);*)
+  if player_artificial player 
+  then begin
+    print_string [] " -- ";
+    match move with
+    | Some m -> 
+      print_string [] (Move.string_of_move (board st) m);
+    | None -> ()
+  end else ();
   print_string [] "\n"
 
 (** [draw_line state num line] prints a substring of [line] bounded by the
@@ -107,7 +113,7 @@ let draw_line st num line : int =
 
 (** [draw_board gamestate] prints the board ascii with the nodes populated
     with information from the board state corresponding to [gamestate]. *)
-let draw_board (st : Interface.t) : unit = 
+let draw_board (st : Interface.t) move : unit = 
   (* clear screen *)
   ANSITerminal.erase Screen;
   (* print topleft corner *)
@@ -121,7 +127,7 @@ let draw_board (st : Interface.t) : unit =
                      |> board_ascii_height) (height () - 3));
   print_string [] "\n";
   (* print out current turn information *)
-  draw_turn st
+  draw_turn st move
 
 (* leaderboard functions ---------------------------------------------------- *)
 
