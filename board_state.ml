@@ -392,13 +392,13 @@ let json_of_node_state (ns : node_state) =
     represents [player_state]. *)
 let json_of_player_stars (ps : player_state) =
   `Assoc [("player",
-           `String (player_name ps.player)); ("stars", `Int (ps.stars))]
+           json_of_player ps.player); ("stars", `Int (ps.stars))]
 
 (** [player_stars_of_json json] is the JSON assoc object that represents
     [json]. *)
 let player_stars_of_json json =
   json |> to_list |> List.map (fun j ->
-      (j |> member "player" |> to_string,
+      (j |> member "player" |> player_of_json,
        j |> member "stars" |> to_int))
 
 (** [map_of_list adder ider map list] is the map of bindings of [ider e]
@@ -434,11 +434,7 @@ let board_state_of_json json =
     in let conts = List.fold_left (fun acc cont ->
         String_map.add cont {id = cont; owner = cont_owner cont} acc)
         String_map.empty (conts board)
-    in let player_list = List.map node_owner (Board.nodes board)
-                         |> List.fold_left (fun acc -> function
-                             | Some x -> x :: acc
-                             | None -> acc) []
-                         |> List.sort_uniq Player.compare
+    in let player_list = List.map fst player_stars
     in let node_cont_maker fcn all_fcn player =
          set_of_list String_set.add String_set.empty
            (List.filter (fun x -> fcn x = Some player) (all_fcn board))
@@ -448,7 +444,7 @@ let board_state_of_json json =
                  player = player;
                  nodes = node_cont_maker node_owner Board.nodes player;
                  conts = node_cont_maker cont_owner Board.conts player;
-                 stars = List.assoc (player_name player) player_stars;
+                 stars = List.assoc player player_stars;
                }
                acc) Player_map.empty player_list
     in {
