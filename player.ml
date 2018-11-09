@@ -53,7 +53,8 @@ let color_of_string = function
   | "default" -> Default
   | str -> failwith ("bad color str: " ^ str)
 
-(** [string_of_color c] is the string corresponding to ANSITerminal color [c]. *)
+(** [string_of_color c] is the string corresponding to ANSITerminal color [c]. 
+*)
 let string_of_color = function
   | Black -> "black"
   | Red -> "red"
@@ -74,7 +75,8 @@ let player_of_json json =
     artificial = json |> member "artificial" |> to_bool
   }
 
-(** [json_of_player player] is the JSON assoc object that represents [player]. *)
+(** [json_of_player player] is the JSON assoc object that represents [player]. 
+*)
 let json_of_player player =
   `Assoc [
     ("id", `Int player.id);

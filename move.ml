@@ -23,10 +23,12 @@ let string_of_move brd = function
     (List.fold_left (fun acc (node, army) ->
          acc ^ node_name brd node ^ " with " ^ (string_of_int army)) "" list)
   | AttackM (node1, node2, army) ->
-    "Attack " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " ^ (string_of_int army)
+    "Attack " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " 
+    ^ (string_of_int army)
   | OccupyM army -> "Occupy with " ^ (string_of_int army)
   | FortifyM (node1, node2, army) ->
-    "Fortify " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " ^ (string_of_int army)
+    "Fortify " ^ node_name brd node2 ^ " from " ^ node_name brd node1 ^ " with " 
+    ^ (string_of_int army)
   | FinishM -> "Finish"
 
 (** [apply_move gs move] is the game state resulting from applying [move] in
@@ -48,7 +50,8 @@ let apply_move gs move = match (turn gs), move with
   | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> end_turn_step gs
   | _, FinishM -> gs
-  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move (gs |> board_st |> board) move))
+  | _ -> failwith ("invalid state/move combination: " 
+                   ^ (string_of_move (gs |> board_st |> board) move))
 
 (** [range min max] is a list of consecutive integers from [min] to 
     [max], inclusive. *)

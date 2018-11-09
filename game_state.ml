@@ -239,7 +239,7 @@ let reinforce st n armies =
   if not (is_reinforce st) then raise (InvalidState st.turn) else (); 
   if remaining_reinforcements st <= 0 then failwith "need more armies" else ();  
   if armies > remaining_reinforcements st || armies < 0
-  then raise (InsufficientArmies (n,armies)) else (); (*TODO: better exception*)
+  then raise (InsufficientArmies (n,armies)) else (); 
   {st with board_state = place_army st.board_state n armies; 
            turn = if remaining_reinforcements st = armies
              then Attack (AttackSelectA, false)
@@ -359,6 +359,7 @@ let end_turn_step st =
     according to the following rules:
 
       - Pick -> Pick
+      - Trade -> Trade
       - Reinforce _ -> Reinforce SelectR
       - Attack _ -> Attack AttackSelectA
       - Fortify _ -> Fortify FromSelectF

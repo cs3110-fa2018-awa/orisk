@@ -22,7 +22,12 @@ type cont_state = {id : cont_id; owner : Player.t option}
 
 (** [player_state] is the state of a player, used internally.
     Set of nodes and continents owned by the player. *)
-type player_state = {player : Player.t; nodes : String_set.t; conts : String_set.t; stars : int}
+type player_state = {
+  player : Player.t; 
+  nodes : String_set.t; 
+  conts : String_set.t; 
+  stars : int
+}
 
 (** [player_stats] is the board statistics of a player.
     It contains the total number of armies, territories, continents,
@@ -251,8 +256,7 @@ let conquer_stars st w l =
 (** [star_generator ()] is either 1 star or sometimes, with a
     low probability, 2 stars. *)
 let star_generator = 
-  fun () ->
-    Random.self_init ();
+  fun () -> Random.self_init ();
     let p = 0.08 in
     if (Random.float 1.0) > p then 1 else 2
 
@@ -340,8 +344,8 @@ let set_owner (st : t) (node : node_id) (player : Player.t option) =
   in let new_conts conts' player' = List.fold_left
          (fun acc cont ->
             String_map.update cont (fun cont_st_opt ->
-                if is_owner st player node cont then Some {id = cont; owner = player'}
-                else None) conts'
+                if is_owner st player node cont 
+                then Some {id = cont; owner = player'} else None) conts'
          ) conts' node_conts
 
   (* state transition *)
@@ -368,12 +372,11 @@ let player_frontiers bs player =
 open Yojson.Basic.Util
 
 (** [node_state_of_json] is the node state that [json] represents. *)
-let node_state_of_json json =
-  {
-    id = json |> member "id" |> to_string;
-    owner = json |> member "owner" |> to_option player_of_json;
-    army = json |> member "army" |> to_int;
-  }
+let node_state_of_json json = {
+  id = json |> member "id" |> to_string;
+  owner = json |> member "owner" |> to_option player_of_json;
+  army = json |> member "army" |> to_int;
+}
 
 (** [json_of_node_state node_state] is the JSON assoc object that 
     represents [node_state]. *)

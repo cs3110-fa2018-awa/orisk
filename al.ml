@@ -31,20 +31,16 @@ let rec move_edge_heuristic gs player move_trees personality =
     List.map (fun edge -> move_edge_heuristic
                  game_state player edge.outcomes personality) moves |>
     List.sort Pervasives.compare |> List.rev |> List.hd in
-  (** [heur tree] is the heuristic score of [tree]. *) (*TODO*)
+  (** [heur tree] is the heuristic score of [tree]. *) 
   let heur tree = match tree.moves with
-    | [] -> (*print_endline "GOT HERE";*)heuristic tree.game_state personality player
-    | _ -> internal tree in
-  (* print_endline ("\nmove edge heur: "^(string_of_float (List.fold_left 
-                                                           (fun acc ({probability} as tree) ->
-                                                              acc+.(probability*.(heur tree))) 0. move_trees)));*)
-  List.fold_left 
-    (fun acc ({probability} as tree) ->
-       (*print_endline ("tree heur: "^(string_of_float (heur tree)));
-         print_endline ("probability: "^(string_of_float (probability)));
-         print_endline "";*)
-       acc+.(probability*.(heur tree))) 0. move_trees
+    | [] -> heuristic tree.game_state personality player
+    | _ -> internal tree in 
+  List.fold_left (fun acc ({probability} as tree) -> 
+      acc+.(probability*.(heur tree))) 0. move_trees
 
+(** [large_attack_probability gs attacker defender] is the probability
+    of winning an attack in [gs] if either [attacker] has more than 
+    4 armies or [defender] has more than 2 armies.  *)
 let large_attack_probability gs attacker defender = 
   (* we are not statisticians so did some diffuse learning with 
      https://boardgames.stackexchange.com/questions/3514/how-can-i-estimate-
@@ -99,10 +95,9 @@ let attack_tree gs attacker defender armies =
           moves = []} :: acc) [] lst in
   if total_attackers > 3 || total_defenders > 2 
   then let gs',_,_ =  attack gs attacker defender attack_armies 
-    in (*print_endline (string_of_float (large_attack_probability gs attacker defender));*)
-    [{game_state = gs';
-      probability = large_attack_probability gs attacker defender;
-      moves = []}]
+    in [{game_state = gs';
+         probability = large_attack_probability gs attacker defender;
+         moves = []}]
   else begin 
     match attack_armies,defend_armies with
     (* Probabilities from https://web.stanford.edu/~guertin/risk.notes.html *)
@@ -140,7 +135,8 @@ let move_probabilities gs move =
   | (Attack (AttackSelectA,_) | Fortify FromSelectF), FinishM
     -> [{game_state = end_turn_step gs; probability = 1.; moves = []}]
   | _, FinishM -> [{game_state = gs; probability = 1.; moves = []}]
-  | _ -> failwith ("invalid state/move combination: " ^ (string_of_move (gs |> board_st |> board) move))
+  | _ -> failwith ("invalid state/move combination: " ^ 
+                   (string_of_move (gs |> board_st |> board) move))
 
 (** [heuristic_compare e1 e2] compares the heuristic score of [e1] and [e2]
     using [Pervasives.compare]. *)
@@ -176,8 +172,8 @@ let rec move_edge gs player personality depth move =
   let move_trees = match depth,(turn gs) with
     | 0,_ | _,Fortify _ | _,Pick _ -> move_probabilities gs move
     | _ -> List.map fill_moves (move_probabilities gs move)
-  in (*print_endline ("calc move: "^(string_of_move move));*){move = move; outcomes = move_trees; 
-                                                              heuristic = move_edge_heuristic gs player move_trees personality}
+  in {move = move; outcomes = move_trees; 
+      heuristic = move_edge_heuristic gs player move_trees personality}
 
 (** [move_tree gs probability player personality depth] is the [move_tree]
     with [probability] built from [depth] best moves out of all the valid moves 
@@ -192,12 +188,4 @@ let move_tree gs probability player personality depth =
 let best_move gs depth =
   let player = current_player gs
   in let tree = move_tree gs 1. player Personality.default depth in
-  (*print_endline ("current gs heuristic "^
-                 (string_of_float
-                    (Heuristic.heuristic gs
-                       Personality.default player)));
-    ignore (List.map
-            (fun edge -> print_endline
-                ((string_of_move edge.move)^" "^
-                 (string_of_float edge.heuristic))) tree.moves);*)
   (List.sort_uniq heuristic_compare tree.moves |> List.rev |> List.hd).move

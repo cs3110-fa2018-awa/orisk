@@ -220,6 +220,7 @@ val battle_won : t -> bool
     according to the following rules:
 
       - Pick -> Pick
+      - Trade -> Trade
       - Reinforce _ -> Reinforce SelectR
       - Attack _ -> Attack AttackSelectA
       - Fortify _ -> Fortify FromSelectF

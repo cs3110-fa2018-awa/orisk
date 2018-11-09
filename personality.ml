@@ -49,12 +49,6 @@ let bonus_heuristic p num = (~~ num) *. 10. *. (~~ (p.aggression))
     personality [p]. Positively weights greater total armies. *)
 let army_heuristic p num = (~~ num) *. 5. *. (~~ (p.aggression))
 
-(** [region_heuristic p num] is the heuristic score of [num]
-    distinct contiguous regions, i.e. paths of nodes owned by the same player,
-    from personality [p]. 
-    Negatively weights scattering nodes such that fortifying is difficult. *)
-let region_heuristic p num = ~-. ((~~ num) *. 50.) *. (~~ (max - p.gambling))
-
 (** [frontier_heuristic p num] is the heuristic score of [num] frontier nodes
     from personality [p]. Frontier node is defined as a node owned by a player
     that borders at least one opponent node. Negatively weights leaving
@@ -67,23 +61,11 @@ let frontier_heuristic p num = ~-. ((~~ num) *. 5.) *. (~~ (p.defensivity))
     armies on frontier nodes. *)
 let frontier_armies_heuristic p num = ((~~ num) *. 5.) *. (~~ (p.defensivity))
 
-(** *)
+(** [min_frontier_armies_heuristic p num] is the heuristic score of [num] 
+    armies where [num] is the minimum amount of armies on a frontier node from
+    personality [p]. Positively weights spreading armies out along frontiers
+    by maximizing the minimum amount of armies. *)
 let min_frontier_armies_heuristic p num = (num *. 15.) *. (~~ (p.defensivity))
-
-(** [non_frontier_armies_heuristic p num] is the heuristic score of [num] 
-    non-frontier armies from personality [p]. Frontier node is defined
-    the same as in [frontier_heuristic]. Negatively weights placing armies
-    on non-frontier nodes. *)
-let non_frontier_armies_heuristic p num = ~-. (~~ num) *. 30.
-
-(** [frontier_differential_heuristic p num] is the heuristic score of [num]
-    frontier differential from personality [p]. Frontier node is defined
-    the same as in [frontier_heuristic]. Negatively weights not
-    putting armies on frontier nodes bordering opponent nodes with large 
-    amount of armies. This is because doing so eaves the frontier node 
-    vulnerable to easy opponent aquisition. *)
-let frontier_differential_heuristic p num = 
-  ~-. ((~~ num) *. 0.4) *. (~~ (p.defensivity))
 
 (** [stars_heuristic p num] is the heuristic score of [num] stars from 
     personality [p]. Positively weights acquiring stars. *)
@@ -93,11 +75,6 @@ let stars_heuristic p num = (~~ num) *. 100.
     players from personality [p]. Negatively weights more opponents so 
     incentivize opponent elimination. *)
 let opponent_num_heuristic p num = ~-. ((~~ num) *. 5000.) *. (~~ (p.spite))
-
-(** [max_opponent_heuristic p num] is the heuristic score of [num] where
-    [num] is the maximum opponent heuristic from personality [p]. 
-    Negatively weights allowing an opponent to dominate. *)
-let max_opponent_heuristic p num = ~-. (num *. 0.1) *. (~~ (p.spite))
 
 (** [avg_opponent_heuristic p num] is the heuristic score of [num] where
     [num] is the average opponent heuristic from personality [p]. 

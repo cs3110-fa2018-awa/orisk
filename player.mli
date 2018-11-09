@@ -30,5 +30,6 @@ val compare : t -> t -> int
 (** [player_of_json json] is the player that [json] represents. *)
 val player_of_json : Yojson.Basic.json -> t
 
-(** [json_of_player player] is the JSON assoc object that represents [player]. *)
+(** [json_of_player player] is the JSON assoc object that represents [player]. 
+*)
 val json_of_player : t -> Yojson.Basic.json

@@ -8,9 +8,13 @@ open Player
 type t
 
 (** The type representing a player's board statistics. *)
-type player_stats = 
-  {player : Player.t; army_tot : int; 
-   node_tot : int; cont_tot : int; star_tot : int}
+type player_stats = {
+  player : Player.t; 
+  army_tot : int; 
+  node_tot : int; 
+  cont_tot : int; 
+  star_tot : int;
+}
 
 (** [stats_category] is the category that the board leaderboard can be sorted 
     by. *)
