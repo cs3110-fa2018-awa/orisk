@@ -472,6 +472,7 @@ let attack st a d invading_armies =
   then raise (NotOwner a) else ();
   if attacker = Board_state.node_owner st.board_state d 
   then raise (FriendlyFire attacker) else ();
+  let defender = Board_state.node_owner st.board_state d in
   let total_attackers = (Board_state.node_army st.board_state a) - 1 in 
   let attack_armies = min total_attackers 3 in
   if attack_armies <= 0 || invading_armies > attack_armies 
@@ -485,23 +486,28 @@ let attack st a d invading_armies =
   let attack_deaths,defend_deaths = battle attack_dice defend_dice (0,0) in 
   if defend_deaths = total_defenders 
   (* attacker won *)
-  then let add_stars_st = place_stars_conditional st (battle_won st) in
-    let bs' = Board_state.set_army 
+  then let add_stars_gs = place_stars_conditional st (battle_won st) in
+    let set_army_bs = Board_state.set_army 
         (Board_state.set_army 
-           (Board_state.set_owner add_stars_st.board_state d attacker) d 
+           (Board_state.set_owner add_stars_gs.board_state d attacker) d 
            (invading_armies - attack_deaths)) a 
         (total_attackers - invading_armies + 1)
-    in {add_stars_st
-        with board_state = bs';
-             players =
-               if List.mem (node_owner add_stars_st.board_state d) (owners bs')
-               then add_stars_st.players
-               else List.filter (fun p ->
-                   Some p <> node_owner add_stars_st.board_state d)
-                   add_stars_st.players;
-             turn = Attack ((OccupyA (a,d)), true)},
-       attack_dice, defend_dice
-    (* attacker lost *)
+    in let set_turn_gs = {add_stars_gs 
+                          with board_state = set_army_bs;
+                               turn = Attack ((OccupyA (a,d)), true)}
+    (* giving defender stars to attacker if defender is elminated *)
+    in if List.mem (node_owner add_stars_gs.board_state d) (owners set_army_bs) 
+    then 
+      {set_turn_gs with players = add_stars_gs.players}, 
+      attack_dice, defend_dice
+    else
+      {set_turn_gs with board_state = 
+                          (conquer_stars set_army_bs attacker defender); 
+                        players = List.filter (fun p ->
+                            Some p <> node_owner add_stars_gs.board_state d)
+                            add_stars_gs.players},
+      attack_dice, defend_dice
+      (* attacker lost *)
   else {st with board_state = (*BISECT-IGNORE*) (* play tested *)
                   Board_state.set_army 
                     (Board_state.set_army st.board_state d 

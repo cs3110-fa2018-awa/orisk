@@ -98,6 +98,11 @@ val set_stars : t -> Player.t -> int -> t
     adding [stars] stars to [player] in [state]. *)
 val place_stars : t -> Player.t -> int -> t
 
+(** [conquer_stars st w l] is the state where player [l] has their stars
+    set to 0, while player [w] gains however many stars [l] had in
+    [st]. *)
+val conquer_stars : t -> Player.t option -> Player.t option -> t
+
 (** [star_generator ()] is either 1 star or sometimes, with a
     low probability, 2 stars. *)
 val star_generator : unit -> int

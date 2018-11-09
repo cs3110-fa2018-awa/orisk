@@ -239,6 +239,15 @@ let set_stars st player stars =
 let place_stars st player stars =
   set_stars st player ((player_stars st player) + stars)
 
+(** [conquer_stars st w l] is the state where player [l] has their stars
+    set to 0, while player [w] gains however many stars [l] had in
+    [st]. *)
+let conquer_stars st w l =
+  match w, l with
+  | None, _ -> failwith "no"
+  | _, None -> failwith "no"
+  | Some w, Some l -> set_stars (place_stars st w (player_stars st l)) l 0
+
 (** [star_generator ()] is either 1 star or sometimes, with a
     low probability, 2 stars. *)
 let star_generator = 
