@@ -249,8 +249,8 @@ let place_stars st player stars =
     [st]. *)
 let conquer_stars st w l =
   match w, l with
-  | None, _ -> failwith "no"
-  | _, None -> failwith "no"
+  | None, _ -> failwith "no" (*BISECT-IGNORE*)
+  | _, None -> failwith "no" (*BISECT-IGNORE*)
   | Some w, Some l -> set_stars (place_stars st w (player_stars st l)) l 0
 
 (** [star_generator ()] is either 1 star or sometimes, with a
@@ -458,8 +458,8 @@ let board_state_of_json json =
     }
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load board state: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load board state: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_board_state board_state] is the JSON assoc object that 
     represents [board_state]. *)

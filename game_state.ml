@@ -321,7 +321,7 @@ let stars_to_armies = function
   | 3 -> 4
   | 4 -> 7
   | 5 -> 10
-  | _ -> failwith "shouldn't happen"
+  | _ -> failwith "shouldn't happen" 
 
 (** [trade_stars st stars] is the result of the current player in [st] trading 
     in [stars] during the [Trade] phase of the game; the player will lose
@@ -610,13 +610,13 @@ let turn_of_json json =
         | "reinforce" -> Reinforce (SelectR, data |> to_int)
         | "attack" -> Attack (AttackSelectA, data |> to_bool)
         | "fortify" -> Fortify FromSelectF
-        | _ -> failwith ("invalid turn name string: " ^ name)
+        | _ -> failwith ("invalid turn name string: " ^ name) 
       end with
     | ex -> failwith ("turn_of_json failed: " ^ (Printexc.to_string ex))
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load game state turn: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load game state turn: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_turn turn] is the JSON assoc object representing [turn]. *)
 let json_of_turn turn =
@@ -646,8 +646,8 @@ let game_state_of_json json =
     }
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load game state: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load game state: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_game_state gamestate] is the JSON assoc object
     representing [gamestate].*)

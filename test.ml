@@ -329,11 +329,27 @@ let game_state_tests = [
   gen_comp "turn valid fortify to" 
     (lazy (turn_valid_nodes (~$ turn_fortify_toselect))) 
     ["HR5"; "JAM"; "Keeton"; "LR7"; "RPCC"] (pp_list str);
-  
+
   gen_comp "save load"
     (lazy ((~$ init_game_state) |> json_of_game_state
            |> game_state_of_json |> json_of_game_state))
     (~$ init_game_state |> json_of_game_state) Yojson.Basic.pretty_to_string;
+  gen_comp "save load2"
+    (lazy ((~$ turn_trade) |> json_of_game_state
+           |> game_state_of_json |> json_of_game_state))
+    (~$ turn_trade |> json_of_game_state) Yojson.Basic.pretty_to_string;
+  gen_comp "save load3"
+    (lazy ((~$ turn_reinforce) |> json_of_game_state
+           |> game_state_of_json |> json_of_game_state))
+    (~$ turn_reinforce |> json_of_game_state) Yojson.Basic.pretty_to_string;
+  gen_comp "save load4"
+    (lazy ((~$ turn_attack_defend) |> json_of_game_state
+           |> game_state_of_json |> json_of_game_state))
+    (~$ turn_attack_defend |> json_of_game_state) Yojson.Basic.pretty_to_string;
+  gen_comp "save load5"
+    (lazy ((~$ turn_fortify_count) |> json_of_game_state
+           |> game_state_of_json |> json_of_game_state))
+    (~$ turn_fortify_count |> json_of_game_state) Yojson.Basic.pretty_to_string;
 ]
 
 let suite =

@@ -70,8 +70,8 @@ exception UnknownCont of cont_id
 let coords_of_node json =
   try (json |> member "x" |> to_int), (json |> member "y" |> to_int) with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load board coords: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load board coords: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_chords (x, y)] is the JSON assoc object representing 
     coordinates [(x,y)]. *)
@@ -89,8 +89,8 @@ let node_of_json json =
     }
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load board node: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load board node: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_node node] is the JSON assoc object representing [node]. *)
 let json_of_node (node : node) =
@@ -112,8 +112,8 @@ let cont_of_json json =
     }
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load board cont: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load board cont: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_cont cont] is the JSON assoc object representing [cont]. *)
 let json_of_cont (cont : cont) =
@@ -172,8 +172,8 @@ let from_json json =
     }
   end with
   | Yojson.Basic.Util.Type_error (msg, j) ->
-    j |> Yojson.Basic.to_string |> print_endline;
-    failwith ("failed to load board: " ^ msg)
+    j |> Yojson.Basic.to_string |> print_endline; (*BISECT-IGNORE*)
+    failwith ("failed to load board: " ^ msg) (*BISECT-IGNORE*)
 
 (** [json_of_board board] is the JSON assoc object representing [board]. *)
 let json_of_board board : Yojson.Basic.json =
@@ -181,9 +181,9 @@ let json_of_board board : Yojson.Basic.json =
     ("map", `String board.name);
     ("ascii", `String board.ascii);
     ("territories", `List (board.nodes |> String_map.bindings
-                     |> List.map (fun (_, node) -> json_of_node node)));
+                           |> List.map (fun (_, node) -> json_of_node node)));
     ("continents", `List (board.conts |> String_map.bindings
-                     |> List.map (fun (_, cont) -> json_of_cont cont)));
+                          |> List.map (fun (_, cont) -> json_of_cont cont)));
   ]
 
 (** [board_node board] is the name of [board]. *)
