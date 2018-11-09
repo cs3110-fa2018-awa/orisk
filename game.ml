@@ -159,11 +159,13 @@ let game_nums st num = match st |> game_state |> turn with
     -> fortify (game_state st) n1 n2 num |> change_game_st st,None
   | _ -> failwith "shouldnt happen"
 
-(** [save st file] saves the JSON object representing game state [st] to [file]. *)
+(** [save st file] saves the JSON object representing game state [st] to 
+    [file]. *)
 let save st file =
   Yojson.Basic.to_file file (st |> game_state |> json_of_game_state)
 
-(** [load file] initializes the game with the game state represented in [file]. *)
+(** [load file] initializes the game with the game state represented in 
+    [file]. *)
 let load file =
   Yojson.Basic.from_file file |> game_state_of_json |> Interface.init
 
@@ -174,9 +176,9 @@ let perform_search st str : (string * bool) =
   let found_node = node_search (st |> Interface.board) str in
   str,found_node <> None
 
-(** [handle_save st msg search] saves [st] to a user specified file with a message
-    and no search if the file name is valid, or returns [st] with no state and 
-    search. *)
+(** [handle_save st msg search] saves [st] to a user specified file with a 
+    message and no search if the file name is valid, or returns [st] with 
+    no state and search. *)
 let handle_save st msg search =
   print_string "Enter file name to save to [.risk] > ";
   match (read_str "") with
@@ -460,7 +462,7 @@ let title =
   ^"\r\n/ / /  \\ \\ \\/\\__\\/_/___\\\\ \\/___/ /  / / /    \\ \\ \\    "
   ^"\r\n\\/_/    \\_\\/\\/_________/ \\_____\\/   \\/_/      \\_\\_\\   "
 
-(** [ext_in_dir d] is a list of all files in [d] with [.json] extension. *)
+(** [ext_in_dir d] is a list of all files in [d] with extension [ext]. *)
 let ext_in_dir ext d =
   let rec build acc dir =
     try build ((Unix.readdir dir) :: acc) dir with
@@ -468,11 +470,12 @@ let ext_in_dir ext d =
   in Unix.opendir d |> build []
      |> List.filter (fun s -> Filename.check_suffix s ext)
 
-(** [game ()] lists all the json files in the current directory and then 
-    prompts for the game json file to load and starts it. 
+(** [game ()] lists all the json files and previously saved games 
+    in the current directory and then prompts for the game file 
+    to load and starts it. 
     Reprompts if the user gives an invalid file. Invalid file includes files not
-    in the current directory, files without .json extension, or files that do 
-    not exist. *)
+    in the current directory, files without .json or .risk extension, or 
+    files that do not exist. *)
 let rec game () =
   ANSITerminal.(print_string [red]
                   ("\n\nWelcome to..." ^ title ^ "\n\n"));

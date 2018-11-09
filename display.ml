@@ -84,8 +84,8 @@ let draw_nodes (st : Interface.t) : unit =
        end
     ) ()
 
-(** [draw_turn gamestate] prints the current turn information based
-    on [gamestate]. *)
+(** [draw_turn st move] prints the current turn information based
+    on [st] and [move] if the current player is artificial. *)
 let draw_turn (st : Interface.t) (move : Move.move option) : unit = 
   let player = game_state st |> current_player
   in print_string [Foreground (player_color player)] (player_name player);
@@ -111,8 +111,9 @@ let draw_line st num line : int =
   in if num >= scrolly && num < height () + scrolly - 3
   then begin print_string [white] (disp ^ "\n"); num + 1 end else num + 1
 
-(** [draw_board gamestate] prints the board ascii with the nodes populated
-    with information from the board state corresponding to [gamestate]. *)
+(** [draw_board st move] prints the board ascii with the nodes populated
+    with information from the board state corresponding to [st] 
+    and [move] if the current player is artificial. *)
 let draw_board (st : Interface.t) move : unit = 
   (* clear screen *)
   ANSITerminal.erase Screen;
