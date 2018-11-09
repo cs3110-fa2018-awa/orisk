@@ -108,3 +108,7 @@ val pick : t -> t
 (** [change_game_st st gamestate] is the interface with 
     the game state [gamestate].*)
 val change_game_st : t -> Game_state.t -> t
+
+(** [human_player_check gs] is [true] if [gs] has at least one human player in 
+    the list of players and [false] otherwise. *)
+val human_player_check : Game_state.t -> bool

@@ -427,7 +427,11 @@ let risk_board f =
   let players = List.rev 
       (insert_players [] [Red;Blue;Green;Yellow;Magenta;Cyan] false false 
          "...") in
-  try game_loop_new (Game_state.init board players |> Interface.init) None with 
+  let gs = Game_state.init board players in
+  (* if we have all als then we want to randomize the board so that we
+     get a different game every time. *)
+  let gs' = if human_player_check gs then gs else gs |> assign_random_nodes in
+  try game_loop_new (gs' |> Interface.init) None with 
   | End_of_file -> print_endline ("\nThanks for playing!\n"); exit 0
 
 (** [risk_saved_game f] loads a saved game of Risk! from save file [f]. *)
