@@ -1,5 +1,7 @@
 # ORisk
 
+Fall 2018.
+
 The board game Risk, implemented in OCaml for the Cornell CS 3110 midterm project.
 
 Created by Alicia Wang, Amanda Xu, and William Smith.
